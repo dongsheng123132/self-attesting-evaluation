@@ -15,6 +15,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { observeText, locate } from '../../benxiang/observe-text.mjs';
 
 const DISCRIMINATORS = [
   {
@@ -55,8 +56,10 @@ const DISCRIMINATORS = [
 function classify(file) {
   // 两份文本的折行位置不同（Gutenberg 在 "all men" 中间断行，OCR 按扫描行断）。
   // 不规范化空白，探针会因为一个换行而漏报——D1 第一版就是这么假阴性的。
-  const text = fs.readFileSync(file, 'utf8').replace(/\s+/g, ' ');
-  const hits = DISCRIMINATORS.map(d => ({ ...d, hit: d.probe.test(text) }));
+  // 规范化不再在这里自己写：这个职责已收进本象（benxiang/observe-text.mjs），
+  // 因为同一个病在本会话里被独立犯了两次。
+  const obs = observeText(fs.readFileSync(file, 'utf8'));
+  const hits = DISCRIMINATORS.map(d => ({ ...d, hit: locate(obs, d.probe).length > 0 }));
 
   const anchors = hits.filter(h => h.kind === 'both');
   const anchorsOk = anchors.every(a => a.hit);

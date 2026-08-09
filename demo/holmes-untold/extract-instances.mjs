@@ -13,6 +13,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { observeText, locate } from '../../benxiang/observe-text.mjs';
 
 const CORPUS_DIR = 'demo/holmes-untold/corpus';
 // 完整正典：四部长篇 + 五部短篇集
@@ -68,28 +69,8 @@ const CANDIDATES = [
   { id: 'UC32', name: 'Bishopgate 珠宝案',                       probe: /Bishopsgate|Bishopgate/i }
 ];
 
-// 逐行匹配会漏掉跨行折断的短语——正典里 "the old / Russian woman" 就断在行末。
-// 本轮同一个病已经在 demo/ulysses-19/collate.mjs 上犯过一次（D1 假阴性）。
-// 所以这里不逐行找，而是把全文空白折叠成单空格后整体搜索，再把匹配偏移映回行号。
-function normalize(text) {
-  const out = [];
-  const lineAt = [];
-  let line = 1, prevSpace = false;
-  for (const ch of text) {
-    // Gutenberg 用下划线表斜体（"the cutter _Alicia_"）。当零宽处理，
-    // 否则每条探针都得自己写 _? ——UC17 就是这么漏的。
-    if (ch === '_') { if (ch === '\n') line++; continue; }
-    const ws = ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r';
-    if (ws) {
-      if (!prevSpace) { out.push(' '); lineAt.push(line); prevSpace = true; }
-    } else {
-      out.push(ch); lineAt.push(line); prevSpace = false;
-    }
-    if (ch === '\n') line++;
-  }
-  return { norm: out.join(''), lineAt };
-}
-
+// 规范化与跨行搜索的职责已收进本象（benxiang/observe-text.mjs）。
+// 原因见该文件顶部：这个病在同一个会话里被独立犯了两次。
 // 篇名判定：向上找最近的篇题行。两种形状都要认——
 // Case-Book / Return 用全大写 "THE ADVENTURE OF THE VEILED LODGER"，
 // Memoirs / Adventures 用 "VI. The Musgrave Ritual"，
@@ -126,19 +107,15 @@ for (const [file, vol] of Object.entries(VOLUMES)) {
   const p = path.join(CORPUS_DIR, file);
   if (!fs.existsSync(p)) { console.error(`缺 ${p}`); process.exit(1); }
   const text = fs.readFileSync(p, 'utf8');
-  loaded.push({ file, vol, lines: text.split(/\r?\n/), ...normalize(text) });
+  loaded.push({ file, vol, lines: text.split(/\r?\n/), obs: observeText(text) });
 }
 
 const found = [], missing = [];
 for (const c of CANDIDATES) {
   const hits = [];
-  for (const { file, vol, lines, norm, lineAt } of loaded) {
-    const rx = new RegExp(c.probe.source, c.probe.flags.includes('g') ? c.probe.flags : c.probe.flags + 'g');
-    for (const m of norm.matchAll(rx)) {
-      const line = lineAt[m.index];
-      // 引语以命中处为中心截一段，够看清语境又不至于抄整段
-      const quote = norm.slice(Math.max(0, m.index - 60), m.index + 130).trim();
-      hits.push({ volume: vol, file, line, story: findStoryTitle(lines, line - 1), quote });
+  for (const { file, vol, lines, obs } of loaded) {
+    for (const m of locate(obs, c.probe, { context: 70 })) {
+      hits.push({ volume: vol, file, line: m.line, story: findStoryTitle(lines, m.line - 1), quote: m.quote });
     }
   }
   if (hits.length) found.push({ ...c, probe: String(c.probe), hits });

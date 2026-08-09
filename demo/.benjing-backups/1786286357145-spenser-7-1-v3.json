@@ -4,8 +4,8 @@
   "id": "spenser-7-1",
   "title": "B 轨（展示层）：《恒常之传奇》第一章 —— 格律可判性演示",
   "goal": "作为展示层产物：在斯宾塞《致罗利书》写明、但从未动笔的位置生成一章，用高度自动化的格律筛查给出可审计报告。本轨不承担因果主张，职责是提供一组解释空间最小的自动判据，当有人质疑 A 轨判据主观时作为对照。",
-  "version": 4,
-  "updated_at": "2026-08-09T14:39:17.145Z",
+  "version": 3,
+  "updated_at": "2026-08-09T13:56:20.783Z",
   "created_at": "2026-08-09T00:00:00Z",
   "governance": {
     "tenant_id": "uking",
@@ -86,8 +86,7 @@
     "W5-1 参与 A/B/C 三臂统计（本轨的通过率是三臂里最不可争辩的一组数）",
     "W6-1 与 A 轨合并进同一份白皮书与同一个 Constraint Bounty 页",
     "W1-4 核实并落盘版权状态记录，替换 facts 里那条 verified=false",
-    "P1 判据措辞整改：把「100% 机器可判」改为「自动筛查 + 盲审裁决」，并设计评审一致率的测量方式",
-    "P1 写 demo/spenser-7-1/calibrate.mjs 并把它挂回这条经验的 recheck（原先挂的是 node demo/spenser-7-1/calibrate.mjs --baseline，脚本尚不存在，考试会把「跑不起来」误判成「经验错了」）"
+    "P1 判据措辞整改：把「100% 机器可判」改为「自动筛查 + 盲审裁决」，并设计评审一致率的测量方式"
   ],
   "learnings": [
     {
@@ -97,16 +96,21 @@
       "origin": {
         "task": "spenser-7-1",
         "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/spenser-7-1/calibrate.mjs --baseline",
+        "expect_exit": 0
       }
     }
   ],
   "actions": [],
-  "content_hash": "584b30d9a901d9faa17c4dc4ff43bd65b8b7c290899f48424fadbfae0985581f",
+  "content_hash": "09b93a7e97af09a30e1e776dac5ae5c1841ae6906f5435732a232dc497d7f259",
   "actor": {
     "harness": "claude-code",
     "model": "claude-opus-5",
     "model_source": "transcript",
     "session_id": "3edfadfa-cb79-4242-b356-7ac79e8d313e",
-    "at": "2026-08-09T14:39:17.144Z"
+    "at": "2026-08-09T13:56:20.782Z"
   }
 }
