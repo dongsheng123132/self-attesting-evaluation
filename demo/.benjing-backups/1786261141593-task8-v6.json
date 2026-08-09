@@ -4,7 +4,7 @@
   "id": "task8",
   "title": "把成果转成对外产出：论文 / 开源 / 宣发的取舍",
   "goal": "判断这套东西能写几篇论文、各自缺什么证据，把能立刻做的对外产出做掉（公开仓库的诚实 README、论文①的证据齐备稿），并明确暂不做什么（找记者）及其理由",
-  "version": 7,
+  "version": 6,
   "scope": "D:/uking编程/ShadowOS = Harness OS/papers 与 D:/uking编程/2origin-harness（公开仓库）",
   "current_state": "(a) 的证据部分完成：Appendix A 已补确切 SHA（b490d9c/7931f50/2665b01/0015ba1/0831752）与行号（benjing-core.mjs:267/428/469、verify-benjing.mjs:56），并声明 ShadowOS 侧无 git、行号有时效。案例 11→14、判据分类 5→8（新增 G 引用活过被引用物、H 规则只应用到部分站点），§6 的设计规则从 3 条扩到 6 条，§7 补了「一半证据不在版本控制里」这条不利事实。TERMINOLOGY.md 与两处命名裁决已完成并推送。剩下的是写 prose——表格现在扛着全部论证，光靠表格过不了审。",
   "facts": [
@@ -151,18 +151,6 @@
       "verified": true,
       "source": "git diff --stat master..naming/review-0.1 仅列 NAMING-REVIEW.md 与 TERMINOLOGY.md；切回 master 后 node 读 demo/task9/task.origin.json 仍为 v2、facts 10",
       "when": "2026-08-09T16:20:00+08:00"
-    },
-    {
-      "claim": "这台机器可从 git 完整重建，且重建后一切判据仍成立：把仓库 clone 到别处，七个协议全部通过、11 份学历全部 ✅ VERIFIED。此前「能不能复现」只有本机一份样本，现在有了第二份",
-      "verified": true,
-      "source": "git clone \"D:/uking编程/ShadowOS = Harness OS\" /tmp/crlf-probe 后在克隆里依次跑七个 verify-*.mjs 退出码全 0，并对 demo/*/task.origin.json 跑 verify-state 得 11/11 VERIFIED",
-      "when": "2026-08-09T16:40:00+08:00"
-    },
-    {
-      "claim": "担心「core.autocrlf=true 会让 checkout 把 LF 转 CRLF 从而毁掉学历指纹」是错的，实测不成立：克隆出来的 task9 确实被转成 112 处 CRLF，但 verify-state 仍报「content_hash 与盘上内容一致」——因为 contentHash 算的是 canonical() 规范化后的 JSON，不是原始字节。仓库内也没有 .sh 文件会被 CRLF 影响",
-      "verified": true,
-      "source": "node 读 /tmp/crlf-probe/demo/task9/task.origin.json 得 CRLF=112；同目录 node southbridge/verify-state.mjs 输出「content_hash 与盘上内容一致」与 ✅ VERIFIED；southbridge/benjing-core.mjs 的 canonical()/contentHash()",
-      "when": "2026-08-09T16:40:00+08:00"
     }
   ],
   "decisions": [
@@ -195,11 +183,6 @@
       "what": "命名评估放在 naming/review-0.1 分支，主干不动一个名字",
       "why": "用户要的是「重新审视」，不是「改完再看」。分支让方案可被推翻而不留残骸；也避免在证据指针没保护好之前造成既成事实",
       "when": "2026-08-09T16:20:00+08:00"
-    },
-    {
-      "what": "不加 .gitattributes 去锁行尾",
-      "why": "先在克隆上复现再下结论：CRLF 转换对 content_hash 无影响（指纹算的是规范化 JSON），仓库内也没有 .sh 会被它破坏。为一个实测不存在的问题加配置，是把猜测写成防御——本仓库对「没有实测缺陷就不做」有过相反的教训（北桥那次是原理性障碍），但这一次确实测过了",
-      "when": "2026-08-09T16:40:00+08:00"
     }
   ],
   "actions": [],
@@ -223,6 +206,6 @@
   ],
   "learnings": [],
   "actor": "naming-review",
-  "updated_at": "2026-08-09T07:39:01.592Z",
-  "content_hash": "0aa3ba7afb9a472612c4400ac780dc5b95b1f58c1c12e345641d876c4a27f463"
+  "updated_at": "2026-08-09T07:36:39.424Z",
+  "content_hash": "14ac9c9f6d3a725b0b04fa53d0adae0700069231b44ba9fbcb33fc4fbee3de3a"
 }
