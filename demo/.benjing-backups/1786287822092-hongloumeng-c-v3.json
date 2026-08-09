@@ -1,0 +1,332 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "hongloumeng-c",
+  "title": "C 轨：《红楼梦》——判词兑现度判分器（案子与续写是同一个实验）",
+  "goal": "造一台只判「叙事一致性」的判分器：给定第五回判词与十二支曲（曹雪芹本人写下的结局规格）、脂批记载的佚稿情节、以及前八十回内部的亲属/称谓/年龄/时间线/官职事实，逐条判定一段文本是否与之矛盾。先用它重审后四十回（这就是「案子」），再用它判我们自己的续写（这就是「续写」）。真正要证明的不是文笔，是「跨会话/跨 harness/跨模型、只靠状态不靠聊天记录」能扛住中文里连续性要求最高的任务，且判据不是我们自己发明的考题。",
+  "version": 3,
+  "created_at": "2026-08-09T00:00:00Z",
+  "governance": {
+    "tenant_id": "uking",
+    "project_id": "benxiang-public-demo",
+    "visibility": "public",
+    "sensitivity": "public",
+    "context_access": "project",
+    "export_policy": "allow",
+    "retention_days": 0
+  },
+  "current_state": "W1-1 已完成：第五回判词与十二支曲结构化为 15 组 47 条断言（L1 28 / L2 13 / L3 6），88 处原文引用逐字可复核且检查器带反向用例，15 个人物全部有硬断言 —— C 轨有骨头，可以继续。语料已双底本对拍：Gutenberg #24264 折行掉字（不可用于逐字判据），已补 wikisource 全 120 回干净底本，接缝结论 k*=80 在两份底本上一致。本轮另实测到一处本境协议缺陷（写入闸门不校验 schema），已复现并记录，待走 RFC。下一步 W1-2 脂批佚稿线索落盘。判分器仍未编写，C0 校准闸门未跑，正文一个字未写，且不允许在 C0 通过前开写。",
+  "facts": [
+    {
+      "claim": "Gutenberg #24264《紅樓夢》120 回全本已落盘，sha256=ff1526996bf4b81807651921a85e5c1c0f1d1d123c9fa4553057ba6a3ec72011，正文 865,303 字（去空白，不含 Gutenberg 头尾声明）",
+      "verified": true,
+      "source": "命令：sha256sum demo/hongloumeng-c/corpus/pg24264-honglou.txt；字数由 node demo/hongloumeng-c/probe-seam.mjs --json 的 chars_total 给出",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "在该底本上做 91 维虚字相对频率的变点扫描，101 个候选切点中最强接缝正是 k=80（Score 3.093），且 79/80/81/82/83 占据前五名——与程高本补入后四十回的编辑边界重合",
+      "verified": true,
+      "source": "命令：node demo/hongloumeng-c/probe-seam.mjs --json --perm 1000（读 best_split / best_score / top5_splits）",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "该接缝不是韵文密度造成的：剔除全部五言/七言整行后重跑，最强切点仍为 k=80、Score 3.088（韵文占比前 0.98% → 后 0.09%，量级不足以解释差异）",
+      "verified": true,
+      "source": "命令：node demo/hongloumeng-c/probe-seam.mjs --json --perm 1000 --strip-verse",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "但置换检验不足以支撑「换作者」：同一程序在《西遊記》100 回（k*=13，Score 2.309）与《水滸傳》70 回本（k*=52，Score 2.302）上同样得到 p 触底的显著接缝。长篇白话小说普遍存在强接缝，显著性本身不具鉴别力；红楼梦的可辩护之处只剩两点——强度更高（3.093 vs 约 2.31），且位置落在外部独立记载的编辑边界上",
+      "verified": true,
+      "source": "命令：node demo/hongloumeng-c/probe-controls.mjs（退出码 0 表示对照本同样显著，即该结论仍成立）",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "《西遊記》的最强接缝 k*=13 落在唐僧身世结束、取经启程之处，是内容转折而非换人——这是「文体统计量分不开换人与换内容」的一个具体反例",
+      "verified": true,
+      "source": "命令：node demo/hongloumeng-c/probe-seam.mjs --json --corpus demo/hongloumeng-c/corpus/pg23962.txt --chapters 100（读 best_split，再核对该本第十三回回目）",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "Gutenberg #24032《儒林外史》文本残缺：第 2–11 回、第 13–18 回整段缺失，第 21 回回目重复一次，不可直接用作对照本",
+      "verified": true,
+      "source": "命令：node -e 扫描 pg24032.txt 中 ^第N回 行（分回器对该文件在第 2 回即抛错，见 probe-seam.mjs 的 splitChapters）",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "本仓 7 个协议验证器在本轮开工前全绿：本象 14/14、北桥 30/30、本境 67/67、影核 VERIFIED、带外 29/29、待办 14/14、学堂 29/29",
+      "verified": true,
+      "source": "命令：node benxiang/verify-benxiang.mjs && node northbridge/verify-northbridge.mjs && node southbridge/verify-benjing.mjs && node southbridge/verify-southbridge.mjs && node oob/verify-oob.mjs && node southbridge/verify-todo.mjs && node xuetang/verify-xuetang.mjs",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "已有计量红学工作（Hu/Wang/Wu 2014 arXiv《Multiple Authors Detection》用 SVM + 相对频率，结论为前 80 与后 40 出自两人且第 67 回异常；李贤平用虚字多元分析得类似结论）均属「文体表面统计量 + 分类器」这一族，未见针对判词兑现/佚稿情节的叙事一致性判据",
+      "verified": false,
+      "when": "待核：需把论文本身落盘为可复核物并逐篇核对方法族；URL 不算可复核物。当前只到「检索到摘要」这一步"
+    },
+    {
+      "claim": "程高本后四十回的作者归属在红学界无定论（红学会张庆善 2020 年表述为「作者仍不确定，但不大可能是高鹗」）",
+      "verified": false,
+      "when": "待核：需落盘一份出处核查记录"
+    },
+    {
+      "claim": "该 Gutenberg 底本为繁简混排（转码遗留，如「儿/兒」「听/聽」并存），虚字表已按异体合并计数；该缺陷在全书均匀分布，不构成 80 回处的系统性偏倚",
+      "verified": false,
+      "when": "待核：需实测混排字符在前 80 回与后 40 回的分布是否真的均匀，不能只靠推理"
+    },
+    {
+      "claim": "本境写入闸门只做乐观锁、不做 schema 校验：artifacts 按 schema 应为 string[]，写成 [{path,what}] 后 benjing-put --create 仍返回 status=done 并落盘；同一份文件交给 schema-check.mjs 则退出 1 并逐条列出违规。校验器存在，但写入路径上没人调用它",
+      "verified": true,
+      "source": "命令：node demo/hongloumeng-c/repro-schema-gate.mjs（退出码 0 = 洞仍在；补上闸门后该脚本会退出 1）",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "该洞的实测下游后果：不合规学历入盘后，benxiang/reobserve.mjs 与 southbridge/verify-state.mjs 均以 ERR_INVALID_ARG_TYPE 崩溃，本象协议判据由 14/14 掉到 13/14（X6.1 reobserve 在真实仓库跑得通并落账本）。数据不合规因此伪装成了程序 bug",
+      "verified": true,
+      "source": "复现路径已固化为 demo/hongloumeng-c/repro-schema-gate.mjs；崩溃点为 benxiang/observe.mjs:33 与 southbridge/verify-state.mjs:32 的 path.isAbsolute(非字符串)",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "已落盘第二份独立底本：zh.wikisource 紅樓夢全 120 回，sha256=0b0b324c12a9a8d1ed8142f51b59635cd8c88bed04dfe0bebe2c9690a8ece3f3，正文 865,612 字（去空白）",
+      "verified": true,
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09",
+      "source": "命令：sha256sum demo/hongloumeng-c/corpus/wikisource-honglou-120.txt"
+    },
+    {
+      "claim": "接缝结论在两份独立底本上一致：干净底本重跑得 k*=80、Score 3.156、p=0.001、前五切点仍为 79–83（掉字底本为 k*=80、3.093）。底本损伤不是 k=80 的成因",
+      "verified": true,
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09",
+      "source": "命令：node demo/hongloumeng-c/probe-seam.mjs --json --perm 1000 --corpus demo/hongloumeng-c/corpus/wikisource-honglou-120.txt --chapters 120"
+    },
+    {
+      "claim": "Gutenberg #24264 在硬折行接缝处丢字，且损伤集中于接缝而非每行：4 字窗口下接缝未命中率 83.1%、同回行内对照 30%（差 53 个百分点）；但全书字数只比干净底本少 309 字，若每行都掉一字应差约 26,215 字。故该底本不可用于逐字判据，聚合类统计仍可用",
+      "verified": true,
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09",
+      "source": "命令：node demo/hongloumeng-c/verify-corpus.mjs（退出码 0 = 损伤确认）"
+    },
+    {
+      "claim": "W1-1 完成：第五回判词与十二支曲已结构化为 15 组 / 47 条断言，其中 L1 明确可判 28 条、L2 需解释可判 13 条、L3 不可判 6 条（已显式排除）；15 个人物/组全部至少有 1 条 L1 断言",
+      "verified": true,
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09",
+      "source": "命令：node demo/hongloumeng-c/verify-panci-spec.mjs（打印可判性分布，退出码 0）"
+    },
+    {
+      "claim": "断言表的 88 处原文引用全部逐字命中落盘原文，零编造；且该检查带反向用例——三条故意改字的假原文全部被抓出，三条真原文全部被认出",
+      "verified": true,
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09",
+      "source": "命令：node demo/hongloumeng-c/verify-panci-spec.mjs --selftest（退出码 0 = 检查器有判别力）"
+    },
+    {
+      "claim": "已记录三处底本异文，其中元春「虎兔相逢」(wikisource) /「虎兕相逢」(gutenberg) 两读互斥且都站得住（生肖纪年 vs 兵象），依赖该句的断言已定为 L3 不可判",
+      "verified": true,
+      "source_kind": "file",
+      "actor": "claude-code",
+      "when": "2026-08-09",
+      "source": "demo/hongloumeng-c/panci-spec.json 的 variants_observed 字段；两份底本均已落盘可自行核对"
+    },
+    {
+      "claim": "秦可卿一条是作者自身违约点：判词「畫梁春盡落香塵」与册页画面「高樓大廈，有一美人懸梁自縊」指向自缢，而正文第十三回写的是病亡。这直接支撑合格线不能定成 100%",
+      "verified": false,
+      "when": "待核：需由判分器在前八十回上跑出该条的实际判定结果，并落盘为 C0 基线的一部分；当前只到「两处文本并置可见冲突」这一步"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "C 轨的对手不是曹雪芹，是后四十回；案子与续写是同一个实验的两次运行",
+      "why": "「AI 续红楼梦」这个框架必输——评判标准变成文笔，任何结果都会被嘲笑，且无法证伪。改成「在曹雪芹自己写下的判词规格下，后四十回与我们的续写各违反几条」，就得到一个有既定非 AI 基线、有裁判、可被任何人重跑的比较。这个对手已经被人挑剔了两百年，不存在「你们挑了个软柿子」的攻击面。这与 A 轨（尤利西斯）「重建实验而非续集」的框架同源。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "判据只能是叙事一致性类（判词兑现 / 佚稿情节 / 亲属称谓 / 年龄时间线 / 官职器物），不得使用文体统计量做判据",
+      "why": "本轮 W0 实测证明文体统计量分不开「换人」与「换内容」：《西遊記》单作者也给出 p 触底的接缝，位置在取经启程这个纯内容转折上。用它当判据，等于把「这一回讲的事不一样」判成「这不是曹雪芹」。叙事一致性判据对换内容免疫——内容可以变，宝玉的姐姐不能变。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "案子就是续写的 C0 校准闸门：判分器必须先在前八十回上跑绿，才允许拿去判后四十回或我们的续写",
+      "why": "沿用 A/B 轨的 C0 原则。若判分器判曹雪芹本人不合格，那是判分器错了，不是曹雪芹错了。没有这道闸门就无法区分「文本不合格」与「判分器有 bug」。且合格线取「前八十回自身的违规率」，不是理论上的 100%——曹雪芹自己也有前后不一之处（如年龄跳变），定成 100% 会造出一个连原作者都判不合格的判分器（B 轨已冻结的同一条原则）。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "只判「是否与判词/脂批矛盾」，绝不判「曹雪芹原稿是什么」",
+      "why": "探佚学的原稿重建是不可判定的，卷进去等于把可证伪的工程问题换成两百年没结论的争论。「矛盾」有明确判据：判词说『二十年来辨是非』，文本给出的年岁若与之冲突，是可判的；原稿到底怎么写，不可判。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "数据源必须先观察后使用，落盘即记指纹",
+      "why": "本轮直接踩到：Gutenberg #24032《儒林外史》缺了 16 回、重了 1 回。若不是分回器硬抛错而是静默跳过，这本残书会以「单作者对照本」的身份进入结论，整个对照矩阵就废了。这正是本仓本象协议第 0 条的场景——别在部件里假设世界是什么样，去观察。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "Hermes/deepseek 只写正文与做批量抽取，不碰判据与判分器",
+      "why": "作者不能给自己发证（学堂判据 X2.1）。让生成方定义或实现合格标准，实验立刻失效。与 A/B 轨一致。",
+      "when": "2026-08-09"
+    }
+  ],
+  "artifacts": [
+    "demo/hongloumeng-c/probe-seam.mjs",
+    "demo/hongloumeng-c/probe-controls.mjs",
+    "demo/hongloumeng-c/repro-schema-gate.mjs",
+    "demo/hongloumeng-c/corpus/pg24264-honglou.txt",
+    "demo/hongloumeng-c/corpus/pg23962.txt",
+    "demo/hongloumeng-c/corpus/pg23863.txt",
+    "demo/hongloumeng-c/corpus/pg24032.txt",
+    "demo/hongloumeng-c/corpus.mjs",
+    "demo/hongloumeng-c/verify-corpus.mjs",
+    "demo/hongloumeng-c/panci-spec.json",
+    "demo/hongloumeng-c/verify-panci-spec.mjs",
+    "demo/hongloumeng-c/corpus/wikisource-honglou-120.txt",
+    "demo/hongloumeng-c/corpus/wikisource-honglou-c005.txt"
+  ],
+  "next_steps": [
+    "P0 提 RFC：本境 benjing-put 在落盘前强制跑 schema-check，违规拒写（退出码另立，别混进 diverged）；同时让 observe/verify-state 对非字符串路径给协议级错误而非 TypeError",
+    "W1-2 落盘脂批佚稿线索（狱神庙 / 卫若兰射圃 / 花袭人有始有终 / 悬崖撒手），逐条标注出处批本与叶次；标不出出处的一律不进判据",
+    "W1-2 落盘脂批佚稿线索：狱神庙、卫若兰射圃、花袭人有始有终、悬崖撒手等，逐条标注出处批本与叶次；标不出出处的一律不进判据",
+    "W1-3 抽取前八十回的硬事实表：亲属关系 / 称谓 / 年龄与时序 / 官职 / 器物归属，作为连续性判据的底表（此步可交 Hermes 批量抽取，但判据定义不交）",
+    "W1-4 冻结判据集 H1–H7（每条：判什么 / 数据源 / 通过条件 / 反向用例长什么样），反向用例应占多数（沿用 oob 惯例）",
+    "W2-1 实现判分器 verify-panci / verify-kinship / verify-clock / verify-canon，各配反向用例",
+    "W2-2 跑 C0 校准闸门：判分器在前八十回上跑出曹雪芹自身的违规率基线；不绿就改判分器，不改曹雪芹",
+    "W3-1 用判分器重审后四十回，公布逐条违规清单与总违规率（这是「案子」的产出，且它在写正文之前就完成了）",
+    "W3-2 假绿排查：抽查判分器判过的条目，公布假绿数（沿用十四次说谎那篇的做法）",
+    "W4-1 在同一判据下起草续写（Hermes 起草，长提示词写 task.md，命令行只传短路径），与后四十回同台比违规率",
+    "W5-1 并入 A/B 轨的三臂实验与同一份白皮书、同一个 Constraint Bounty 页",
+    "待核：把 Hu/Wang/Wu 2014 等既有计量红学工作落盘为可复核物，确认「未见叙事一致性判据」这条空白声明成立；若已有人做过，据实改写定位"
+  ],
+  "learnings": [
+    {
+      "lesson": "变点扫描类方法必须配「同类单作者对照本」才能下结论；置换检验只能排除「程序自己造缝」，排不掉「长篇小说本来就有缝」——实测《西遊記》《水滸傳》同样 p 触底",
+      "status": "candidate",
+      "confidence": 0.9,
+      "origin": {
+        "task": "hongloumeng-c",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/hongloumeng-c/probe-controls.mjs --perm 500",
+        "expect_exit": 0
+      }
+    },
+    {
+      "lesson": "文体表面统计量（虚字频率等）天然分不开「换作者」与「换内容」；要区分，判据必须落在对内容变化免疫的量上——人物关系、称谓、年龄时序这类「内容再怎么变也不该变」的事实",
+      "status": "candidate",
+      "confidence": 0.85,
+      "origin": {
+        "task": "hongloumeng-c",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/hongloumeng-c/probe-controls.mjs --json",
+        "expect_exit": 0
+      }
+    },
+    {
+      "lesson": "公有领域语料在进入结论之前必须先跑一次结构自检（分回/分章完整性），且自检失败要硬抛错不要静默跳过——Gutenberg #24032《儒林外史》缺 16 回重 1 回，静默跳过就会以「单作者对照本」身份污染整个对照矩阵",
+      "status": "candidate",
+      "confidence": 0.8,
+      "origin": {
+        "task": "hongloumeng-c",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/hongloumeng-c/probe-seam.mjs --json --corpus demo/hongloumeng-c/corpus/pg24032.txt --chapters 56",
+        "expect_exit": 1
+      }
+    },
+    {
+      "lesson": "校验器存在 ≠ 校验发生了。写入闸门必须在落盘前调用已有的校验器，否则不合规数据能合法入盘，并在下游以 TypeError 的形式伪装成程序 bug。这是本仓「存在性检查冒充验证」的同族变体，只是上移了一层",
+      "status": "candidate",
+      "confidence": 0.9,
+      "origin": {
+        "task": "hongloumeng-c",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/hongloumeng-c/repro-schema-gate.mjs",
+        "expect_exit": 0
+      }
+    },
+    {
+      "lesson": "为古籍做逐字判据前必须两份独立底本对拍；且损伤率必须同时报「接缝命中率」与「行内对照命中率」，只报前者会把繁简与版本异文的噪声当成损伤。本轮噪声本底高达 30–52%，不减掉它会把结论夸大一倍",
+      "status": "candidate",
+      "confidence": 0.9,
+      "origin": {
+        "task": "hongloumeng-c",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/hongloumeng-c/verify-corpus.mjs",
+        "expect_exit": 0
+      }
+    },
+    {
+      "lesson": "凡「我从原文提炼出来的规格」都必须配一条逐字回溯检查：每条引文必须能在落盘原文里原样找到，并且该检查本身要带反向用例（故意改字的假引文必须被抓）。凭记忆写古文错字是常态，而错字一旦进了规格，后面所有判据都建在假地基上且无人会发现",
+      "status": "candidate",
+      "confidence": 0.9,
+      "origin": {
+        "task": "hongloumeng-c",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/hongloumeng-c/verify-panci-spec.mjs --selftest",
+        "expect_exit": 0
+      }
+    },
+    {
+      "lesson": "规格文件里绝不能预填「被测对象是否满足」的结论。判词断言表只写「作者断言了什么」与「怎么判」，兑现与否由判分器单独跑——预填等于让观察器接收预期值，判分器会退化成确认偏误机",
+      "status": "candidate",
+      "confidence": 0.85,
+      "origin": {
+        "task": "hongloumeng-c",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/hongloumeng-c/verify-panci-spec.mjs",
+        "expect_exit": 0
+      }
+    }
+  ],
+  "actions": [],
+  "content_hash": "7ee4c40500adb57b0ee6a8bf0e9fca5cdb5b8b169a34f06faa16e9be9f0fcc72",
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "29ca9383-b51b-46af-94ae-64bbf6abe5d6",
+    "at": "2026-08-09T14:47:41.250Z"
+  },
+  "updated_at": "2026-08-09T14:47:41.250Z"
+}

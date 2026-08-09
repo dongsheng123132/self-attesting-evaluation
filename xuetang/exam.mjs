@@ -24,6 +24,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { findStates, readState, putState, contentHash } from '../southbridge/benjing-core.mjs';
 import { SPEC, checkRecheck, applyExam, learningId, normalizeForWrite, discriminating } from './learning-core.mjs';
+import { isNotRunnable, notRunnableReason, preflight } from './not-runnable.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -66,6 +67,13 @@ for (const it of items) {
     log(`  ○ 不可考  ${id}  ${rc.reason}`);
     continue;
   }
+  // 起飞前先看考题脚本在不在。这是确定性事实，不必先跑一遍再去猜 stderr。
+  const pre = preflight(rc.argv, ROOT);
+  if (pre) {
+    results.push({ ...it, id, result: 'error', detail: `跑不起来：${pre}`, ms: 0 });
+    log(`  ⚠ 跑不起来  ${id}  跑不起来：${pre}　(0.0s)  ${String(it.l.lesson).slice(0, 46)}`);
+    continue;
+  }
   const t0 = Date.now();
   let r;
   try {
@@ -79,6 +87,13 @@ for (const it of items) {
     result = 'error'; detail = `跑不起来：${r.error.message || r.error}`;
   } else if (r.signal) {
     result = 'error'; detail = `被信号中止 ${r.signal}（可能是超时 ${TIMEOUT}ms）`;
+  } else if (isNotRunnable(r)) {
+    // spawn 成功不等于命令跑起来了。`node 不存在的脚本.mjs` 会正常启动并退出 1，
+    // 与「断言失败」的退出码完全一样——于是「脚本还没写」被判成「经验错了」，
+    // 正是本文件开头第 8 行明令禁止的那件事。实测触发过：两条经验的 recheck
+    // 指向尚未编写的 calibrate.mjs，被判 fail。
+    result = 'error';
+    detail = `跑不起来：${notRunnableReason(r)}`;
   } else {
     const wantExit = it.l.recheck.expect_exit == null ? 0 : it.l.recheck.expect_exit;
     const wantOut = it.l.recheck.expect_stdout || '';

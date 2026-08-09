@@ -15,7 +15,9 @@ import { fileURLToPath } from 'node:url';
 import {
   SPEC, learningId, checkRecheck, checkLearning, normalizeForWrite, applyExam, collect, ALLOWED_CMDS, EXECUTION_DENIED, discriminating
 } from './learning-core.mjs';
+import { spawnSync } from 'node:child_process';
 import { checkState } from '../southbridge/schema-check.mjs';
+import { isNotRunnable, preflight } from './not-runnable.mjs';
 import { putState, contentHash, readState } from '../southbridge/benjing-core.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -109,6 +111,42 @@ t('X3.3', '【反向】error 不升也不降——跑不起来 ≠ 经验错了�
   return (a.status === 'verified' && b.status === 'candidate' && a.exam.errors === 1)
     || `a=${a.status} b=${b.status} errors=${a.exam.errors}`;
 });
+// X3.5/X3.6：分类边界。X3.3 验的是「拿到 error 之后不升不降」，但 error 得先被认出来。
+// 实测漏过：recheck 指向尚未编写的脚本，node 正常启动并退出 1，与断言失败同码，
+// 于是「脚本还没写」被判成「经验错了」——正是 exam.mjs 开头明令禁止的那件事。
+t('X3.5', '【反向】recheck 指向不存在的脚本 → 判「跑不起来」，不判「挂了」', () => {
+  const missing = path.join(SB, '这个脚本不存在.mjs');
+  const byPreflight = preflight(['node', missing], SB);
+  const r = spawnSync(process.execPath, [missing], { encoding: 'utf8' });
+  if (r.status === 0) return '前提不成立：跑不存在的脚本竟然退出 0';
+  // 两道都要成立：起飞前查得出，起飞后也认得出
+  if (!byPreflight) return '起飞前检查没发现脚本不存在';
+  return isNotRunnable(r) || `起飞后未被识别为跑不起来（status=${r.status}）`;
+});
+t('X3.7', '【反向】起飞前检查不得误伤存在的脚本', () => {
+  const f = path.join(SB, 'exists.mjs');
+  fs.writeFileSync(f, 'process.exit(0)');
+  return preflight(['node', f], SB) === null || '把存在的脚本判成了不存在';
+});
+t('X3.6', '【反向】真正的断言失败不得被洗成「跑不起来」（判宽比判窄更危险）', () => {
+  const f = path.join(SB, 'assert-fail.mjs');
+  // 业务输出里故意写上启动期错误的字样，模拟最容易误判的情况
+  fs.writeFileSync(f, 'console.error("判据失败：Cannot find module 在正典里的对应段落"); process.exit(1);');
+  const r = spawnSync(process.execPath, [f], { encoding: 'utf8' });
+  return isNotRunnable(r) === false || '业务输出里的关键字把真失败洗成了 error，经验将永不降级';
+});
+
+t('X3.8', '【反向】考题脚本故意抛错（自检失败硬抛）不得被洗成「跑不起来」', () => {
+  const f = path.join(SB, 'throws.mjs');
+  // 复刻 demo/hongloumeng-c/probe-seam.mjs 的形状：ESM 里未捕获抛出。
+  // 它的栈底必然含 ModuleJob.run / node:internal/modules 帧——第一版就是被这个骗了。
+  fs.writeFileSync(f, 'throw new Error("分回失败：底本可能残缺");');
+  const r = spawnSync(process.execPath, [f], { encoding: 'utf8' });
+  if (r.status === 0) return '前提不成立：抛错的脚本竟然退出 0';
+  if (!/node:internal\/modules/.test(r.stderr)) return '前提不成立：栈里没有模块帧，这条判据没测到它要测的东西';
+  return isNotRunnable(r) === false || '故意抛错被洗成了「跑不起来」，该降级的经验永不降级';
+});
+
 t('X3.4', '【反向】考试次数只增不减（runs 是账，不是状态）', () => {
   let n = L({ recheck: RC });
   for (const r of ['pass', 'fail', 'error', 'pass']) n = applyExam(n, r, { when: 'T' });
