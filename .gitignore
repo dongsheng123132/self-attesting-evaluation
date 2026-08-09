@@ -19,3 +19,4 @@ node_modules/
 #                              论文 §7 已如实写明「这些凭证由被记录者自己产生」——
 #                              进了 git 之后，那条弱点才算真的被修掉。
 # benxiang/observations.jsonl  「上次被独立观察是什么时候」的唯一答案来源。
+*.tmp
