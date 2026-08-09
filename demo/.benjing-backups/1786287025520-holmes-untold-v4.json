@@ -4,8 +4,8 @@
   "id": "holmes-untold",
   "title": "证明层：华生「未叙案件」状态化基准 —— 预注册因子实验",
   "goal": "用福尔摩斯正典中华生明确提及但从未展开的案件作为多个同构任务实例，做预注册的「模型 × 记忆形式」因子实验，检验「持久状态能否替代模型规模」。判据分可见集与隐藏集，隐藏集在生成阶段不可见并以 sha256 预先封存。本轨是全项目唯一承担因果主张的地方。",
-  "version": 5,
-  "updated_at": "2026-08-09T14:50:25.520Z",
+  "version": 4,
+  "updated_at": "2026-08-09T14:48:59.675Z",
   "created_at": "2026-08-09T00:00:00Z",
   "governance": {
     "tenant_id": "uking",
@@ -16,7 +16,7 @@
     "export_policy": "allow",
     "retention_days": 0
   },
-  "current_state": "V/H 判据已拆分并封存，预注册文书已成草案 v1（未生效）。 V 可见集 6 条；H 隐藏集：正典/编年 14 条（全部锚定到语料某一行，剔除 0）、跨实例 5 条、逐实例种子忠实 32 条。 H 不进 git，构造脚本进；SEAL.json 记 sha256=4a989f0e…，权威时间戳是它那次 git commit。 生效条件 1/4 已满足（封条提交于 868ef41）。**尚未跑任何一次生成，也不允许跑**——预注册 §10 的四个生效条件里，污染基线实验与提示词模板哈希两条未完成。",
+  "current_state": "V/H 判据已拆分并封存，预注册文书已成草案 v1（未生效）。 V 可见集 6 条；H 隐藏集：正典/编年 14 条（全部锚定到语料某一行，剔除 0）、跨实例 5 条、逐实例种子忠实 32 条。 H 不进 git，构造脚本进；SEAL.json 记 sha256=4a989f0e…，权威时间戳是它那次 git commit。 **尚未跑任何一次生成，也不允许跑**——预注册 §10 的四个生效条件里，污染基线实验与提示词模板哈希两条未完成。",
   "facts": [
     {
       "claim": "本轨源自 codex 独立审视的第 7 条建议与「如果只能改一件事」结论：改为预注册的模型×记忆形式因子实验，多任务实例、等算力预算、判据独立制定且生成阶段不可见",
@@ -131,14 +131,6 @@
       "source_kind": "file",
       "actor": "claude-code",
       "when": "2026-08-09"
-    },
-    {
-      "claim": "预注册生效条件 1/4 已满足：SEAL.json 与 PREREGISTRATION.md 已提交进 git（commit 868ef41，提交时间 2026-08-09T22:49:57+08:00）。此刻起 H 已固定，任何后续对 H 的改动都会被 seal.mjs --verify 抓出",
-      "verified": true,
-      "source": "可重跑命令：git log -1 --format=%H --  demo/holmes-untold/SEAL.json（得 868ef41f315c…）；node demo/holmes-untold/seal.mjs --verify（退出码 0）",
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-09"
     }
   ],
   "decisions": [
@@ -204,6 +196,7 @@
     "demo/holmes-untold/constraints-visible.json"
   ],
   "next_steps": [
+    "P0【生效条件 1/4】把 SEAL.json 与 PREREGISTRATION.md 提交进 git —— 这一刻之后才允许跑生成",
     "P0【生效条件 2/4】写死 frontier 的具体型号与版本并公布",
     "P0【生效条件 3/4】提示词模板定稿并公布其 sha256",
     "P0【生效条件 4/4】跑污染基线实验：各模型在 M0 条件下凭记忆复现正典细节与既有仿作情节的比率，先公布",
@@ -249,12 +242,12 @@
     }
   ],
   "actions": [],
-  "content_hash": "7be8760fa9dd9988b86fbe0600b4c67ac3d513fe6871c64a7b15de7530813e6b",
+  "content_hash": "eae7d1f1034310c61ae5b5a2d154168a76ebea778b0b24a748f9c1135ec4ad8a",
   "actor": {
     "harness": "claude-code",
     "model": "claude-opus-5",
     "model_source": "transcript",
     "session_id": "3edfadfa-cb79-4242-b356-7ac79e8d313e",
-    "at": "2026-08-09T14:50:25.519Z"
+    "at": "2026-08-09T14:48:59.674Z"
   }
 }
