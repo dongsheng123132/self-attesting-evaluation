@@ -12,6 +12,14 @@
 *.yml  text eol=lf
 *.yaml text eol=lf
 
+# 无扩展名，会落进 `* text=auto` 被按平台改行尾——那会让锚定的哈希在别人 clone 后对不上。
+LICENSE text eol=lf
+
+# OpenTimestamps 证明是二进制。此前它们没被改写，靠的是 git 的二进制启发式恰好识别出 NUL 字节——
+# 也就是靠运气不是靠守卫（论文案例 14 里 audit.log 留在版本控制外，也是同一种运气）。
+# 一个不含 NUL 的 .ots 会被当文本改写，证明当场作废，且没有任何东西会报错。所以显式钉死。
+*.ots  binary
+
 # Windows 原生命令脚本保留 CRLF；压缩包、Office、CAD 与图片按二进制处理。
 *.bat  text eol=crlf
 *.cmd  text eol=crlf
