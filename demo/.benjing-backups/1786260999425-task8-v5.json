@@ -4,7 +4,7 @@
   "id": "task8",
   "title": "把成果转成对外产出：论文 / 开源 / 宣发的取舍",
   "goal": "判断这套东西能写几篇论文、各自缺什么证据，把能立刻做的对外产出做掉（公开仓库的诚实 README、论文①的证据齐备稿），并明确暂不做什么（找记者）及其理由",
-  "version": 6,
+  "version": 5,
   "scope": "D:/uking编程/ShadowOS = Harness OS/papers 与 D:/uking编程/2origin-harness（公开仓库）",
   "current_state": "(a) 的证据部分完成：Appendix A 已补确切 SHA（b490d9c/7931f50/2665b01/0015ba1/0831752）与行号（benjing-core.mjs:267/428/469、verify-benjing.mjs:56），并声明 ShadowOS 侧无 git、行号有时效。案例 11→14、判据分类 5→8（新增 G 引用活过被引用物、H 规则只应用到部分站点），§6 的设计规则从 3 条扩到 6 条，§7 补了「一半证据不在版本控制里」这条不利事实。TERMINOLOGY.md 与两处命名裁决已完成并推送。剩下的是写 prose——表格现在扛着全部论证，光靠表格过不了审。",
   "facts": [
@@ -115,42 +115,6 @@
       "verified": true,
       "source": "cd \"ShadowOS = Harness OS\" && git rev-parse --is-inside-work-tree 报 fatal: not a repository；ls demo/.benjing-backups/ 为逐次写入的 <epoch>-<task>-v<n>.json；papers/self-attesting-evaluation.md §7 第三条",
       "when": "2026-08-09T14:30:00+08:00"
-    },
-    {
-      "claim": "ShadowOS 工作目录已纳入版本控制（基线提交 4525942，358 个文件），论文 §7 记的那条弱点「证据链有一半不在版本控制里、凭证由被记录者自己产生」自此可修：audit.log、demo/.benjing-backups/、benxiang/observations.jsonl 三条证据链刻意不进 .gitignore 并已提交",
-      "verified": true,
-      "source": "git -C \"D:/uking编程/ShadowOS = Harness OS\" log --oneline 得 4525942；git show --stat HEAD 得 358 files changed；.gitignore 里「刻意不忽略的」一节逐条写明理由",
-      "when": "2026-08-09T16:20:00+08:00"
-    },
-    {
-      "claim": ".claude/trace.jsonl（185.8K 逐轮会话文本）被排除在版本控制外，依据是本仓库自己的铁律「不存聊天记录，存 State + Verified Facts，聊天记录是影」；同时它若公开会与 bench/corpus.json 里「会话记录不该进公开仓库」的取舍自相矛盾",
-      "verified": true,
-      "source": ".gitignore 首条；git status --short 实测 trace.jsonl 与 nb-injected-*.json 均未进暂存区",
-      "when": "2026-08-09T16:20:00+08:00"
-    },
-    {
-      "claim": "「命名不好」这句话混着三件性质不同的事，混在一起谈会导致改了语言而缺陷还在：A 概念名（在冻结期内且在干活）、B 名实不符（是缺陷）、C 对外映射（TERMINOLOGY.md 已解决）。真正该改的只有 B",
-      "verified": true,
-      "source": "NAMING-REVIEW.md §0 三分表；TERMINOLOGY.md 开头「命名冻结管的是内部一致性，对外映射是另一件事」",
-      "when": "2026-08-09T16:20:00+08:00"
-    },
-    {
-      "claim": "southbridge/ 名实不符已量化：目录下 13 个 .mjs 分属三个协议（本境 7 个 SPEC=2origin/0.2、影核 5 个 SPEC=shadowcore/0.2、无归属 1 个 uking-heartbeat），而 TERMINOLOGY.md 定义南桥仅为 action channel（CLI/MCP 两条）——即只有 2 个文件真的是南桥。其余部件均为一目录一协议（benxiang 3 / northbridge 2 / oob 3 / xuetang 3）",
-      "verified": true,
-      "source": "ls -1 southbridge/*.mjs 得 13 个；逐文件 grep \"SPEC = \" 得 benjing-core=2origin/0.2、shadowcore-core=shadowcore/0.2；TERMINOLOGY.md 南桥行",
-      "when": "2026-08-09T16:20:00+08:00"
-    },
-    {
-      "claim": "southbridge/ 改名的爆炸半径实测 258 处：代码 import/路径 42、文档与 RFC 命令 74、两个公开仓库 34，以及**学历 facts[].source 里 108 处**。第三项是拦路虎——source 是证据指针，全局替换而不逐条复核，等于把「可复核」降级成「看起来像可复核」",
-      "verified": true,
-      "source": "grep -rn \"southbridge/\" --include=*.mjs 得 42；--include=*.md 得 74；grep -o \"southbridge/\" demo/*/task.origin.json 得 108；两个公开仓库 grep 得 34",
-      "when": "2026-08-09T16:20:00+08:00"
-    },
-    {
-      "claim": "git init 引入了一个此前不存在的风险：学历是活文件而现在受版本控制，git checkout 切分支会用提交里的版本覆盖工作区，可能静默回滚另一个并发会话刚写入的学历——乐观锁与 PreToolUse 守卫都拦不住 git 自己的写。本轮实测该分支只含两份文档、未触 demo/，切换是安全的，但这个洞在下一次分支涉及 demo/ 时就会真实存在",
-      "verified": true,
-      "source": "git diff --stat master..naming/review-0.1 仅列 NAMING-REVIEW.md 与 TERMINOLOGY.md；切回 master 后 node 读 demo/task9/task.origin.json 仍为 v2、facts 10",
-      "when": "2026-08-09T16:20:00+08:00"
     }
   ],
   "decisions": [
@@ -168,21 +132,6 @@
       "what": "案例 8（source 只查形式）与案例 10（乐观锁放过截断写入）暂不修，作为 open 写进论文",
       "why": "修掉会让 §6 的主张更漂亮但 §7 的诚实性变差。按本文自己的规则，未修就写未修",
       "when": "2026-08-09T11:30:00+08:00"
-    },
-    {
-      "what": "概念名（本象/本境/影核/北桥/南桥/学堂/学历）一个都不改",
-      "why": "命名冻结在有效期内，而推翻它等于用一次口味判断去否掉一条为防口味判断而立的规则；更实在的理由是这套隐喻在干活——正因为把系统想成主板，才问得出「七个部件装了几个」，才发现唯一没装的是本象，那一问直接定位了自证病复发五次的结构性成因",
-      "when": "2026-08-09T16:20:00+08:00"
-    },
-    {
-      "what": "southbridge/ 的迁移只出方案不执行，且前置条件是先给 dereferenceSource 加路径别名表",
-      "why": "108 处 source 是证据指针。先动文件再补别名，等于让 108 条已验证事实的证据同时断链一段时间——本仓库刚在 B12 悬空探针上确认过「基准可确认才敢说缺失」，这里要反过来用：基准还在时才敢搬家",
-      "when": "2026-08-09T16:20:00+08:00"
-    },
-    {
-      "what": "命名评估放在 naming/review-0.1 分支，主干不动一个名字",
-      "why": "用户要的是「重新审视」，不是「改完再看」。分支让方案可被推翻而不留残骸；也避免在证据指针没保护好之前造成既成事实",
-      "when": "2026-08-09T16:20:00+08:00"
     }
   ],
   "actions": [],
@@ -199,13 +148,16 @@
     "TERMINOLOGY.md 定稿后同步一份到 2origin-harness",
     "southbridge/ 目录名实不符：等有一次非做不可的改动时顺手做，改的时候用 B12 悬空报告逐条修 source",
     "论文②的四项前置：真实 memory 系统对照、重采样与置信区间、多模型多任务、重做开卷天花板的探针",
-    "crosscheck 那条旧分歧（demo/task2/actionable-notes.md 无审计记录）要么补账要么说明",
-    "southbridge/ 迁移（若决定做）四步顺序：① dereferenceSource 加路径别名表保证证据不断链 → ② git mv 分三批（本境/影核/tools）每批单独提交并跑全量 210 条判据 → ③ 用 B12 悬空报告逐条确认 108 处 source，不做全局 sed → ④ 最后更新两个公开仓库与 4 份 RFC",
-    "git 与学历的冲突面：切分支会绕过乐观锁与 PreToolUse 守卫覆盖工作区的 task.origin.json。需要一条约定或 hook——例如涉及 demo/ 的分支切换前先跑体检并要求工作区干净",
-    "把 TERMINOLOGY.md 同步一份到 2origin-harness（本轮已补学堂/经验/长循环考试三行与「名字的债」一节）"
+    "crosscheck 那条旧分歧（demo/task2/actionable-notes.md 无审计记录）要么补账要么说明"
   ],
   "learnings": [],
-  "actor": "naming-review",
-  "updated_at": "2026-08-09T07:36:39.424Z",
-  "content_hash": "14ac9c9f6d3a725b0b04fa53d0adae0700069231b44ba9fbcb33fc4fbee3de3a"
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "661d96e7-04c9-4e24-a6a1-72e6301c6a77",
+    "at": "2026-08-09T03:26:04.617Z"
+  },
+  "updated_at": "2026-08-09T03:26:04.617Z",
+  "content_hash": "b9d4c8e61d52a8d33e7d3acc10cd801fcac83cf77fe8e4896b510ccceb230c87"
 }
