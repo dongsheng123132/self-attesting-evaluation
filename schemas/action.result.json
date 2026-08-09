@@ -24,6 +24,19 @@
       "enum": ["auto", "expect_sha256", "confirm", "none"],
       "description": "expect_sha256 = 出示目标当前 hash，『证明你读过』，无头 harness 唯一拿得出的批准凭据"
     },
+    "approval_evidence": {
+      "type": ["object", "null"],
+      "description": "批准的出处（RFC-0009）。由核心自己观察进程上下文产出，不是调用方声明——驱动传什么都不影响它。approval 字段说『用了哪种凭据』，本字段说『那张凭据是谁给的』",
+      "properties": {
+        "source": {
+          "enum": ["expect_sha256", "interactive_tty", "headless_override", "none"],
+          "description": "expect_sha256=自证凭据 / interactive_tty=核心观察到 stdin 是 TTY / headless_override=SHADOWCORE_HEADLESS_CONFIRM=1 放行 / none=无凭据"
+        },
+        "self_proving": { "type": "boolean", "description": "该凭据能否被核心独立校验。true 时伪造成本等于老实做的成本" },
+        "human": { "type": ["boolean", "null"], "description": "是否有人参与。false 时不得据此认定有人批准过；null 表示该凭据与人无关" },
+        "note": { "type": "string" }
+      }
+    },
     "riskReason": { "type": "string", "description": "判级理由（人类可读）" },
     "reason": { "type": "string", "description": "失败/拒绝/需批准的原因" },
 

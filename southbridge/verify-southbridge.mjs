@@ -147,8 +147,15 @@ async function main() {
     const [hi] = await rpc([{ args: { relpath: rel('task.origin.json'), content: '{}\n', mode: 'write' } }]);
     check('T4.1 覆盖 task.origin.json = high risk', hi.risk === 'high' && hi.status === 'requires_approval', `risk=${hi.risk}`);
 
+    // T4.2 已反转（RFC-0009）。原判据断言「无头 MCP 通道带 confirm → done」——
+    // 那正是探针 R3 的行为：驱动自己打五个字母就冒充了人在环批准，而 MCP server
+    // 是被 harness spawn 的，永远没有人在那头。原判据把这个洞写成了规格。
     const [conf] = await rpc([{ args: { relpath: rel('task.origin.json'), content: '{}\n', mode: 'write', approval: 'confirm' } }]);
-    check('T4.2 显式 confirm 后放行', conf.status === 'done' && conf.approval === 'confirm', `status=${conf.status}`);
+    check('T4.2 无头 MCP 通道的 confirm 被拒（原判据把 R3 写成了规格，此处反转）',
+      conf.status === 'requires_approval' && conf.approval_evidence?.human === false,
+      `status=${conf.status} evidence=${JSON.stringify(conf.approval_evidence)}`);
+    check('T4.2b 被拒后学历文件未被改动',
+      fs.readFileSync(abs('task.origin.json'), 'utf8') === '{"spec":"2origin/0.1"}\n');
   }
 
   // ═══ T5：白名单硬边界仍在（v0.1 唯一做对的事，不能回退）═══
@@ -282,6 +289,61 @@ async function main() {
     const [w4] = await rpc([{ args: a }]);
     check('T8.7 文件被截断 → 仍判 diverged',
       w4.status === 'diverged' && w4.footprint_observed?.present === false, `status=${w4.status}`);
+  }
+
+  // ═══ T9：批准的出处（RFC-0009）—— 全部反向用例 ═══
+  //
+  // 存在理由：T6 那组 parity 判据测的是「两个守规矩的驱动彼此像不像」，
+  // 由 import 语句保证，恒绿。它测不出「一个不守规矩的驱动能不能得手」。
+  // T9 只问后者。判据来源：southbridge/probe-rogue-driver.mjs 实测（2026-08-10，2/3 得手）。
+  {
+    fs.writeFileSync(abs('t9.md'), 'v1\n', 'utf8');
+
+    // T9.1 无 trick 的硬断言：真 spawn 子进程，stdin 不是 TTY，不靠任何注入
+    const c1 = cli(['write', '--relpath', rel('t9.md'), '--content', 'v2\n', '--approval', 'confirm']);
+    check('T9.1 无头通道（真子进程，无 TTY）的 confirm 被判 requires_approval',
+      c1.result?.status === 'requires_approval' && c1.code === 2, `status=${c1.result?.status} code=${c1.code}`);
+    check('T9.2 被拒时世界未被改动', fs.readFileSync(abs('t9.md'), 'utf8') === 'v1\n');
+
+    // T9.3 逃生门：放行，但审计必须留下"不是人批的"
+    const c2 = cli(['write', '--relpath', rel('t9.md'), '--content', 'v2\n', '--approval', 'confirm'],
+      '', { SHADOWCORE_HEADLESS_CONFIRM: '1' });
+    check('T9.3 逃生门放行，但出处记为 headless_override 且 human=false（定责不落到人头上）',
+      c2.result?.status === 'done' &&
+      c2.result?.approval_evidence?.source === 'headless_override' &&
+      c2.result?.approval_evidence?.human === false,
+      `evidence=${JSON.stringify(c2.result?.approval_evidence)}`);
+    check('T9.3b 该出处进了审计，不只在 stdout（事后可查）',
+      fs.readFileSync(path.join(here, 'audit.log'), 'utf8').includes('"source":"headless_override"'));
+
+    // T9.4 自证凭据必须被标出来——两种凭据的可伪造性不同，不能一视同仁
+    fs.writeFileSync(abs('t9b.md'), 'v1\n', 'utf8');
+    const c3 = cli(['write', '--relpath', rel('t9b.md'), '--content', 'v2\n', '--expect-sha256', sha('v1\n')]);
+    check('T9.4 expect_sha256 路径标记 self_proving=true',
+      c3.result?.status === 'done' && c3.result?.approval_evidence?.self_proving === true,
+      `evidence=${JSON.stringify(c3.result?.approval_evidence)}`);
+    check('T9.5 low 风险不伪造出处（没批准就是 null，不塞个好看的值）',
+      (() => { const c = cli(['write', '--relpath', rel('t9c.md'), '--content', 'x']);
+               return c.result?.status === 'done' && c.result?.approval_evidence === null; })());
+
+    // T9.6 approval_evidence 由核心观察产出：驱动把它当参数塞进来必须无效
+    fs.writeFileSync(abs('t9d.md'), 'v1\n', 'utf8');
+    const [forge] = await rpc([{ args: {
+      relpath: rel('t9d.md'), content: 'v2\n', mode: 'write', approval: 'confirm',
+      approval_evidence: { source: 'interactive_tty', human: true }   // 驱动伪造
+    } }]);
+    check('T9.6 驱动伪造 approval_evidence 无效（该字段是观察，不是声明）',
+      forge.status === 'requires_approval' && forge.approval_evidence?.human === false,
+      `status=${forge.status} evidence=${JSON.stringify(forge.approval_evidence)}`);
+
+    // T9.7 盯着探针：R3 不复发。R2 不在此列——它已知不可修（RFC-0009 §4）
+    const probe = spawnSync(process.execPath, [path.join(here, 'probe-rogue-driver.mjs'), '--json'],
+      { encoding: 'utf8' });
+    let pj = null;
+    try { pj = JSON.parse(probe.stdout.trim().split('\n').pop()); } catch { /* 解析不了下面就红 */ }
+    check('T9.7 叛徒驱动探针：R3 不再得手', pj?.r3_forgeable === false, `probe=${JSON.stringify(pj)}`);
+    check('T9.8 探针仍诚实报告 R2 得手（不可修的洞不许被悄悄粉饰成绿）',
+      pj?.r2_bypassed === true, `probe=${JSON.stringify(pj)}`);
   }
 
   // ── 判决

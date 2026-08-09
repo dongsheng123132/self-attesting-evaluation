@@ -29,7 +29,15 @@ const USAGE = `南桥 CLI（影核 v0.2）· ShadowOS 根: ${ROOT}
 
 stdout=一行 action.result JSON；stderr=人类提示
 退出码 0=done/replayed 2=requires_approval 3=denied 4=failed/diverged 1=用法错
-长内容请用 --content-file 或 stdin（--content-file -），不要塞进 --content`;
+长内容请用 --content-file 或 stdin（--content-file -），不要塞进 --content
+
+批准凭据（RFC-0009）：
+  --expect-sha256 <hash>   自证的凭据。核心一比就知真假，伪造成本=老实做的成本。
+                           **无头 harness 请用这个**（先 verify 拿 hash）。
+  --approval confirm       人在环确认。仅当核心观察到 stdin 是 TTY 时有效；
+                           无头通道会被判 requires_approval。
+                           自动化确需自批时设 SHADOWCORE_HEADLESS_CONFIRM=1 ——
+                           照样放行，但审计从此记 human:false，别指望事后甩锅给人。`;
 
 function parseArgs(argv) {
   const out = { _: [] };

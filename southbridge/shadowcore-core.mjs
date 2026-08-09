@@ -162,17 +162,60 @@ export function assessRisk(relpath, absPath, mode) {
   return { risk: 'low', reason: mode === 'append' ? '追加写' : '新建文件' };
 }
 
+// ───────────────────────── 批准的出处（RFC-0009）─────────────────────────
+// 观察本进程处在什么上下文里。**必须由核心自己观察，不能由驱动声明**——
+// 若把这个检查放进 CLI，叛徒驱动跳过它即可，那是把 RFC-0009 §1 的 R3 原样复现。
+// 返回的是观察结果，调用方传什么都不影响它。
+export function observeApprovalContext() {
+  return {
+    tty: !!process.stdin.isTTY,
+    headless_override: process.env.SHADOWCORE_HEADLESS_CONFIRM === '1'
+  };
+}
+
 // 批准判定：low 自动放行；medium/high 必须出示凭据。
-// 关键设计：expect_sha256 是"证明你读过当前内容"——这是无头 harness 唯一拿得出的批准。
-export function checkApproval(risk, before, args) {
-  if (risk === 'low') return { ok: true, approval: 'auto' };
+//
+// 两种凭据的可伪造性根本不同，v0.2 初版却一视同仁（RFC-0009 §2 实测）：
+//   expect_sha256      —— **自证的**。核心拿 before.sha256 一比就知真假；驱动想伪造
+//                         就必须真去读文件，而真读了就真满足了"证明你读过"。
+//   approval:"confirm" —— **无出处**。核心分不清"人点了确认"和"驱动打了这五个字母"。
+// 后果不是写错文件，是事后定责会定到人头上：审计白纸黑字写着"人在环确认"。
+//
+// 所以 confirm 现在需要一个无头通道拿不到的东西。逃生门保留（见下），
+// 因为目的不是禁止自动化自批，是**让审计能区分谁批的**——堵死只会让人改代码，更查不到。
+export function checkApproval(risk, before, args, ctx = observeApprovalContext()) {
+  if (risk === 'low') return { ok: true, approval: 'auto', approval_evidence: null };
 
   const { expect_sha256, approval } = args;
   if (expect_sha256) {
-    if (expect_sha256 === before.sha256) return { ok: true, approval: 'expect_sha256' };
+    if (expect_sha256 === before.sha256) {
+      return { ok: true, approval: 'expect_sha256', approval_evidence: { source: 'expect_sha256', self_proving: true, human: null } };
+    }
     return { ok: false, approval: 'expect_sha256', reason: `expect_sha256 不匹配：目标当前 ${before.sha256}` };
   }
-  if (approval === 'confirm') return { ok: true, approval: 'confirm' };
+
+  if (approval === 'confirm') {
+    if (ctx.tty) {
+      return { ok: true, approval: 'confirm', approval_evidence: { source: 'interactive_tty', self_proving: false, human: true } };
+    }
+    if (ctx.headless_override) {
+      // 放行，但审计从此写着 human:false —— 这条记录就是本次修复的全部意义
+      return {
+        ok: true, approval: 'confirm',
+        approval_evidence: {
+          source: 'headless_override', self_proving: false, human: false,
+          note: '非人工确认：由 SHADOWCORE_HEADLESS_CONFIRM=1 放行，不得据此认定有人批准过'
+        }
+      };
+    }
+    return {
+      ok: false, approval: 'confirm',
+      approval_evidence: { source: 'none', self_proving: false, human: false },
+      reason: 'approval:"confirm" 的语义是人在环显式确认，但本进程 stdin 不是 TTY（无头通道）。' +
+              '改用 expect_sha256（自证的凭据），或显式设 SHADOWCORE_HEADLESS_CONFIRM=1 —— 后者会在审计里记为非人工批准'
+    };
+  }
+
   return { ok: false, approval: 'none', reason: `risk=${risk} 需要 expect_sha256（乐观锁）或 approval:"confirm"` };
 }
 
@@ -255,6 +298,7 @@ export function doWrite(args, actor = 'shadowcore') {
   if (!appr.ok) {
     const r = {
       ...base, status: 'requires_approval', risk, approval: appr.approval,
+      approval_evidence: appr.approval_evidence ?? null,
       reason: appr.reason, riskReason,
       current: { sha256: before.sha256, size_bytes: before.size_bytes, exists: before.exists }
     };
@@ -265,9 +309,13 @@ export function doWrite(args, actor = 'shadowcore') {
   // ── 审计闸门（fail-closed）：动世界之前先记 intent，记不下就不动
   // 「所有关键 Action 必须可审计」不是口号。审计写不进去还照做，等于这次动作
   // 事后无法定责——而定责恰恰是本协议唯一一次真正救过场的能力（§6.6 靠审计零记录定的责）。
-  if (!logAudit(actor, { ...base, kind: 'action.intent', status: 'pending', risk, approval: appr.approval })) {
+  if (!logAudit(actor, {
+    ...base, kind: 'action.intent', status: 'pending', risk,
+    approval: appr.approval, approval_evidence: appr.approval_evidence ?? null
+  })) {
     const r = {
       ...base, status: 'denied', risk, approval: appr.approval,
+      approval_evidence: appr.approval_evidence ?? null,
       reason: '审计不可写，按 fail-closed 拒绝执行（世界未被改动）', audit: 'unavailable'
     };
     return r;   // 审计都写不了，这里也不再尝试写审计
@@ -289,7 +337,7 @@ export function doWrite(args, actor = 'shadowcore') {
     if (mode === 'append') fs.appendFileSync(target, content, 'utf8');
     else fs.writeFileSync(target, content, 'utf8');
   } catch (e) {
-    const r = { ...base, status: 'failed', risk, approval: appr.approval, reason: `写失败: ${e.message}` };
+    const r = { ...base, status: 'failed', risk, approval: appr.approval, approval_evidence: appr.approval_evidence ?? null, reason: `写失败: ${e.message}` };
     logAudit(actor, r);
     return r;
   }
@@ -306,6 +354,8 @@ export function doWrite(args, actor = 'shadowcore') {
     ...base,
     status,
     risk, approval: appr.approval, riskReason,
+    // 批准的出处（RFC-0009）：核心观察所得，非调用方声明。审计据此区分"人批的"与"自动化自批的"
+    approval_evidence: appr.approval_evidence ?? null,
     evidence: after,
     state_diff: { before: { exists: before.exists, sha256: before.sha256 }, after: { exists: after.exists, sha256: after.sha256 } },
     bytes_written: expectedBytes,
@@ -351,7 +401,7 @@ export function doVerify(args, actor = 'shadowcore') {
 export const TOOLS = [
   {
     name: 'southbridge_write',
-    description: '南桥写动作（影核 v0.2）：白名单内写/追加文件。返回 action.result —— status 由写后回头观察决定，不是 exit code。medium/high 风险需 expect_sha256（乐观锁）或 approval:"confirm"。',
+    description: '南桥写动作（影核 v0.2）：白名单内写/追加文件。返回 action.result —— status 由写后回头观察决定，不是 exit code。medium/high 风险需 expect_sha256（乐观锁）；approval:"confirm" 仅在交互式 TTY 下有效，MCP 通道是无头的，请用 expect_sha256。',
     inputSchema: {
       type: 'object',
       properties: {
@@ -360,7 +410,7 @@ export const TOOLS = [
         mode: { type: 'string', enum: ['write', 'append'], default: 'write' },
         idempotency_key: { type: 'string', description: '幂等键。同 key 同请求重放不会重复写' },
         expect_sha256: { type: 'string', description: '目标当前内容的 sha256。批准破坏性写的凭据（证明你读过）' },
-        approval: { type: 'string', enum: ['confirm'], description: '人在环显式确认，用于无法先读的场景' }
+        approval: { type: 'string', enum: ['confirm'], description: '人在环显式确认。仅当核心观察到 stdin 是 TTY 时有效——无头通道拿不到 TTY，会被判 requires_approval（RFC-0009）' }
       },
       required: ['relpath', 'content']
     }
