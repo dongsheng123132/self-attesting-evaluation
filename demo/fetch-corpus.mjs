@@ -43,6 +43,69 @@ const MANIFEST = [
     url: 'https://www.gutenberg.org/cache/epub/72698/pg72698.txt',
     sha256: 'f10bc49ebd8441466a0940a0eda83a572ae90a120b1c5282e44308e00d32c5d9',
     note: '《仙后》卷二：Books IV–VII，含《变易篇》两章与 vnperfite 第八章'
+  },
+  {
+    track: 'holmes-untold',
+    file: 'demo/holmes-untold/corpus/pg244.txt',
+    url: 'https://www.gutenberg.org/cache/epub/244/pg244.txt',
+    sha256: 'b1ce37ab30c24d470681c3c2bc746be7555d2a9b63d64eb7f477fe73e09d1a8f',
+    note: '正典：A Study in Scarlet'
+  },
+  {
+    track: 'holmes-untold',
+    file: 'demo/holmes-untold/corpus/pg2097.txt',
+    url: 'https://www.gutenberg.org/cache/epub/2097/pg2097.txt',
+    sha256: '4cdea89cf6cd2567a556d0e6901edb89949dd79e200dbaf4ced4cabf1d5d2c26',
+    note: '正典：The Sign of the Four'
+  },
+  {
+    track: 'holmes-untold',
+    file: 'demo/holmes-untold/corpus/pg1661.txt',
+    url: 'https://www.gutenberg.org/cache/epub/1661/pg1661.txt',
+    sha256: '922e2a12ccb43a4c9544c260b2166c6ad2097aeb5957faeee113f173bb857cd0',
+    note: '正典：The Adventures of Sherlock Holmes'
+  },
+  {
+    track: 'holmes-untold',
+    file: 'demo/holmes-untold/corpus/pg834.txt',
+    url: 'https://www.gutenberg.org/cache/epub/834/pg834.txt',
+    sha256: '509da3f8bbdc6c3857073e74911f628eef8fea557fcb5bca9e1713c846e43ec3',
+    note: '正典：The Memoirs of Sherlock Holmes'
+  },
+  {
+    track: 'holmes-untold',
+    file: 'demo/holmes-untold/corpus/pg2852.txt',
+    url: 'https://www.gutenberg.org/cache/epub/2852/pg2852.txt',
+    sha256: 'f7c8c68729d32a5f6a04a5a9ad73d184176e66a6c76b3992c41c1ab47b427d98',
+    note: '正典：The Hound of the Baskervilles'
+  },
+  {
+    track: 'holmes-untold',
+    file: 'demo/holmes-untold/corpus/pg108.txt',
+    url: 'https://www.gutenberg.org/cache/epub/108/pg108.txt',
+    sha256: '8c4de14b3a1952417eca4673fcb1b8aa8f946f8a4164f10ec761368af34d5e5a',
+    note: '正典：The Return of Sherlock Holmes'
+  },
+  {
+    track: 'holmes-untold',
+    file: 'demo/holmes-untold/corpus/pg3289.txt',
+    url: 'https://www.gutenberg.org/cache/epub/3289/pg3289.txt',
+    sha256: '380bfdbf3ab3b2a9e1e059a17de187929f3ac91629225daa093d01b6cb348d48',
+    note: '正典：The Valley of Fear'
+  },
+  {
+    track: 'holmes-untold',
+    file: 'demo/holmes-untold/corpus/pg2350.txt',
+    url: 'https://www.gutenberg.org/cache/epub/2350/pg2350.txt',
+    sha256: 'b1afb9459790ed4601453097d5c9bcece0b84f0dbe93a9a34510a9acb844f53f',
+    note: '正典：His Last Bow'
+  },
+  {
+    track: 'holmes-untold',
+    file: 'demo/holmes-untold/corpus/pg69700.txt',
+    url: 'https://www.gutenberg.org/cache/epub/69700/pg69700.txt',
+    sha256: '91f86e29b576c27576d199a8889a85bdb297e214d18e71e12b5efe3c69c425cd',
+    note: '正典：The Case-Book of Sherlock Holmes'
   }
 ];
 

@@ -4,8 +4,8 @@
   "id": "holmes-untold",
   "title": "证明层：华生「未叙案件」状态化基准 —— 预注册因子实验",
   "goal": "用福尔摩斯正典中华生明确提及但从未展开的案件作为多个同构任务实例，做预注册的「模型 × 记忆形式」因子实验，检验「持久状态能否替代模型规模」。判据分可见集与隐藏集，隐藏集在生成阶段不可见并以 sha256 预先封存。本轨是全项目唯一承担因果主张的地方。",
-  "version": 2,
-  "updated_at": "2026-08-09T14:23:09.812Z",
+  "version": 1,
+  "updated_at": "2026-08-09T13:56:20.943Z",
   "created_at": "2026-08-09T00:00:00Z",
   "governance": {
     "tenant_id": "uking",
@@ -16,7 +16,7 @@
     "export_policy": "allow",
     "retention_days": 0
   },
-  "current_state": "P0 实例清单已冻结：从完整正典（4 长篇 + 5 短篇集，共 9 卷）抽出 32 个「华生提及但从未展开」的案件，每条带卷名、篇名、行号与原文引语，探针命中率 32/32、篇名定位 32/32。远超多实例实验所需的 12 个。 语料已全部落盘记指纹并纳入 demo/fetch-corpus.mjs（13 条全绿）。 仍未做：柯南·道尔版权状态核实、正典底本判别流程、V/H 判据拆分与 H 封存、预注册文书、污染基线实验。一次生成都还没跑。",
+  "current_state": "刚建轨，尚未开工。设计已定型（见 decisions），实例清单未冻结，判据未制定，隐藏集未封存，预注册文书未写，一次生成都还没跑。",
   "facts": [
     {
       "claim": "本轨源自 codex 独立审视的第 7 条建议与「如果只能改一件事」结论：改为预注册的模型×记忆形式因子实验，多任务实例、等算力预算、判据独立制定且生成阶段不可见",
@@ -35,38 +35,6 @@
       "claim": "华生提及但从未展开的案件数量足以支撑多实例设计（苏门答腊巨鼠、坎伯韦尔投毒案、酒商 Vamberry、铝制拐杖、Ricoletti 与其妻、Isadora Persano 与异虫、Grice Patersons 于 Uffa 岛、双科普特族长、James Phillimore 取伞、快艇 Alicia 等）",
       "verified": false,
       "when": "待核：需从正典文本逐条抽取并落盘为实例清单，给出每条的出处篇名与行号"
-    },
-    {
-      "claim": "完整正典 9 卷已落盘并记指纹，可由清单按 sha256 重建",
-      "verified": true,
-      "source": "可重跑命令：node demo/fetch-corpus.mjs --verify（13 条全部 ✓，含 holmes-untold 9 卷）",
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-09"
-    },
-    {
-      "claim": "正典中可用作实验实例的「未叙案件」共 32 条，全部带出处（卷/篇/行/引语），按卷分布：Adventures 9、Return 9、Case-Book 6、Memoirs 6、Hound 1、Sign of Four 1",
-      "verified": true,
-      "source": "可重跑命令：node demo/holmes-untold/extract-instances.mjs（退出码 0，报「命中 32/32、未命中 0」）；机器可读清单：同脚本 --json",
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-09"
-    },
-    {
-      "claim": "抽取器第一版有三个缺陷，均已修复并留注释存证：(a) UC17 探针 /cutter Alicia|Alicia/ 过宽，命中的是《贵族单身汉》里与未叙案件无关的 Lady Alicia Whittington——假阳性；(b) 逐行匹配漏掉跨行折断的短语（\"the old / Russian woman\"）——假阴性；(c) 篇名检测只认全大写，导致 Memoirs（\"VI. The Musgrave Ritual\"）与四部长篇（\"Chapter I\" + 次行标题）整卷报「未定位篇名」",
-      "verified": true,
-      "source": "文件：demo/holmes-untold/extract-instances.mjs 中 UC17 条目注释、normalize() 注释、findStoryTitle() 注释；可重跑命令：node demo/holmes-untold/extract-instances.mjs（修复后 32/32 且篇名未定位 0 条）",
-      "source_kind": "mixed",
-      "actor": "claude-code",
-      "when": "2026-08-09"
-    },
-    {
-      "claim": "「逐行匹配漏掉跨行短语」这一个病，在同一个工作会话里犯了两次：先是 demo/ulysses-19/collate.mjs 的 D1 探针假阴性（#4300 在 \"all men\" 中间折行），修完后又在 extract-instances.mjs 上原样复发（UC31）",
-      "verified": true,
-      "source": "文件：demo/ulysses-19/collate.mjs 的 classify() 空白规范化注释、demo/holmes-untold/extract-instances.mjs 的 normalize() 注释（后者明写「本轮同一个病已经在 collate.mjs 上犯过一次」）",
-      "source_kind": "file",
-      "actor": "claude-code",
-      "when": "2026-08-09"
     }
   ],
   "decisions": [
@@ -94,21 +62,12 @@
       "what": "本轨是全项目唯一承担因果主张的地方；ulysses-19 与 spenser-7-1 降为展示层",
       "why": "让抓眼球的产物不承担科学负载，科学主张也不必依赖有争议的文学诠释。两层分开发布、分开措辞。",
       "when": "2026-08-09"
-    },
-    {
-      "what": "实例清单由脚本从盘上文本抽取，不手写；抽取器必须同时报「未命中」项",
-      "why": "手写清单是「我记得正典里有这么一句」——那是记忆不是证据，而本项目每个实例都要能指回盘上某一行。只报命中项的抽取器，其失败模式与成功无法区分（papers/self-attesting-evaluation.md 的核心论点）。实际上正是「未命中」那一栏暴露了本抽取器自己的三个缺陷。",
-      "when": "2026-08-09"
     }
   ],
-  "artifacts": [
-    "demo/holmes-untold/extract-instances.mjs",
-    "demo/holmes-untold/corpus/",
-    "demo/fetch-corpus.mjs"
-  ],
+  "artifacts": [],
   "next_steps": [
-    "P0 为「跨行短语必须能被找到」写反向用例：造一份把目标短语折断的样本，断言抽取器仍能命中；这条经验现在是 candidate 且没有 recheck，因为唯一现成的命令（跑抽取器本身）是恒绿的，挂上去等于假考题",
-    "P0 正典底本判别：仿 demo/ulysses-19/collate.mjs 建一套探针，确认 9 卷 Gutenberg 文本的版本身份——#4300 的教训是「文件名写着 1922 不等于它是 1922」",
+    "P0 冻结实例清单：从正典文本逐条抽取华生提及的未叙案件，落盘为带出处篇名与行号的清单，目标 ≥12 个可用实例",
+    "P0 落盘正典语料并记指纹（Gutenberg 全集），建立与 ulysses-19 同样的底本判别流程——不要重蹈 #4300 的坑",
     "P0 核实并落盘柯南·道尔版权状态记录",
     "P0 制定判据集并拆分 V/H；H 封存后公开 sha256（预注册的密码学承诺）",
     "P0 写预注册文书：假设、臂、样本量、分析计划、停止规则，发布后才允许跑第一次生成",
@@ -134,24 +93,15 @@
         "task": "holmes-untold",
         "when": "2026-08-09"
       }
-    },
-    {
-      "lesson": "在整本书里找短语，绝不能逐行匹配——排版折行会把短语拆成两半造成假阴性。应先把全文空白折叠（并把 Gutenberg 的斜体下划线当零宽字符），在规范化文本上整体搜索，再把匹配偏移映回行号",
-      "status": "candidate",
-      "confidence": 0.9,
-      "origin": {
-        "task": "holmes-untold",
-        "when": "2026-08-09"
-      }
     }
   ],
   "actions": [],
-  "content_hash": "0485641a2584b9e7d069cd99d4a5c9ffa7c421de6ae7928b2297199be9a554fc",
+  "content_hash": "d3c107bb4f28ee5977a64ce005c2ed8d8649ac9d1a8ac855154bc9bbdebf5378",
   "actor": {
     "harness": "claude-code",
     "model": "claude-opus-5",
     "model_source": "transcript",
     "session_id": "3edfadfa-cb79-4242-b356-7ac79e8d313e",
-    "at": "2026-08-09T14:23:09.811Z"
+    "at": "2026-08-09T13:56:20.942Z"
   }
 }
