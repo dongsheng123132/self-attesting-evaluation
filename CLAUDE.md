@@ -73,9 +73,31 @@ node oob/verify-oob.mjs                  # 带外观察 v0.1，29 条判据（24
 node oob/crosscheck.mjs                  # 带外对账：学历声称 ↔ 影核审计、boot 自报 ↔ 磁盘实数（退出码 1 = 有分歧待解释）
 node southbridge/verify-todo.mjs         # 待办传播 v0.1，14 条判据（11 条反向）
 node xuetang/verify-xuetang.mjs          # 学堂 v0.1，26 条判据（17 条反向：作者自封 verified / 恒绿考题 / 空当全绿）
+node governance/verify-governance.mjs    # 治理边界 v0.1，14 条判据
+node governance/verify-anchor.mjs        # 证据锚定 v0.1，19 条判据（14 条反向：隐私泄漏 / 守卫空转 / 自证时间）
 node southbridge/benjing-todo.mjs list --dupes   # 查跨学历重复待办（退出码 2 = 有重复）
 node southbridge/verify-state.mjs demo/taskN/task.origin.json   # 单份学历
 ```
+> ⚠ 上面这些注释里的判据条数是写下那天的快照，已经落后于实际（多个会话在加判据）。
+> 要真数就跑一遍看 `判决：N/N`，**别引用本文件里的数字** —— 硬编码计数正是论文案例 9 的病。
+
+### 证据锚定：唯一不由我们自己签发的时间（governance/anchor/0.1）
+本机 git **没有 remote，commit date 可以任意伪造**，所以仓库里的任何时间主张都不可外部核验。
+锚定把「此刻盘上的证据集合」压成一个指纹，交给我们控制不了的东西盖章（OpenTimestamps → 比特币区块头）。
+
+```bash
+node governance/anchor.mjs build     # 重建清单（确定性：同盘两次逐字节相同）
+node governance/anchor.mjs stamp     # 冻结快照并提交指纹（只发 32 字节哈希，不发内容）
+node governance/anchor.mjs upgrade   # 1~24h 后把日历承诺升级成比特币区块证明
+node governance/anchor.mjs verify    # 回盘比对 + 检查外部时间锚
+# 退出码 0=一致且有外部时间锚  1=用法错  3=一致但没盖章（不给绿灯）  4=与磁盘分歧
+```
+
+- **清单里没有任何时间字段**：自己给自己写时间戳就是论文批的那个病。时间只在 `.ots` 里。
+- **锚点是冻结快照，不原地覆盖**：账本天天在长，改一个字节 `.ots` 就失效。
+  快照存 `governance/anchors/<内容哈希>.json`，文件名只用哈希——带日期的文件名仍是自证时间。
+- **排除优先于收录**：客户工作区 / 隐藏判据集 / 语料一律不锚定，且排除项只出计数不出路径（列名字本身就是泄露）。
+- 改完协议或论文后重新 `stamp`；旧锚点留着别删，它们证明的是当时的状态。
 
 ### 无头 harness 落盘走南桥 CLI（影核 v0.2）
 codex/Hermes 这类无头 harness 要往 `demo/` 写东西时，**别用它自己的写文件工具，走南桥**——受审计、有风险分级、有幂等、写后回读验证：

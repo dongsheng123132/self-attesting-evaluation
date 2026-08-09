@@ -21,6 +21,11 @@ private/
 # 南桥写入探针/覆盖备份是本机运行态；跨模型论文证据使用下面明确保留的账本与本境备份。
 southbridge/.backups/
 
+# 证据锚定的工作副本：每次 build 覆盖，且账本天天在长所以它天天变。
+# 它可由 `node governance/anchor.mjs build` 从磁盘确定性重算，进 git 只会制造噪音。
+# 有价值的是 governance/anchors/ 里那些冻结快照 + .ots（见下方"刻意不忽略"）。
+governance/anchor-manifest.json
+
 # Office/CAD/Python 临时物
 ~$*
 __pycache__/
@@ -33,6 +38,9 @@ __pycache__/
 #                              论文 §7 已如实写明「这些凭证由被记录者自己产生」——
 #                              进了 git 之后，那条弱点才算真的被修掉。
 # benxiang/observations.jsonl  「上次被独立观察是什么时候」的唯一答案来源。
+# governance/anchors/          冻结的证据快照 + OpenTimestamps 证明。这是本仓库唯一
+#                              **不由我们自己签发**的时间凭证：本机 commit date 可以任意伪造，
+#                              比特币区块头不行。删掉它们等于把优先权主张退回自证状态。
 *.tmp
 
 # 文学基准三轨的语料：公有领域原文，体积大且可由 demo/fetch-corpus.mjs 按指纹重建
