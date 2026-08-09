@@ -1,0 +1,230 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "ulysses-19",
+  "title": "A 轨（展示层）：《尤利西斯》非正典基准产物 —— 反事实缺口写作",
+  "goal": "作为展示层产物：在一处由研究者定义的反事实缺口上生成文本，用可机检约束筛查 + 盲审裁决给出可审计报告。本轨不承担因果主张（「状态胜过模型规模」由证明层 holmes-untold 承担），只负责传播与可审计性演示。",
+  "version": 3,
+  "updated_at": "2026-08-09T13:56:20.530Z",
+  "created_at": "2026-08-09T00:00:00Z",
+  "governance": {
+    "tenant_id": "uking",
+    "project_id": "benxiang-public-demo",
+    "visibility": "public",
+    "sensitivity": "public",
+    "context_access": "project",
+    "export_policy": "allow",
+    "retention_days": 0
+  },
+  "current_state": "W1：阻塞项(1) 底本已判定并解决——Gutenberg #4300 被判别器判为 POST-1922-EDITED（命中 3 条 Gabler 校订读法），不得用作原著基线；archive.org 1922 初版扫描件 OCR 判为 CONSISTENT-WITH-1922，改用它作底本权威。 本轨已按 2026-08-09 决策降为展示层：不再承担 X>Z 因果主张。 阻塞项(2) 实验设计问题随之转移到新建的证明层学历 holmes-untold。 仍未解决：Linati 图式选点地基待核（用户暂缓）；OCR 底本质量粗糙，需建勘误流程；判据未形式化；验证器未编写；正文未开写。",
+  "facts": [
+    {
+      "claim": "《尤利西斯》1922 年莎士比亚书店初版在美国与欧盟均已进入公有领域（美：1923 年前出版物；欧盟：乔伊斯 1941 年卒，life+70 于 2012 年到期）",
+      "verified": false,
+      "when": "待核：需落盘一份版权状态核查记录作为 source，URL 不算可复核物"
+    },
+    {
+      "claim": "1984/1986 Gabler《校订本》带有独立编辑版权主张，本项目全程只用 1922 初版文本",
+      "verified": false,
+      "when": "待核：同上"
+    },
+    {
+      "claim": "乔伊斯的 Linati 图式把《奥德赛》第 I–XXIII 卷映射完毕，第 XXIV 卷（第二次冥府之行 + 与拉厄耳忒斯相认）无对应回目",
+      "verified": false,
+      "when": "待核：数据源落盘后由 verify-schema 的覆盖度检查给出可重跑证据"
+    },
+    {
+      "claim": "本机已安装 codex-cli 0.147.0，可用于跨 harness 复现实验",
+      "verified": true,
+      "source": "命令：codex --version（输出 codex-cli 0.147.0）",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "源语料 Gutenberg #4300 已落盘：demo/ulysses-19/corpus/pg4300-ulysses-1922.txt，sha256=e03094626f9528cf3fc287a49d6edbdbf47cd40483cb13ceb301e74e15ebbf9e",
+      "verified": true,
+      "source": "可重跑命令：sha256sum demo/ulysses-19/corpus/pg4300-ulysses-1922.txt",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "Gutenberg #4300 的文件头不声明所据底本（Credits 仅为 EBook produced by Col Choat），不能凭文件名断定其为 1922 初版",
+      "verified": true,
+      "source": "文件：demo/ulysses-19/corpus/pg4300-ulysses-1922.txt 第 1-20 行；可重跑命令：sed -n 1,20p demo/ulysses-19/corpus/pg4300-ulysses-1922.txt",
+      "source_kind": "mixed",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "该文本第 9415 行（Scylla and Charybdis）含 \"Do you know what you are talking about? Love, yes. Word known to all men.\" 该段被广泛记述为 Gabler 1984 据罗森巴赫手稿所作恢复、1922 初版应无",
+      "verified": false,
+      "when": "部分可核：该行存在于盘上文件已验证（grep -n \"Love, yes\" demo/ulysses-19/corpus/pg4300-ulysses-1922.txt → 9415）；但「1922 初版无此句」仅有记忆与二手记述，未与扫描件比对，故整条判 false"
+    },
+    {
+      "claim": "codex（独立进程，不共享本会话上下文）对 W1 规格做了对抗性审视，判定：实验设计致命失败概率 85%、三臂公平性失败 90%、「机器可检」失实 95%、词汇年代闸失去判别力 80%、被曲解为「AI 续写名著」80%、W2 崩盘 85%、版权受阻 15%",
+      "verified": true,
+      "source": "文件：demo/ulysses-19/reviews/codex-review-2026-08-09.md（sha256=0a8bf74d42a19bf1073b667e7300ad3205f382b94b4ce0be93290199ed9e9235）；可重跑命令：codex exec --sandbox read-only < 该审视提示词",
+      "source_kind": "file",
+      "actor": "codex",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "「《奥德赛》第 XXIV 卷是 Linati 图式里唯一未映射的空位」这一核心选点依据被 codex 质疑：公开转录的 Linati 图式列的是 18 个 episode 行、而非奥德赛 24 卷覆盖表，且 Penelope 行中已出现 Laertes",
+      "verified": false,
+      "when": "待核，且这是选点的地基。必须拿到 Linati 图式的可核转录逐行比对；若质疑成立，A 轨的「唯一空位」叙事不成立，需重新选点或改叙事"
+    },
+    {
+      "claim": "Gutenberg #4300 携带后世校订（Gabler）读法，不是 1922 初版：判别器 3 条 gabler_only 探针全部命中，2 条定位锚点均在",
+      "verified": true,
+      "source": "可重跑命令：node demo/ulysses-19/collate.mjs（退出码 2；#4300 判 POST-1922-EDITED）",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "archive.org 藏本 ulyssesshake1922_1hmp（Shakespeare and Company, 1922）的 OCR 全文被同一判别器判为 CONSISTENT-WITH-1922：3 条 gabler_only 探针全不命中，2 条锚点均在",
+      "verified": true,
+      "source": "可重跑命令：node demo/ulysses-19/collate.mjs demo/ulysses-19/corpus/archive-1922-shakespeare-ocr.txt（退出码 0）",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "两版在该处的具体差异：1922 初版由 \"L’art d’être grand...\" 直接接 \"—His own image to a man...\"；#4300 在其间插入 \"Will he not see reborn in her...\" 与 \"Do you know what you are talking about? Love, yes. Word known to all men. Amor vero aliquid alicui bonum vult...\"",
+      "verified": true,
+      "source": "文件：demo/ulysses-19/corpus/archive-1922-shakespeare-ocr.txt 第 10136-10139 行 vs demo/ulysses-19/corpus/pg4300-ulysses-1922.txt 第 9409-9418 行",
+      "source_kind": "file",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "判别器 collate.mjs 的第一版对 D1 探针假阴性，原因是 #4300 在 \"all men\" 中间折行而探针未规范化空白；已修为先折叠空白再匹配",
+      "verified": true,
+      "source": "文件：demo/ulysses-19/collate.mjs 中 classify() 的空白规范化注释；可重跑命令：node demo/ulysses-19/collate.mjs（修复后 D1/D2/D3 三条全中）",
+      "source_kind": "mixed",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "对外框架定为「重建实验」而非「AI 写续集」",
+      "why": "若框架是续集，评判标准变成文学质量，deepseek 的仿作必然被英语文学圈嘲笑，本象协议一个字传不出去。重建实验的可辩护主张是「N 条机器可检约束全绿 + 跨会话跨模型只靠状态」，免疫「文笔差」攻击，且无第二家能提出。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "统一命题：只在作者本人留下的、有文档记载的空位上施工",
+      "why": "拆掉「你凭什么续」这个攻击面。A 轨的空位是乔伊斯自己的对应表算出来的（《奥德赛》XXIV 无对应回），不是我们拍脑袋选的。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "第 19 回的 Linati 行由我方按乔伊斯的行进规则推导，并全程标注 derived_by_rule=true，绝不冒充乔伊斯原有",
+      "why": "乔伊斯没有为第 19 回留下图式行。把推导值说成原有值就是 provenance 造假，正是本仓 self-attesting-evaluation 里反复抓到的那类事故。推导值必须可被读者驳回，所以要单独标注并给出推导依据。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "C0 校准闸门：6 个验证器必须先在 1922 原著上全绿，才允许开写正文",
+      "why": "若验证器判乔伊斯本人不合格，那是验证器错了，不是乔伊斯错了。没有这道闸门就无法区分「作品不合格」与「验证器有 bug」——这正是学堂判据里「恒绿考题」的反面用法。原著全绿本身也是发布时最强的可信度证明，且它在写任何一个字之前就完成了。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "词汇年代闸用 Ngrams + Wiktionary 词源近似，不用 OED，并公布该近似的误判率",
+      "why": "OED 首见年数据要钱。用近似不是问题，把近似说成精确才是问题。公布误判率是本仓的既有风格（十四次说谎那篇）。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "Hermes/deepseek 只写正文与做批量抽取，不碰判据与判分器",
+      "why": "作者不能给自己发证（学堂判据 X2.1）。让生成方定义或实现合格标准，整个实验立刻失去意义。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "底本校勘升级为 C0 之前的阻塞项：未与 1922 初版扫描件比对完成，不得开跑 C0，更不得开写正文",
+      "why": "C0 的全部意义是拿原著给验证器定基线。底本若混入 1984 校订读法，基线错得完全看不出来——6 个验证器会一起给出自信的绿。这正是 papers/self-attesting-evaluation.md 反复抓到的那类事故：报告失败的部件与失败的部件是同一个。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "在实验设计重做之前，冻结验证器工程投入",
+      "why": "codex 指出 A 臂拿到判据清单与验证器反馈可反复爬分、B/C 裸跑，测到的是「答案表 + 搜索预算」的收益而非持久状态的收益。若不先修实验设计就去写 6 个验证器，W2 的工作量会全部计入一个 W5 注定推翻的结论。先修设计，再写验证器。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "词汇年代闸改为三值输出（seen / unseen / uncertain），不再作为 pass/fail 判据，且在拿到 OED 或 EEBO 人工标注盲测集之前不声称任何误判率",
+      "why": "Ngrams 测的是扫描库里的字符串频次，不是词义级首见年；古拼写造成漏报，OCR 与错误书目年份造成伪早现，同形异义无法区分。没有人工标注盲测集就「公布误判率」本身即是一次自证。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "底本权威改为 archive.org 1922 初版扫描件 OCR；Gutenberg #4300 降级为「排印整洁的对照本」，一切读法分歧以扫描件为准，并建勘误表",
+      "why": "#4300 已被可重跑判别器证明携带 Gabler 校订读法。除基线正确性外还有法律面：Gabler 的编辑成果在部分法域有独立权利主张，而本项目的公有领域清白是发布前提。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "本轨降级为展示层，不承担因果主张；因果主张移交新建的 holmes-untold 证明轨",
+      "why": "codex 独立审视指出：单篇稿子上的 N 条相关约束不是 N 个独立样本，没有多实例、预注册与隐藏判据，X>Z 无统计识别力。让抓眼球的产物不承担科学负载，科学主张也就不必依赖一个有争议的「唯一空位」诠释。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "全线弃用「第19回」「重建」「失落章节」等措辞，改称研究者定义的反事实缺口；正文入附录，每页页首永久标注 non-canonical benchmark artifact",
+      "why": "codex 判定被媒体曲解为「AI 完成《尤利西斯》」的概率 80%。一旦提供封面、连贯全文或仿作者署名，读者会按文学仿作评价，约束实验本身就消失了。此外也规避 passing-off 风险。",
+      "when": "2026-08-09"
+    }
+  ],
+  "artifacts": [
+    "demo/ulysses-19/collate.mjs",
+    "demo/ulysses-19/corpus/",
+    "demo/ulysses-19/reviews/codex-review-2026-08-09.md"
+  ],
+  "next_steps": [
+    "P0 扩充 collate.mjs 的判别集：再取 20 处已知两版分歧点，把「抽样 20 处」这一承诺变成可重跑判据（当前只有 3 条探针，全部集中在同一段落）",
+    "P1 建立 OCR 勘误流程：扫描件 OCR 质量粗糙（如 L’art d’étre、—Thope），需定义「以扫描件定读法、以 #4300 定排印」的合并规则并可重跑",
+    "P0【阻塞·地基】核实 Linati 图式：拿可核转录逐行比对，判定「奥德赛 XXIV 唯一未映射」是否成立；不成立则 A 轨选点叙事必须改写",
+    "P1 评估 codex 的替代靶子建议：福尔摩斯正典中华生提及的「未叙案件」集合——同一任务结构可得十余个实例，支持 hidden test set 与统计效力；需先排查训练集污染与既有仿作",
+    "P1 命名与措辞整改：全线弃用「第19回」「重建」「失落章节」，改称研究者定义的反事实缺口；正文入附录，每页页首永久标注 non-canonical benchmark artifact",
+    "P1 排期补 W4 与返工余量：codex 指出现排期无 W4，未给盲审、误差标注、预实验、返工留时间",
+    "W1-2 把版权状态核查写成可复核物落盘，替换 facts 里两条 verified=false 的版权声明",
+    "W1-3 冻结判据集 U1–U7 的形式化定义（每条：判什么 / 数据源 / 通过条件 / 反向用例长什么样）",
+    "W1-4 声明并公开第 19 回的 Linati 行推导依据（Ep16/17/18 三行的行进规则 → Ep19 各栏取值）",
+    "W2-1 实现 6 个验证器 verify-schema / verify-topo / verify-clock / verify-canon / verify-lexicon / verify-motif，每个配反向用例（按本仓 oob 惯例，反向用例应占多数）",
+    "W2-2 跑 C0 校准闸门：6 个验证器在 1922 原著 18 回上全绿；不绿就改验证器，不改乔伊斯",
+    "W3-1 用 Hermes 起草正文（长提示词写 task.md，命令行只传短路径）",
+    "W5-1 跑 A/B/C 三臂实验并统计约束通过率",
+    "W5-2 假绿排查：抽查验证器判过的条目，公布假绿数",
+    "W6-1 发布物：GitHub 仓库 + 白皮书 + Constraint Bounty 页（hefangsheng@gmail.com）",
+    "待定：X<Z（有状态的廉价模型输给无状态的前沿模型）时怎么发——按本仓规矩必须照实发，但发布策略未定"
+  ],
+  "learnings": [
+    {
+      "lesson": "任何「作品合格性」验证器，必须先在被续作品的原著上跑绿（校准闸门），否则无法区分「新作不合格」与「验证器有 bug」",
+      "status": "candidate",
+      "confidence": 0.8,
+      "origin": {
+        "task": "ulysses-19",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/ulysses-19/calibrate.mjs --against-original",
+        "expect_exit": 0
+      }
+    },
+    {
+      "lesson": "给一个「留下联系方式」的公开作品配悬赏（找到我们漏掉的约束违例就署名公布），比放 Contact us 有效——它给了对方写信的理由，并把最挑剔的人群变成免费的对抗性测试者",
+      "status": "candidate",
+      "confidence": 0.5,
+      "origin": {
+        "task": "ulysses-19",
+        "when": "2026-08-09"
+      }
+    }
+  ],
+  "actions": [],
+  "content_hash": "06e78a425db3dab6be2b4875ac6b1c8564f0d3feaf2b6683f8c5698b097845ae",
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "3edfadfa-cb79-4242-b356-7ac79e8d313e",
+    "at": "2026-08-09T13:56:20.530Z"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "spenser-7-1",
+  "title": "B 轨：《仙后》第七卷第一章（Of Constancie）——验证器硬度演示",
+  "goal": "在斯宾塞《致罗利书》写明、但从未动笔的空位上施工：写出第七卷第一章，并用 100% 机器可判的格律约束（ABABBCBCC + 抑扬五音步 + 亚历山大格收尾）证明约束满足；本轨的职责不是声量，是把「机器可检」这件事做到无可辩驳。",
+  "version": 1,
+  "updated_at": "2026-08-09T13:32:28.996Z",
+  "created_at": "2026-08-09T00:00:00Z",
+  "governance": {
+    "tenant_id": "uking",
+    "project_id": "benxiang-public-demo",
+    "visibility": "public",
+    "sensitivity": "public",
+    "context_access": "project",
+    "export_policy": "allow",
+    "retention_days": 0
+  },
+  "current_state": "W1 规格冻结阶段。判据集 S1/S2 已声明，空位依据已确认（《致罗利书》12 卷 12 德目，第七卷 Of Constancie 仅存「变易篇」残卷，编号为该卷第 VI/VII/VIII 章，第 i–v 章从未写过）。数据源未落盘，2 个验证器未编写，C0 校准闸门未跑。正文未开写。",
+  "facts": [
+    {
+      "claim": "《仙后》全部文本及斯宾塞《致罗利书》处于公有领域（斯宾塞 1599 年卒）",
+      "verified": false,
+      "when": "待核：需落盘版权状态核查记录作为 source"
+    },
+    {
+      "claim": "第七卷仅存「变易篇」残卷，被编为该卷第 VI、VII 章及第 VIII 章的两节；第 i–v 章不存在任何文本",
+      "verified": false,
+      "when": "待核：数据源落盘后由 verify-allegory 的覆盖度检查给出可重跑证据"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "合格线设为「斯宾塞本人在现存 6 卷里的违规率」，不是 100%",
+      "why": "斯宾塞自己有为数不少的不规则诗节（音节数、韵脚、古拼写变体）。把合格线定成 100% 会造出一个连原作者都通不过的验证器，那不是严格，是错。C0 校准的产出不只是「绿/不绿」，而是一个测出来的基线数字——我们的新章必须落在斯宾塞自己的分布内，这个判据比 100% 更难伪造，也更诚实。同一条原则适用于 A 轨。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "第一章必须与现存的「变易篇」（同卷靠后的第 VI–VIII 章）不矛盾",
+      "why": "这是本轨最像红楼梦判词的一条：残卷在时间上位于本章之后，因此本章必须把残卷所预设的人物、地点、德目框架铺设好。它是一条真正的、外部给定的、不可协商的连续性约束——不是我们自己发明的考题。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "B 轨定位为「验证器硬度演示」，不承担传播指标",
+      "why": "《仙后》的大众声量远低于《尤利西斯》。双轨分工：A 轨扛声量并承受争议，B 轨提供一个 100% 可判、无解释空间的证据——当有人质疑 A 轨的判据主观时，B 轨是不需要辩论的那一半。",
+      "when": "2026-08-09"
+    }
+  ],
+  "artifacts": [],
+  "next_steps": [
+    "W1-1 落盘数据源并记录指纹：Gutenberg《仙后》全六卷 + 变易篇、《致罗利书》、CMU Pronouncing Dictionary、早期现代英语音节化回退词表",
+    "W1-2 冻结判据 S1.1–S1.6（诗节行数 / ABABBCBCC / 1–8 行抑扬五音步 / 第 9 行亚历山大格 12 音节 / 每章 argument 四行 / 词汇须见于斯宾塞语料或 1600 年前有据）",
+    "W1-3 冻结判据 S2.1–S2.4（德目=Constancy / 主角骑士具名且一致 / 与变易篇残卷不矛盾 / 章数符合斯宾塞成卷惯例）",
+    "W2-1 实现 verify-stanza 与 verify-allegory，各配反向用例",
+    "W2-2 跑 C0 校准：在现存 6 卷 + 变易篇上跑，产出斯宾塞本人的违规率基线（这个数字就是合格线）",
+    "W3-1 Hermes 起草约 50–60 个诗节；格律迭代交给廉价通道反复跑，判分只由验证器给",
+    "W5-1 参与 A/B/C 三臂统计（本轨的通过率是三臂里最不可争辩的一组数）",
+    "W6-1 与 A 轨合并进同一份白皮书与同一个 Constraint Bounty 页"
+  ],
+  "learnings": [
+    {
+      "lesson": "为「像不像原作者」设验证器时，合格线应取原作者本人在其语料上的实测违规率，而不是理论上的 100%——定成 100% 会造出一个连原作者都判不合格的验证器",
+      "status": "candidate",
+      "confidence": 0.85,
+      "origin": {
+        "task": "spenser-7-1",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/spenser-7-1/calibrate.mjs --baseline",
+        "expect_exit": 0
+      }
+    }
+  ],
+  "actions": [],
+  "content_hash": "bb342a5ac4cef2ed36267d0ab0a4fdc54a927e24f9889c0d039b9071be7b30f1",
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "3edfadfa-cb79-4242-b356-7ac79e8d313e",
+    "at": "2026-08-09T13:32:28.996Z"
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "ulysses-19",
+  "title": "A 轨：《尤利西斯》第 19 回（对应《奥德赛》第 24 卷）——重建实验",
+  "goal": "在乔伊斯自己的 Linati 对应表里唯一留空的那一格上施工：写出《尤利西斯》第 19 回，并用 6 类机器可检约束证明它满足约束；真正要证明的不是文笔，而是「跨会话/跨 harness/跨模型、只靠状态不靠聊天记录」能完成人类文学中最难的连续性任务。",
+  "version": 1,
+  "updated_at": "2026-08-09T13:32:28.879Z",
+  "created_at": "2026-08-09T00:00:00Z",
+  "governance": {
+    "tenant_id": "uking",
+    "project_id": "benxiang-public-demo",
+    "visibility": "public",
+    "sensitivity": "public",
+    "context_access": "project",
+    "export_policy": "allow",
+    "retention_days": 0
+  },
+  "current_state": "W1 规格冻结阶段。判据集与 Linati 第 19 行已声明（其中 Ep19 行为我方按规则推导，非乔伊斯原有，见 decisions）。数据源尚未落盘，6 个验证器尚未编写，原著校准（C0 闸门）尚未通过。正文一个字都还没写，也不允许在 C0 通过前开写。",
+  "facts": [
+    {
+      "claim": "《尤利西斯》1922 年莎士比亚书店初版在美国与欧盟均已进入公有领域（美：1923 年前出版物；欧盟：乔伊斯 1941 年卒，life+70 于 2012 年到期）",
+      "verified": false,
+      "when": "待核：需落盘一份版权状态核查记录作为 source，URL 不算可复核物"
+    },
+    {
+      "claim": "1984/1986 Gabler《校订本》带有独立编辑版权主张，本项目全程只用 1922 初版文本",
+      "verified": false,
+      "when": "待核：同上"
+    },
+    {
+      "claim": "乔伊斯的 Linati 图式把《奥德赛》第 I–XXIII 卷映射完毕，第 XXIV 卷（第二次冥府之行 + 与拉厄耳忒斯相认）无对应回目",
+      "verified": false,
+      "when": "待核：数据源落盘后由 verify-schema 的覆盖度检查给出可重跑证据"
+    },
+    {
+      "claim": "本机已安装 codex-cli 0.147.0，可用于跨 harness 复现实验",
+      "verified": true,
+      "source": "命令：codex --version（输出 codex-cli 0.147.0）",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "对外框架定为「重建实验」而非「AI 写续集」",
+      "why": "若框架是续集，评判标准变成文学质量，deepseek 的仿作必然被英语文学圈嘲笑，本象协议一个字传不出去。重建实验的可辩护主张是「N 条机器可检约束全绿 + 跨会话跨模型只靠状态」，免疫「文笔差」攻击，且无第二家能提出。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "统一命题：只在作者本人留下的、有文档记载的空位上施工",
+      "why": "拆掉「你凭什么续」这个攻击面。A 轨的空位是乔伊斯自己的对应表算出来的（《奥德赛》XXIV 无对应回），不是我们拍脑袋选的。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "第 19 回的 Linati 行由我方按乔伊斯的行进规则推导，并全程标注 derived_by_rule=true，绝不冒充乔伊斯原有",
+      "why": "乔伊斯没有为第 19 回留下图式行。把推导值说成原有值就是 provenance 造假，正是本仓 self-attesting-evaluation 里反复抓到的那类事故。推导值必须可被读者驳回，所以要单独标注并给出推导依据。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "C0 校准闸门：6 个验证器必须先在 1922 原著上全绿，才允许开写正文",
+      "why": "若验证器判乔伊斯本人不合格，那是验证器错了，不是乔伊斯错了。没有这道闸门就无法区分「作品不合格」与「验证器有 bug」——这正是学堂判据里「恒绿考题」的反面用法。原著全绿本身也是发布时最强的可信度证明，且它在写任何一个字之前就完成了。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "词汇年代闸用 Ngrams + Wiktionary 词源近似，不用 OED，并公布该近似的误判率",
+      "why": "OED 首见年数据要钱。用近似不是问题，把近似说成精确才是问题。公布误判率是本仓的既有风格（十四次说谎那篇）。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "Hermes/deepseek 只写正文与做批量抽取，不碰判据与判分器",
+      "why": "作者不能给自己发证（学堂判据 X2.1）。让生成方定义或实现合格标准，整个实验立刻失去意义。",
+      "when": "2026-08-09"
+    }
+  ],
+  "artifacts": [],
+  "next_steps": [
+    "W1-1 落盘数据源并记录指纹：Gutenberg #4300（1922 初版正文）、Thom's Official Directory 1904（archive.org, PD）、Google Books Ngrams 首现表、CMU Pronouncing Dictionary",
+    "W1-2 把版权状态核查写成可复核物落盘，替换 facts 里两条 verified=false 的版权声明",
+    "W1-3 冻结判据集 U1–U7 的形式化定义（每条：判什么 / 数据源 / 通过条件 / 反向用例长什么样）",
+    "W1-4 声明并公开第 19 回的 Linati 行推导依据（Ep16/17/18 三行的行进规则 → Ep19 各栏取值）",
+    "W2-1 实现 6 个验证器 verify-schema / verify-topo / verify-clock / verify-canon / verify-lexicon / verify-motif，每个配反向用例（按本仓 oob 惯例，反向用例应占多数）",
+    "W2-2 跑 C0 校准闸门：6 个验证器在 1922 原著 18 回上全绿；不绿就改验证器，不改乔伊斯",
+    "W3-1 用 Hermes 起草正文（长提示词写 task.md，命令行只传短路径）",
+    "W5-1 跑 A/B/C 三臂实验并统计约束通过率",
+    "W5-2 假绿排查：抽查验证器判过的条目，公布假绿数",
+    "W6-1 发布物：GitHub 仓库 + 白皮书 + Constraint Bounty 页（hefangsheng@gmail.com）",
+    "待定：X<Z（有状态的廉价模型输给无状态的前沿模型）时怎么发——按本仓规矩必须照实发，但发布策略未定"
+  ],
+  "learnings": [
+    {
+      "lesson": "任何「作品合格性」验证器，必须先在被续作品的原著上跑绿（校准闸门），否则无法区分「新作不合格」与「验证器有 bug」",
+      "status": "candidate",
+      "confidence": 0.8,
+      "origin": {
+        "task": "ulysses-19",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/ulysses-19/calibrate.mjs --against-original",
+        "expect_exit": 0
+      }
+    },
+    {
+      "lesson": "给一个「留下联系方式」的公开作品配悬赏（找到我们漏掉的约束违例就署名公布），比放 Contact us 有效——它给了对方写信的理由，并把最挑剔的人群变成免费的对抗性测试者",
+      "status": "candidate",
+      "confidence": 0.5,
+      "origin": {
+        "task": "ulysses-19",
+        "when": "2026-08-09"
+      }
+    }
+  ],
+  "actions": [],
+  "content_hash": "3793eb62c0f964dda8d9eb16f72170832b421403d8ef7bb146d7d845efada626",
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "3edfadfa-cb79-4242-b356-7ac79e8d313e",
+    "at": "2026-08-09T13:32:28.878Z"
+  }
+}

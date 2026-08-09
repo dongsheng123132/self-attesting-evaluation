@@ -34,3 +34,8 @@ __pycache__/
 #                              进了 git 之后，那条弱点才算真的被修掉。
 # benxiang/observations.jsonl  「上次被独立观察是什么时候」的唯一答案来源。
 *.tmp
+
+# 文学基准三轨的语料：公有领域原文，体积大且可由 demo/fetch-corpus.mjs 按指纹重建
+demo/ulysses-19/corpus/
+demo/spenser-7-1/corpus/
+demo/holmes-untold/corpus/

@@ -1,0 +1,116 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "spenser-7-1",
+  "title": "B 轨（展示层）：《恒常之传奇》第一章 —— 格律可判性演示",
+  "goal": "作为展示层产物：在斯宾塞《致罗利书》写明、但从未动笔的位置生成一章，用高度自动化的格律筛查给出可审计报告。本轨不承担因果主张，职责是提供一组解释空间最小的自动判据，当有人质疑 A 轨判据主观时作为对照。",
+  "version": 3,
+  "updated_at": "2026-08-09T13:56:20.783Z",
+  "created_at": "2026-08-09T00:00:00Z",
+  "governance": {
+    "tenant_id": "uking",
+    "project_id": "benxiang-public-demo",
+    "visibility": "public",
+    "sensitivity": "public",
+    "context_access": "project",
+    "export_policy": "allow",
+    "retention_days": 0
+  },
+  "current_state": "W1 进行中。源语料已落盘并记指纹（Gutenberg #70717 卷一、#72698 卷二，后者含《变易篇》两章 + 未完成的第八章）。空位依据已由盘上文本实证：《恒常之传奇》仅存编号 VI、VII 的两章与 vnperfite 的第 VIII 章，第 i–v 章不存在。判据 S1/S2 已声明但未形式化，2 个验证器未编写，C0 校准未跑，正文未开写。 已按 2026-08-09 决策降为展示层：不承担 X>Z 因果主张，该主张由 holmes-untold 证明轨承担。",
+  "facts": [
+    {
+      "claim": "《仙后》全部文本及斯宾塞《致罗利书》处于公有领域（斯宾塞 1599 年卒，life+70 早已届满；1609 对开本亦无在世版权）",
+      "verified": false,
+      "when": "待核：需落盘版权状态核查记录作为 source"
+    },
+    {
+      "claim": "《恒常之传奇》（Legend of Constancie）现存文本仅为编号 Canto VI、Canto VII 的两章，加上标注 vnperfite 的第 VIII 章残篇；第 i–v 章不存在任何文本",
+      "verified": true,
+      "source": "文件：demo/spenser-7-1/corpus/pg72698.txt 第 19487–19497 行（TWO CANTOS OF MVTABILITIE … VNDER THE LEGEND OF Constancie）、第 19503 行（Canto VI.）、第 20082 行（Canto VII.）、第 20727 行（_The VIII. Canto, vnperfite._）；可重跑命令：grep -nE \"Canto VI.|Canto VII.|vnperfite\" demo/spenser-7-1/corpus/pg72698.txt",
+      "source_kind": "mixed",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "1609 对开本自己只说这两章「appeare to be parcell of some following Booke of the FAERIE QVEENE」——把它们定为「第七卷」是后世编辑传统的推断，不是斯宾塞的编号",
+      "verified": true,
+      "source": "文件：demo/spenser-7-1/corpus/pg72698.txt 第 19491–19493 行（原文如上引）",
+      "source_kind": "file",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    },
+    {
+      "claim": "源语料已落盘并记指纹：pg70717.txt（卷一，Books I–III）sha256=50c39558176779d02f3e9b3498f235e353489f5f51e7cd41527c6eb9ff819d4e；pg72698.txt（卷二，Books IV–VII）sha256=f10bc49ebd8441466a0940a0eda83a572ae90a120b1c5282e44308e00d32c5d9",
+      "verified": true,
+      "source": "可重跑命令：sha256sum demo/spenser-7-1/corpus/pg70717.txt demo/spenser-7-1/corpus/pg72698.txt",
+      "source_kind": "command",
+      "actor": "claude-code",
+      "when": "2026-08-09"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "合格线设为「斯宾塞本人在现存 6 卷里的违规率」，不是 100%",
+      "why": "斯宾塞自己有为数不少的不规则诗节（音节数、韵脚、古拼写变体）。把合格线定成 100% 会造出一个连原作者都通不过的验证器，那不是严格，是错。C0 校准的产出不只是「绿/不绿」，而是一个测出来的基线数字——我们的新章必须落在斯宾塞自己的分布内，这个判据比 100% 更难伪造，也更诚实。同一条原则适用于 A 轨。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "第一章必须与现存的「变易篇」（同卷靠后的第 VI–VIII 章）不矛盾",
+      "why": "这是本轨最像红楼梦判词的一条：残卷在时间上位于本章之后，因此本章必须把残卷所预设的人物、地点、德目框架铺设好。它是一条真正的、外部给定的、不可协商的连续性约束——不是我们自己发明的考题。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "B 轨定位为「验证器硬度演示」，不承担传播指标",
+      "why": "《仙后》的大众声量远低于《尤利西斯》。双轨分工：A 轨扛声量并承受争议，B 轨提供一个 100% 可判、无解释空间的证据——当有人质疑 A 轨的判据主观时，B 轨是不需要辩论的那一半。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "对外一律称《恒常之传奇》第一章（Canto i of the Legend of Constancie），「第七卷」只作为括注的通行叫法出现",
+      "why": "1609 对开本原文只说这两章「似乎属于某个后续之卷」，卷号是编辑推断。我们的整个卖点是 provenance 严谨；在最容易被专家一眼看穿的地方用一个不属于原作者的编号，等于把刀递给对方。",
+      "when": "2026-08-09"
+    },
+    {
+      "what": "本轨降级为展示层；同时接受 codex 的判据降级——格律不是 100% 自动可判",
+      "why": "codex 指出抑扬格、历史发音、eye rhyme、德目是否真正体现都存在歧义，「100% 机器可判」是过度声称。改称「自动筛查 + 盲审裁决」，并报告评审一致率（inter-rater agreement）。",
+      "when": "2026-08-09"
+    }
+  ],
+  "artifacts": [],
+  "next_steps": [
+    "W1-1b 补落盘：CMU Pronouncing Dictionary + 早期现代英语音节化回退词表（斯宾塞古拼写 CMU 覆盖不到）",
+    "W1-2 冻结判据 S1.1–S1.6（诗节行数 / ABABBCBCC / 1–8 行抑扬五音步 / 第 9 行亚历山大格 12 音节 / 每章 argument 四行 / 词汇须见于斯宾塞语料或 1600 年前有据）",
+    "W1-3 冻结判据 S2.1–S2.4（德目=Constancy / 主角骑士具名且一致 / 与变易篇残卷不矛盾 / 章数符合斯宾塞成卷惯例）",
+    "W2-1 实现 verify-stanza 与 verify-allegory，各配反向用例",
+    "W2-2 跑 C0 校准：在现存 6 卷 + 变易篇上跑，产出斯宾塞本人的违规率基线（这个数字就是合格线）",
+    "W3-1 Hermes 起草约 50–60 个诗节；格律迭代交给廉价通道反复跑，判分只由验证器给",
+    "W5-1 参与 A/B/C 三臂统计（本轨的通过率是三臂里最不可争辩的一组数）",
+    "W6-1 与 A 轨合并进同一份白皮书与同一个 Constraint Bounty 页",
+    "W1-4 核实并落盘版权状态记录，替换 facts 里那条 verified=false",
+    "P1 判据措辞整改：把「100% 机器可判」改为「自动筛查 + 盲审裁决」，并设计评审一致率的测量方式"
+  ],
+  "learnings": [
+    {
+      "lesson": "为「像不像原作者」设验证器时，合格线应取原作者本人在其语料上的实测违规率，而不是理论上的 100%——定成 100% 会造出一个连原作者都判不合格的验证器",
+      "status": "candidate",
+      "confidence": 0.85,
+      "origin": {
+        "task": "spenser-7-1",
+        "when": "2026-08-09"
+      },
+      "recheck": {
+        "kind": "command",
+        "run": "node demo/spenser-7-1/calibrate.mjs --baseline",
+        "expect_exit": 0
+      }
+    }
+  ],
+  "actions": [],
+  "content_hash": "09b93a7e97af09a30e1e776dac5ae5c1841ae6906f5435732a232dc497d7f259",
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "3edfadfa-cb79-4242-b356-7ac79e8d313e",
+    "at": "2026-08-09T13:56:20.782Z"
+  }
+}
