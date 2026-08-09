@@ -1,0 +1,32 @@
+{
+  "_note": "引文台账。每条 = arXiv id → 该 id 在 arXiv 上的真实标题。verify-citations.mjs 逐条回查；标题对不上即红。写错 id、论文撤稿、编造条目都会被抓到。",
+  "_recheck": "node research/verify-citations.mjs",
+  "briefing_2026_08_10": {
+    "_source": "一份外部 AI 简报（无引用），2026-08-10 由用户粘贴；本台账是对它的逐条核验结果",
+    "2608.00808": "Turning Interaction History into Execution State: A Runtime Layer for Long-Horizon Coding Agents",
+    "2606.06090": "Beyond Semantic Organization: Memory as Execution State Management for Long-Horizon Agents",
+    "2608.01964": "LongHorizon-Harness: Advancing Long-Horizon Agents for Real-World Tasks",
+    "2607.11388": "StructAgent: Harness Long-horizon Digital Agents with Unified Causal Structure",
+    "2607.00692": "Self-GC: Self-Governing Context for Long-Horizon LLM Agents",
+    "2608.01918": "HarnessCompass: Guiding Automatic Harness Evolution toward Generalizable and Effective Agent Harnesses",
+    "2606.06324": "From Failed Trajectories to Reliable LLM Agents: Diagnosing and Repairing Harness Flaws",
+    "2607.26598": "Living-Harness Is an Interactive-Agent Evolver",
+    "2608.04968": "EvolveNet: Collaborative Harness Evolution for Agent Self-Improvement",
+    "2606.23449": "AOHP: An Open-Source OS-Level Agent Harness for Personalized, Efficient and Secure Interaction",
+    "2607.10487": "Temporary Authority, Permanent Effects: Commit-Time Authorization for LLM Agents",
+    "2606.09426": "WeaveBench: A Long-Horizon, Real-World Benchmark for Computer-Use Agents with Hybrid Interfaces"
+  },
+  "supplementary_2026_08_10": {
+    "_source": "简报未提及，2026-08-10 顺着内容补搜到，与本仓库既有部件直接对位",
+    "2606.15376": "CoAgent: Concurrency Control for Multi-Agent Systems",
+    "2604.09744": "MPAC: A Multi-Principal Agent Coordination Protocol for Interoperable Multi-Agent Collaboration",
+    "2607.22711": "CORVUS: Context Optimization and Reduction Via Underlying Synchronization for LLM Coding Agents",
+    "2605.20744": "Hack-Verifiable Environments: Towards Evaluating Reward Hacking at Scale",
+    "2607.18575": "RECEIPT: Deterministic, Reward-Hacking-Resistant Verification for White-Box Agentic XSS Discovery",
+    "2506.07564": "SAFEFLOW: A Principled Protocol for Trustworthy and Transactional Autonomous Agent Systems",
+    "2604.06693": "Aegon: Auditable AI Content Access with Ledger-Bound Tokens and Hardware-Attested Mobile Receipts",
+    "2608.03222": "Fail-Fast, Restart-Smart: Early Failure Prediction and Restart for SWE Agentic Tasks",
+    "2602.04284": "Agent-Omit: Adaptive Context Omission for Efficient LLM Agents",
+    "2608.03699": "TARL: Transaction-Aware Reliable Ledgers for Executable Memory Management in Long-Term Agents"
+  }
+}
