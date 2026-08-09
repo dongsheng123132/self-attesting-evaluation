@@ -17,6 +17,9 @@
 | 学历 | **task state**（文件）/ *academic record*（比喻） | 一个任务的 `task.origin.json`：状态 + 已验证事实 + 决策 + 下一步。**不是聊天记录** | `demo/*/task.origin.json` | `2origin/0.2` |
 | 本象 | **the observer** | 「看世界」的唯一实现。铁律：`observe()` 永不接收预期——观察器一旦收预期就退化成确认偏误机 | `benxiang/observe.mjs` | `benxiang/0.1` |
 | 北桥 | **context compiler** | 把状态编译进上下文窗口。两个时刻：boot（无 goal，确定性）与 request（goal 出现后才做相关性） | `northbridge/compile.mjs` | `northbridge/0.2` |
+| 学堂 | **the school** / *learning loop* | 经验的产生、升降级与装载。核心规则：learning 的 `recheck` 必须是可重跑的动作——没有它，这条经验永远无法被推翻，也就永远不该叫 verified | `xuetang/learning-core.mjs`、`exam.mjs` | `xuetang/0.1` |
+| 经验 | **learning** | 「下次别再这样」。与 fact（「这个任务发生过什么」）分属两类：fact 要 `source` 引可复核物，learning 要 `recheck` 是可重跑命令 | `demo/*/task.origin.json` 的 `learnings[]` | `xuetang/0.1` |
+| 长循环考试 | **the exam** | 把每条 verified 经验的 `recheck` 再跑一遍，跑挂当场降级。「一次成功不是永久真理」的机械化 | `xuetang/exam.mjs` | `xuetang/0.1` |
 | 南桥 | **action channel** | 把动作请求送到影核的**通道**。目前两条：CLI（给无头 harness）与 MCP。两条通道判决一致是**验证出来的**，不是假设 | `southbridge/southbridge-cli.mjs`、`southbridge-mcp.mjs` | `shadowcore/0.2` §双驱动 parity |
 | 影核 | **action kernel** | 动作的**核**：风险判级、批准模型、审计落盘、幂等、写后回读观察 | `southbridge/shadowcore-core.mjs` | `shadowcore/0.2` |
 | 带外观察 | **out-of-band check** | 不通过被观察者自己的自述去核对它。学历声称 ↔ 影核审计 ↔ 磁盘实数 | `oob/` | `oob/0.1` |
@@ -81,3 +84,20 @@
 - [ ] 改公开仓库 README 开头的 "persists credentials" → "persists task state"（与本表 §2 裁决一致）
 - [ ] 本表定稿后同步一份到 `2origin-harness`，公开仓库的英文读者是主要受众
 - [ ] `southbridge/` 目录名实不符：记录在案，等有一次非做不可的改动时顺手做，别为它单开一次重构
+
+---
+
+## 名字的债（哪些名字现在是**假的**）
+
+对外映射解决"该叫它什么"，但有一类问题映射解决不了：**目录名声称的内容与实际内容不符**。
+这不是翻译问题，是「声明冒充事实」在文件系统层的形态，与"没人加载的 schema"同型。
+
+| 位置 | 声称 | 实际 | 状态 |
+|---|---|---|---|
+| `southbridge/` | 南桥 = action channel，两条通道（CLI / MCP） | 13 个 `.mjs` 分属三个协议：本境 7 个、影核 5 个、无归属 1 个。**只有 2 个真的是南桥** | 已量化，**未修** |
+
+爆炸半径实测 258 处，其中 **108 处在学历的 `facts[].source` 里**——那是证据指针，
+批量替换等于把「可复核」降级成「看起来像可复核」。迁移顺序与前置条件见
+[`NAMING-REVIEW.md`](./NAMING-REVIEW.md) §2。
+
+**在别名表就位之前不要动它。** 记在这里是为了让读者知道这条债存在，而不是假装名字都是真的。
