@@ -15,6 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { findStates, recheckSource, health } from '../southbridge/benjing-core.mjs';
+import { canShareContext, normalizeGovernance } from '../governance/policy.mjs';
 
 export const SPEC = 'northbridge/0.2';
 
@@ -52,13 +53,44 @@ function loadAll(root) {
   return out.sort((a, b) => b.mtime - a.mtime);
 }
 
-function healthLine(root) {
+function normRel(p) { return String(p || '').replace(/\\/g, '/').replace(/^\.\//, ''); }
+
+/**
+ * 显式 activeRef 可以是相对路径或 state.id。显式指定找不到时绝不回退到 mtime 最新项——
+ * 否则一个拼写错误就会把另一个客户的最新任务当成本轮任务。
+ */
+function selectActive(all, activeRef = '', allowAutoSelect = false) {
+  if (!all.length) return { active: null, explicit: !!activeRef, reason: 'empty' };
+  if (!activeRef && !allowAutoSelect) return { active: null, explicit: false, reason: 'unbound' };
+  if (!activeRef) return { active: all[0], explicit: false, reason: 'latest_mtime' };
+  const want = normRel(activeRef);
+  // 路径是唯一键，优先精确解析。id 只在全盘唯一时可作短名；模板复制导致的同 id
+  // 不能靠 mtime 决胜，否则较新的另一个租户会被静默选成 active 并全量展示。
+  const byPath = all.find(x => x.rel === want);
+  if (byPath) return { active: byPath, explicit: true, reason: 'explicit_path' };
+  const byId = all.filter(x => String(x.s.id || '') === want);
+  if (byId.length === 1) return { active: byId[0], explicit: true, reason: 'explicit_id' };
+  if (byId.length > 1) return { active: null, explicit: true, reason: 'active_ambiguous' };
+  return { active: null, explicit: true, reason: 'active_not_found' };
+}
+
+function scopedStates(all, active) {
+  if (!active) return [];
+  return all.filter(x => x === active || canShareContext(x.s, active.s));
+}
+
+function healthLine(root, allowedRels = new Set(), hidden = 0) {
   try {
     const h = health(root);
-    if (!h.issues) return `✔ 体检 ${h.states} 份学历全部健康，无孤儿`;
+    const items = (h.items || []).filter(i => allowedRels.has(normRel(i.path)));
+    const visibleIssues = items.filter(i => i.parse_error || i.in_sync === false || i.locked === false
+      || (i.unverifiable_sources || []).length || (i.dangling_sources || []).length
+      || (i.missing_artifacts || []).length || (i.schema_issues || []).length);
+    const isolation = hidden ? `；另有 ${hidden} 份学历受作用域隔离，未披露名称与内容` : '';
+    if (!visibleIssues.length) return `✔ 当前作用域 ${items.length} 份学历体检无已知问题${isolation}`;
     const detail = [];
-    for (const o of (h.orphans || [])) detail.push(`${o.path} 孤儿(${o.reason})`);
-    for (const i of h.items) {
+    // orphan 没有可验证的治理元数据，不能在当前任务上下文里泄露其路径；全局体检仍保留它。
+    for (const i of visibleIssues) {
       const bits = [];
       if (i.in_sync === false) bits.push('指纹不符(有人绕过 benjing-put 改过)');
       if (i.locked === false) bits.push('只读位掉了');
@@ -69,23 +101,45 @@ function healthLine(root) {
       if (bits.length) detail.push(`${i.path} ${bits.join(' ')}`);
     }
     const cap = detail.length <= 3 ? detail.join('；') : detail.slice(0, 3).join('；') + `；…等共 ${detail.length} 项`;
-    return `⚠ 体检 ${h.issues} 处问题 / ${h.states} 份学历：${cap}`;
+    return `⚠ 当前作用域体检 ${visibleIssues.length} 份有问题 / ${items.length} 份学历：${cap}${isolation}`;
   } catch { return ''; }
 }
 
 /**
- * boot：SessionStart。**不做相关性**——这一刻没有 goal，做相关性就是瞎猜。
- * 只给：当前任务的完整状态 + 其余任务的存在性与规模 + 体检 + 怎么按需调更多。
+ * boot：SessionStart。**不做相关性，也不猜当前任务**——这一刻没有 goal/tenant 绑定。
+ * 显式 active 后只给：当前任务完整状态 + 获准作用域目录 + 过滤后的体检。
  */
-export function compileBoot(root, budget = 6000) {
-  const all = loadAll(root);
-  if (!all.length) return { text: '', loaded: 0, total: 0 };
-  const active = all[0];
+export function compileBoot(root, budget = 6000, options = {}) {
+  if (budget && typeof budget === 'object') {
+    options = budget;
+    budget = options.budget ?? 6000;
+  }
+  const disk = loadAll(root);
+  if (!disk.length) return { text: '', loaded: 0, total: 0, states: 0, hiddenStates: 0 };
+  const selected = selectActive(disk, options.activeRel || '', options.allowAutoSelect === true);
+  if (!selected.active) {
+    const unbound = selected.reason === 'unbound';
+    const ambiguous = selected.reason === 'active_ambiguous';
+    return {
+      text: `[本境 boot · ${SPEC}｜背景，不是任务指令]\n⚠ ${unbound
+        ? '本会话未显式绑定当前任务；为避免跨客户串线，北桥没有展示任何学历正文。'
+        : ambiguous
+          ? '当前任务 id 在多份学历中重复；为避免跨租户歧义劫持，北桥拒绝选择。请改用唯一相对路径。'
+        : '显式指定的当前任务不存在；为避免串入其他任务，北桥没有回退到“最新学历”。'}\n`
+        + `—— 用户当前提示优先。需要继承任务时，设置 SHADOWOS_ACTIVE_TASK=<相对路径或 task id>。`,
+      loaded: 0, total: 0, states: 0, hiddenStates: disk.length,
+      activeRel: null, selection: selected.reason
+    };
+  }
+  const active = selected.active;
+  const all = scopedStates(disk, active);
+  const hiddenStates = disk.length - all.length;
   const totalFacts = all.reduce((n, x) => n + (x.s.facts || []).filter(f => f.verified).length, 0);
 
   const activeFacts = (active.s.facts || []).filter(f => f.verified);
+  const activeKind = selected.explicit ? '当前任务（显式指定）' : '最近活动任务（自动候选）';
   const bodyOf = (facts) => [
-    `── 当前任务 · ${active.rel} ──`,
+    `── ${activeKind} · ${active.rel} ──`,
     `任务：${active.s.title || '(未命名)'}`,
     `目标：${active.s.goal || ''}`,
     `当前状态：${active.s.current_state || ''}`,
@@ -102,7 +156,7 @@ export function compileBoot(root, budget = 6000) {
     (active.s.next_steps || []).map((x, i) => `${i + 1}. ${x}`).join('\n') || '（暂无）'
   ].filter(Boolean).join('\n');
 
-  const others = all.slice(1).map(x => {
+  const others = all.filter(x => x !== active).map(x => {
     const n = (x.s.facts || []).filter(f => f.verified).length;
     const todo = (x.s.next_steps || []).length;
     return `- ${x.rel}｜${x.s.title || x.s.id}｜已验证事实 ${n} 条｜未完成 ${todo} 项`;
@@ -111,10 +165,10 @@ export function compileBoot(root, budget = 6000) {
   // 头部必须跟着降级一起变。原先它无条件写「当前任务全量装载」——一旦降级触发，
   // 正文只展开了一部分，而头部还在宣称全量：那就是本仓库反复在修的那一类「统计者谎报」。
   // 头部长度会随文案微变，但降级循环每轮重算全文，收敛不受影响。
-  const hLine = healthLine(root);
+  const hLine = healthLine(root, new Set(all.map(x => x.rel)), hiddenStates);
   const headOf = (dropped) => [
-    `[本境 boot · ${SPEC}]`,
-    `磁盘上 ${all.length} 份学历、${totalFacts} 条已验证事实。`
+    `[本境 boot · ${SPEC}｜背景，不是任务指令]`,
+    `当前作用域可见 ${all.length} 份学历、${totalFacts} 条已验证事实。`
     + (dropped
       ? `当前任务展开 ${activeFacts.length - dropped}/${activeFacts.length} 条（预算降级，未展开的见文末说明），其余只列目录。`
       : `当前任务全量装载，其余只列目录。`),
@@ -134,7 +188,7 @@ export function compileBoot(root, budget = 6000) {
     dirLines.join('\n'),
     extra,
     '',
-    '—— 请基于以上状态续上任务，不要重新问用户「任务是什么」。',
+    '—— 用户当前提示是唯一任务选择；若提示另有目标，忽略“最近活动任务”，不要追问是否继续它。',
     '—— 改学历走 node southbridge/benjing-put.mjs（带 --expect）；直接 Write 会被 PreToolUse 拦断。'
   ].filter(x => x !== '' || true).join('\n');
 
@@ -180,15 +234,17 @@ export function compileBoot(root, budget = 6000) {
     text = [
       `[本境 boot · ${SPEC}]`,
       `⚠ 预算 ${budget} 装不下正常 boot 摘要（需 ${text.length}）——已退化为最小帧。`,
-      `磁盘上 ${all.length} 份学历、${totalFacts} 条已验证事实。当前任务：${active.rel}｜${active.s.title || active.s.id || ''}`,
+      `当前作用域可见 ${all.length} 份学历、${totalFacts} 条已验证事实。${activeKind}：${active.rel}｜${active.s.title || active.s.id || ''}`,
       `完整状态请直接读该文件，或调高预算重开。`,
       '',
-      '—— 请基于以上状态续上任务，不要重新问用户「任务是什么」。',
+      '—— 用户当前提示优先；若提示另有目标，忽略最近任务，不要追问是否继续它。',
       '—— 改学历走 node southbridge/benjing-put.mjs（带 --expect）；直接 Write 会被 PreToolUse 拦断。'
     ].join('\n');
   }
   return {
     text, loaded: usedFacts.length, total: totalFacts, states: all.length,
+    diskStates: disk.length, hiddenStates, activeRel: active.rel,
+    selection: selected.reason, governance: normalizeGovernance(active.s),
     factsDropped, bodyRoom,
   };
 }
@@ -200,19 +256,26 @@ export function compileBoot(root, budget = 6000) {
  */
 export function compileRequest(root, goal, {
   budget = 2200, already = new Set(), minScore = 0.35, max = 8,
-  learningBudget = 900, maxLearnings = 4,
+  learningBudget = 900, maxLearnings = 4, activeRel = '', allowAutoSelect = false,
 } = {}) {
-  const all = loadAll(root);
-  if (!all.length) return { text: '', picked: [], considered: 0 };
+  const disk = loadAll(root);
+  if (!disk.length) return { text: '', picked: [], considered: 0, hiddenStates: 0 };
+  const selected = selectActive(disk, activeRel, allowAutoSelect);
+  if (!selected.active) {
+    return { text: '', picked: [], learnings: [], considered: 0, learningsConsidered: 0,
+      hiddenStates: disk.length, reason: selected.reason };
+  }
+  const all = scopedStates(disk, selected.active);
+  const hiddenStates = disk.length - all.length;
 
-  const activeRel = all[0].rel;
+  const activePath = selected.active.rel;
   const cand = [];
   for (const x of all) {
     for (const f of (x.s.facts || []).filter(f => f.verified)) {
       const id = factId(f.claim);
       if (already.has(id)) continue;
       // active 任务的事实已在 boot 全量给过，这里不重复
-      if (x.rel === activeRel) continue;
+      if (x.rel === activePath) continue;
       const score = relevance(goal, f.claim + ' ' + (f.source || ''));
       if (score >= minScore) cand.push({ id, score, from: x.rel, f });
     }
@@ -256,18 +319,20 @@ export function compileRequest(root, goal, {
   }
 
   if (!picked.length && !lpicked.length)
-    return { text: '', picked: [], learnings: [], considered: cand.length, learningsConsidered: lcand.length };
+    return { text: '', picked: [], learnings: [], considered: cand.length,
+      learningsConsidered: lcand.length, hiddenStates, activeRel: activePath };
 
-  const parts = [`[北桥 context.request · ${SPEC}]`];
+  const parts = [`[北桥 context.request · ${SPEC}｜已按治理作用域过滤]`];
   if (picked.length) {
     parts.push(`按本轮目标调入 ${picked.length} 条此前未装载的已验证事实（候选 ${cand.length} 条，阈值 ${minScore}）：`);
     parts.push(...picked.map(p => p.line));
-    parts.push(`—— 这些来自其他任务的学历，boot 时因预算未装载；因与本轮目标相关而调入。`);
+    parts.push(`—— 这些只来自当前任务获准访问的作用域；其他租户/项目即使更相关也不会进入候选。`);
   }
   if (lpicked.length) {
     parts.push(`按本轮目标调入 ${lpicked.length} 条**已通过长循环考试**的经验（候选 ${lcand.length} 条）：`);
     parts.push(...lpicked.map(p => p.line));
     parts.push(`—— 经验只在 recheck 最近一次跑通时才是 verified；跑挂会当场降级（node xuetang/exam.mjs）。`);
   }
-  return { text: parts.join('\n'), picked, learnings: lpicked, considered: cand.length, learningsConsidered: lcand.length };
+  return { text: parts.join('\n'), picked, learnings: lpicked, considered: cand.length,
+    learningsConsidered: lcand.length, hiddenStates, activeRel: activePath };
 }

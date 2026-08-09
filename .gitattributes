@@ -1,0 +1,26 @@
+# 协议、状态和审计账本统一 LF，避免不同 Git/Windows 配置改变逐行证据的字节边界。
+* text=auto
+.gitattributes text eol=lf
+.gitignore text eol=lf
+*.mjs  text eol=lf
+*.js   text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+*.md   text eol=lf
+*.log  text eol=lf
+*.sh   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Windows 原生命令脚本保留 CRLF；压缩包、Office、CAD 与图片按二进制处理。
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.dwg  binary
+*.dxf  binary

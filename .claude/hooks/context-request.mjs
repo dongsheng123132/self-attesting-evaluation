@@ -12,7 +12,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const projectDir = path.resolve(here, '..', '..');
+const projectDir = process.env.SHADOWOS_PROJECT_ROOT
+  ? path.resolve(process.env.SHADOWOS_PROJECT_ROOT)
+  : path.resolve(here, '..', '..');
+const activeRel = String(process.env.SHADOWOS_ACTIVE_TASK || '').trim();
 
 function bail() { process.exit(0); } // 无输出 = 不注入任何东西
 
@@ -31,13 +34,15 @@ let mod;
 try { mod = await import('../../northbridge/compile.mjs'); } catch { bail(); }
 
 let out;
-try { out = mod.compileRequest(projectDir, goal, { already }); } catch { bail(); }
+try { out = mod.compileRequest(projectDir, goal, { already, activeRel }); } catch { bail(); }
 if (!out.text) bail();
 
 // 记账：注入过的不再重复注入。这样整个学历库在一次会话里可以被逐步、按需地全部够到，
 // 而不是 boot 时一次性塞爆预算。
 try {
   for (const p of out.picked) already.add(p.id);
+  for (const p of (out.learnings || [])) already.add(p.id);
+  fs.mkdirSync(path.dirname(ledgerPath), { recursive: true });
   fs.writeFileSync(ledgerPath, JSON.stringify([...already]), 'utf8');
 } catch { /* 记账失败不影响本轮注入，最多下轮重复一次 */ }
 

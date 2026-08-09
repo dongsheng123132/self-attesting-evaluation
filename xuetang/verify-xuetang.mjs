@@ -135,7 +135,7 @@ t('X5.1', '【反向】北桥 request 不许注入 candidate 经验', async () =
   fs.writeFileSync(path.join(d, 'demo/t1/task.origin.json'), JSON.stringify(mkState('t1', {
     learnings: [L({ lesson: '乐观锁只回答你读的是不是最新的，回答不了你有没有把内容带上', status: 'candidate', recheck: RC })]
   })));
-  const r = compileRequest(d, '乐观锁 并发 学历');
+  const r = compileRequest(d, '乐观锁 并发 学历', { activeRel: 't1' });
   return (r.learnings.length === 0 && !/经验·已通过考试/.test(r.text)) || `注入了 ${r.learnings.length} 条 candidate`;
 });
 t('X5.2', '正向：verified 经验会被按目标调入，且标明它靠哪条命令过的考试', async () => {
@@ -144,7 +144,7 @@ t('X5.2', '正向：verified 经验会被按目标调入，且标明它靠哪条
   fs.writeFileSync(path.join(d, 'demo/t1/task.origin.json'), JSON.stringify(mkState('t1', {
     learnings: [L({ lesson: '乐观锁只回答你读的是不是最新的，回答不了你有没有把内容带上', status: 'verified', recheck: RC, exam: { runs: 1, last_result: 'pass' } })]
   })));
-  const r = compileRequest(d, '乐观锁 并发 学历');
+  const r = compileRequest(d, '乐观锁 并发 学历', { activeRel: 't1' });
   return (r.learnings.length === 1 && /node --version/.test(r.text)) || `picked=${r.learnings.length}`;
 });
 

@@ -48,7 +48,16 @@ fs.mkdirSync(J('.claude/hooks'), { recursive: true });
 fs.mkdirSync(J('southbridge'), { recursive: true });
 // 部件目录整个拷贝：前三次事故都是新增跨部件依赖后沙箱漏拷（benxiang → northbridge）。
 // 枚举单个文件的写法必然滞后于依赖增长，改成整目录。
-for (const d of ['benxiang', 'northbridge']) fs.cpSync(path.join(REPO, d), J(d), { recursive: true });
+//
+// 第五次复发（2026-08-09）：另一会话新增 governance/policy.mjs 并被 northbridge/compile.mjs 引入，
+// 沙箱没拷 governance/ ⇒ ERR_MODULE_NOT_FOUND。**改成整目录还不够，因为"哪些目录"仍是枚举的。**
+// 这里改成扫仓库根下的部件目录，新增部件不必再回来改这一行；
+// 真正的治本是让沙箱按 import 图闭包拷贝，那要单独做（已记入学历 next_steps）。
+const PARTS = fs.readdirSync(REPO, { withFileTypes: true })
+  .filter(e => e.isDirectory() && !e.name.startsWith('.') &&
+    !['demo', 'node_modules', 'papers', 'rfcs', 'research', 'schemas', 'southbridge', 'hooks'].includes(e.name))
+  .map(e => e.name);
+for (const d of PARTS) fs.cpSync(path.join(REPO, d), J(d), { recursive: true });
 // southbridge 也必须整目录（只拷 .mjs，跳过 audit.log 这类大数据文件）。
 // 第四次复发了：上面那条注释说「枚举单个文件的写法必然滞后于依赖增长」，
 // 然后只把 benxiang/northbridge 改成了整目录，southbridge 仍在枚举——

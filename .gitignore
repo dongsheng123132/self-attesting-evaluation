@@ -12,6 +12,20 @@
 *.tmp.mjs
 node_modules/
 
+# 真实客户工作区：活状态可以继续由本境管理，但原稿、姓名、绝对路径和生成物不进入公开代码历史。
+# 可复用规则应从这里提炼到协议/工具目录；对外证据必须走 governance/export-state.mjs。
+demo/book-project/
+demo/.benjing-backups/*-book-project-v*.json
+private/
+
+# 南桥写入探针/覆盖备份是本机运行态；跨模型论文证据使用下面明确保留的账本与本境备份。
+southbridge/.backups/
+
+# Office/CAD/Python 临时物
+~$*
+__pycache__/
+*.pyc
+
 # ── 刻意**不**忽略的（写下来，免得以后有人"顺手"加进去）──
 # southbridge/audit.log        只追加审计日志。ACCEPTANCE.md §2 的跨模型复算全靠它，
 #                              第三方要能按行切片复原当时口径，删了这条主张就没了凭证。

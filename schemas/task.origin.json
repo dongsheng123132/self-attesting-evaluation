@@ -36,7 +36,24 @@
       }
     },
 
-    "scope": { "type": "string", "description": "作用域，如 project:shadowos" },
+    "scope": { "type": "string", "description": "旧版自由文本作用域，仅供人读；不再作为跨任务授权依据。跨任务共享与发布只认 governance" },
+    "governance": {
+      "type": "object",
+      "description": "任务隔离与发布边界。字段缺失或声明不自洽时，执行层必须 fail-closed：仅本任务可见、禁止导出",
+      "required": [
+        "tenant_id", "project_id", "visibility", "sensitivity",
+        "context_access", "export_policy", "retention_days"
+      ],
+      "properties": {
+        "tenant_id": { "type": "string", "description": "客户/组织隔离键；不得从路径或标题猜测" },
+        "project_id": { "type": "string", "description": "租户内项目隔离键；跨任务共享必须显式相同" },
+        "visibility": { "enum": ["private", "project", "public"], "description": "private=仅任务，project=同项目，public=可候选公开" },
+        "sensitivity": { "enum": ["public", "internal", "confidential", "restricted"], "description": "restricted 永不跨任务；public 也仍受 context_access/export_policy 约束" },
+        "context_access": { "enum": ["task", "project", "global"], "description": "北桥可把本任务内容注入到哪里" },
+        "export_policy": { "enum": ["deny", "redacted", "allow"], "description": "deny=禁止，redacted=仅安全摘要，allow=仅 public/public 的 allowlist 正文" },
+        "retention_days": { "type": "integer", "minimum": 0, "description": "保留期；0 表示未获授权前不自动清理，不表示永久公开" }
+      }
+    },
     "created_at": { "type": "string", "description": "ISO 时间" },
     "updated_at": { "type": "string", "description": "ISO 时间。内容未变则不刷新" },
 
