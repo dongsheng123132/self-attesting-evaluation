@@ -1,0 +1,23 @@
+{
+  "tasks": [
+    {
+      "id": "c2836522",
+      "cron": "17 9 * * 2",
+      "prompt": "Harness 研究跟踪任务（ShadowOS）：1) 用 WebFetch 抓取 https://lilianweng.github.io/posts/2026-07-04-harness/ 看是否更新；2) 用 WebSearch 检索最近一周 Agent Harness 领域新进展（关键词：harness engineering, loop engineering, persistent state, harness benchmark, harness evolution, MemoHarness, Living-Harness, EvolveNet）；3) 把可落地的全球最佳实践蒸馏成 markdown，追加写到 D:\\uking编程\\ShadowOS = Harness OS\\research\\harness-tracker.md（含日期、来源链接、一句话可操作结论）；4) 如果有影响我们主板架构（本境/本象/影核/uking）的实践，在结论里用「→ 应做：」标注具体接入点。保持简洁，中文输出。",
+      "createdAt": 1786168659715,
+      "recurring": true,
+      "createdBySessionId": "4f87e3b9-5cdb-48df-8acc-230eb7012a4d",
+      "createdByPid": 21344
+    },
+    {
+      "id": "1cb0867c",
+      "cron": "23 8 * * *",
+      "prompt": "营销点自动刷新任务：1) 跑 `cd D:/uking编程/2origin-marketing && node refresh-notes.mjs` 扫描关联仓库最新 commit，更新 docs/whats-new.md；2) 检查关联仓库（2origin-computer / 2origin-harness / 2origin / uking）是否有新的可营销变化（新功能/新发布/新测试通过/新修复）；3) 若有值得写的点，按草稿制写一篇草稿文章到 `drafts/`（标题≤26字、summary≤120字、含关键词、文末 CTA 引 U-King 下载 https://u-claw.org.cn/download/U-King-Setup.exe）；4) 把草稿和 whats-new.md commit 到 2origin-marketing 仓库并 push。诚实边界：营销点必须真实可核验，不宣称未实现能力，涉他人资料脱敏。保持简洁，中文。",
+      "createdAt": 1786182929334,
+      "recurring": true,
+      "createdBySessionId": "4f87e3b9-5cdb-48df-8acc-230eb7012a4d",
+      "createdByPid": 21344,
+      "lastFiredAt": 1786236780666
+    }
+  ]
+}

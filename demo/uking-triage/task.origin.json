@@ -1,0 +1,90 @@
+{
+  "spec": "2origin/0.1",
+  "kind": "task.origin",
+  "id": "uking-triage",
+  "title": "uking 排障学历沉淀（2026-08-08）",
+  "goal": "把对 uking 三个日志异常的排查结论沉淀为可复用学历，供下次排障继承。",
+  "version": 1,
+  "scope": "machine:local",
+  "created_at": "2026-08-08T17:30:00+08:00",
+  "updated_at": "2026-08-08T17:30:00+08:00",
+  "current_state": "三个日志异常排查完毕：crashlog 多实例误报（已修）、selfHeightTab UI 崩溃（历史已修）、chat error 偶发（非当前 bug）。uking 当前无明确持续 bug。",
+  "facts": [
+    {
+      "claim": "uking crashlog 反复报 unclean_exit 是退出检测误报（多实例/旧进程残留），非真崩溃",
+      "verified": true,
+      "source": "C:/Users/ZhuanZ/.uking/logs/.session.json + crashlog.rs (settle_previous)",
+      "when": "2026-08-08"
+    },
+    {
+      "claim": "crashlog 误报已修复：settle_previous 检查标记 pid 存活则不算异常退出，cargo test crashlog 9 passed",
+      "verified": true,
+      "source": "git diff crashlog.rs + cargo test crashlog",
+      "when": "2026-08-08"
+    },
+    {
+      "claim": "selfHeightTab is not defined 是 0.9.83 的 UI 崩溃，0.9.87 已随 selfHeightTab 引入修复，非当前 bug",
+      "verified": true,
+      "source": "git log -S selfHeightTab src/App.tsx",
+      "when": "2026-08-08"
+    },
+    {
+      "claim": "chat.log 两次 status=error 是 8/4、8/5 一次性偶发，之后 3 天未复发",
+      "verified": true,
+      "source": "C:/Users/ZhuanZ/.uking/logs/chat.log",
+      "when": "2026-08-08"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "排查 uking 日志异常先确诊是否当前 bug，不盲目改代码",
+      "why": "selfHeightTab/chat error 都是历史/偶发，盲改会引入无谓风险",
+      "when": "2026-08-08"
+    },
+    {
+      "what": "crashlog 误报是真 bug，值得修，改法是 pid 存活判据",
+      "why": "多实例残留每次启动都误报，假阳性比没有更坏",
+      "when": "2026-08-08"
+    }
+  ],
+  "actions": [
+    {
+      "verb": "observe",
+      "target": "crash.log + chat.log + .session.json",
+      "status": "done",
+      "result": "三个异常信号定位"
+    },
+    {
+      "verb": "fix",
+      "target": "crashlog.rs settle_previous",
+      "status": "done",
+      "result": "加 pid 存活判据，9 测试通过"
+    }
+  ],
+  "artifacts": [],
+  "verification": "crashlog 修复经 cargo test 验证；其余两项确诊为历史/偶发。",
+  "next_steps": [
+    "uking 出现新 crash 时，先查 pid 是否存活（心跳新鲜=误报）",
+    "selfHeightTab 若在更高版本再现，查 App.tsx 193 行引入的 tab 路径",
+    "chat error 若复发，重点查模型首字节超时（21s）与代理"
+  ],
+  "learnings": [
+    {
+      "lesson": "uking 排障第一步：区分当前 bug vs 历史已修 vs 偶发——用 git log 和日志频率确认，别盲改",
+      "confidence": 0.9,
+      "status": "candidate"
+    },
+    {
+      "lesson": "读状态文件判故障，先检查写状态者是否还活着（crashlog 多实例误报的教训）",
+      "confidence": 0.85,
+      "status": "candidate"
+    }
+  ],
+  "content_hash": "a63478922f38cad34ee177ea419fac3962099bc7d32ac7d6c5841235f3091cf8",
+  "actor": {
+    "harness": "claude-code",
+    "model": "unobserved",
+    "session_id": "0ce4fbd1-6e08-449f-b7a6-12838e62c6f7",
+    "at": "2026-08-08T09:29:20.645Z"
+  }
+}

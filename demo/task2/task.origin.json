@@ -1,0 +1,124 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "demo.task2",
+  "title": "跨 Harness 学籍：Claude Code → Codex 接续同一任务",
+  "goal": "验证『AI 学历跨 harness 继承』：Claude Code 先干一半（把 research/harness-tracker.md 的事实提炼进本状态），关闭后，Codex 读同一份 task.origin.json 接续完成剩余（生成一份可落地的实践清单 markdown）。",
+  "version": 13,
+  "scope": "project:shadowos",
+  "created_at": "2026-08-08T15:40:00+08:00",
+  "updated_at": "2026-08-09T06:52:10.396Z",
+  "current_state": "STEP-A/B/C 完成。跨 harness 学历继承=验证通过（Codex 零追问续作）。C5 验证器抓出真实缺陷：actionable-notes.md 被 artifacts 声明但磁盘不存在，已被标记并重建。写权限瓶颈三连实锤已记录。",
+  "facts": [
+    {
+      "claim": "本机同时装有 Claude Code（providers.json→deepseek）和 Codex（codex-route.json→deepseek-v4-pro），两套 harness 读同一目录",
+      "verified": true,
+      "source": "cat ~/.uking/providers.json + codex-route.json",
+      "when": "2026-08-08T15:40:00+08:00"
+    },
+    {
+      "claim": "research/harness-tracker.md 已含第 1 期 12 条全球 harness 最佳实践蒸馏",
+      "verified": true,
+      "source": "Read research/harness-tracker.md",
+      "when": "2026-08-08T15:40:00+08:00"
+    },
+    {
+      "claim": "12 条实践已提炼为结构化 facts，产物 demo/task2/extracted-facts.md 已生成（STEP-A 完成）",
+      "verified": true,
+      "source": "Read demo/task2/extracted-facts.md",
+      "when": "2026-08-08T15:45:00+08:00"
+    },
+    {
+      "claim": "Codex 只凭 task.origin.json + extracted-facts.md 无追问续作，跨 harness 学历继承成立",
+      "verified": true,
+      "source": "codex exec 运行 + ~/.codex/sessions 日志",
+      "when": "2026-08-08T15:50:00+08:00"
+    },
+    {
+      "claim": "Codex 沙箱只读，正文落盘被策略拦截（apply_patch/Set-Content 等 blocked），这是跨 harness 交接的真实瓶颈",
+      "verified": true,
+      "source": "codex exec 输出 + task2 无 actionable-notes.md",
+      "when": "2026-08-08T15:52:00+08:00"
+    },
+    {
+      "claim": "即使 -s workspace-write，Codex 仍不落盘（apply_patch 工具未暴露），写权限瓶颈需 OriginBus Trust/Approval 层解决，非传沙箱参数",
+      "verified": true,
+      "source": "codex exec -s workspace-write 重跑输出",
+      "when": "2026-08-08T16:00:00+08:00"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "跨 harness 交接的唯一信物是 task.origin.json，不复制聊天记录",
+      "why": "验证本象原则：harness 只是执行外壳，学历在状态文件里",
+      "when": "2026-08-08T15:40:00+08:00"
+    },
+    {
+      "what": "Codex 沙箱只读问题不绕过，用主会话代落盘并如实标注",
+      "why": "诚实原则：不伪造『Codex 生成的正文』；沙箱权限本身是要解决的南桥 Trust 层问题",
+      "when": "2026-08-08T15:55:00+08:00"
+    }
+  ],
+  "actions": [
+    {
+      "verb": "file.read",
+      "target": "research/harness-tracker.md",
+      "status": "done",
+      "result": "读入 12 条实践",
+      "evidence": "Read OK"
+    },
+    {
+      "verb": "file.write",
+      "target": "demo/task2/extracted-facts.md",
+      "status": "done",
+      "result": "12 条结构化 facts 产物（Claude Code STEP-A）",
+      "evidence": "files exist"
+    },
+    {
+      "verb": "file.read",
+      "target": "demo/task2/extracted-facts.md + task.origin.json",
+      "status": "done",
+      "result": "Codex 读入并分析，无追问续作",
+      "evidence": "codex exec 运行 + sessions 日志"
+    },
+    {
+      "verb": "file.write",
+      "target": "demo/task2/actionable-notes.md",
+      "status": "done",
+      "result": "由主会话代 Codex 落盘（Codex 交付更新指令但沙箱只读）",
+      "evidence": "files exist"
+    }
+  ],
+  "artifacts": [
+    "research/harness-tracker.md",
+    "demo/task2/extracted-facts.md",
+    "demo/task2/actionable-notes.md"
+  ],
+  "verification": "跨 harness 学历继承已验证通过：Codex 仅凭 task.origin.json + facts 无追问续作。C5 验证器(verify-state.mjs)发现 actionable-notes.md 被声明但磁盘不存在，已重建。写权限瓶颈三次确认，已作为南桥 Trust 层输入。",
+  "next_steps": [
+    "南桥写权限（Trust/Approval 层）：设计无头 harness 的统一写授权模型（codex exec 需暴露写工具/给工作目录写权限；这是 OriginBus 的南桥职责）",
+    "实施 actionable-notes.md 优先级：#4 Experience Bank + #2 长循环考试（上学循环最小闭环）",
+    "跨机器本境复刻：把本境复制到测试机验证 SessionStart 注入（验证『环境即镜像』）"
+  ],
+  "learnings": [
+    {
+      "lesson": "跨 harness 接续：harness 是外壳、学历在状态文件；Codex 仅凭 state 即可无追问续作",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "跨 harness 交接瓶颈在写权限：沙箱只读时正文落盘失败，需南桥 Trust/Approval 层统一授权",
+      "confidence": 0.85,
+      "status": "candidate"
+    }
+  ],
+  "content_hash": "1b6bd8d57fe5aa865107ee3b85206875d791f99fb64fb6afc43e12c73f0b5ae3",
+  "actor": "xuetang/exam"
+}

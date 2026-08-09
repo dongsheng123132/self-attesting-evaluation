@@ -1,0 +1,139 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "task8",
+  "title": "把成果转成对外产出：论文 / 开源 / 宣发的取舍",
+  "goal": "判断这套东西能写几篇论文、各自缺什么证据，把能立刻做的对外产出做掉（公开仓库的诚实 README、论文①的证据齐备稿），并明确暂不做什么（找记者）及其理由",
+  "version": 3,
+  "scope": "D:/uking编程/ShadowOS = Harness OS/papers 与 D:/uking编程/2origin-harness（公开仓库）",
+  "current_state": "(b) 术语表完成：TERMINOLOGY.md 落地，两处重叠都有裁决（影核=action kernel / 南桥=action channel；credential 只指授权，学历=task state），公开仓库 README 已按裁决改完并推送 2665b01，并如实写明参考实现里没有本象。过程中修好两处红：verify-benjing 沙箱漏拷 southbridge/*.mjs（同型第四次复发）、B11.3 断言旧契约。六套回归全绿，本境判据 58 条。下一步 (a) 补 SHA 写 prose。",
+  "facts": [
+    {
+      "claim": "公开仓库的 README 已改成先摆结果表再摆边界，并把判分器自己的四个 bug 印在正文里，已推送到公开仓库",
+      "verified": true,
+      "source": "git -C D:/uking编程/2origin-harness log --oneline -1 得 7931f50；git push 输出 b490d9c..7931f50 HEAD -> master；README.md「Benchmark: does structured state actually beat a transcript?」节",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "claim": "论文①的证据从 5 个案例扩到 11 个，且横跨两个独立子系统（判分器 7 个 + 状态层 4 个），这使「我们在一个文件里粗心」这个替代解释不成立，是把工程日志升格成结构性主张的关键",
+      "verified": true,
+      "source": "papers/self-attesting-evaluation.md §4 两张表 + §5 五类判据映射；证据索引见 Appendix A",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "claim": "另一个会话在我写 README 的同时删掉了 bench/run-final.log 与 run-final2.log 并提交了 RESULTS-v3.md（b490d9c）：我 README 里的链接和 30 分钟前写进 task7 的两条 source 同时悬空。source 形式校验查不出这种悬空（它只查引没引可复核物，不查还在不在），是人工发现的",
+      "verified": true,
+      "source": "ls bench/ 显示两个 log 已不在盘上；git log b490d9c；task7 v11 的两条 fact 仍写着 run-final2.log；southbridge/benjing-core.mjs:392 注释自陈该边界",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "claim": "公开仓库的 .gitignore 是一行含字面 \n 的坏文件（.backups/\naudit.log\nnode_modules/），从建仓起就没生效过；audit.log 侥幸没被提交，不是被拦住的",
+      "verified": true,
+      "source": "od -c .gitignore 显示  n 为两个字符；git ls-files | grep -iE \"audit|.backups\" 无输出；已改为逐行并加 bench/cache/",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "claim": "公开仓库里曾有一份由私有会话记录蒸馏的产物（bench/cache/summary-task6-9634.txt，9479 字节）随 0831752 推出去，而同一 commit 的 corpus.json 明写「会话记录不该进公开仓库」。扫描无路径/邮箱/密钥/人名，风险低；已停止跟踪并 gitignore，历史未重写",
+      "verified": true,
+      "source": "gh repo view 得 visibility=PUBLIC；git show 0831752:bench/cache/summary-task6-9634.txt 可取出；git rm --cached bench/cache 已随 7931f50 生效",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "claim": "source 解引用已落地并被判据锁死：dereferenceSource + health 两桶分类 + verify-state 提示行，8 条新判据（B12.1~B12.8）其中 6 条是反向用例，本境判据从 49 涨到 57，六套回归全绿",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 判决 57/57；另五套 benxiang/northbridge/southbridge/oob/verify-todo 退出码均 0；southbridge/benjing-core.mjs 的 dereferenceSource",
+      "when": "2026-08-09T12:30:00+08:00"
+    },
+    {
+      "claim": "解引用探针的第一版自己就是「对什么都报警」：149 条已验证事实里报出 32 条悬空，其中 26 条是自己的正则造的（C:/ 与 ~/ 被切成 /Users…、/.uking… 后按 D 盘根解析；隔壁仓库的相对路径如 bench/RESULTS-v2.md 基准根本不可确认）。加「基准可确认才敢说缺失」后降到 6 条",
+      "verified": true,
+      "source": "首版 health 输出 32 条（task7 独占 16 条）；改用带盘符判定 + 首段目录存在性确认基准后复跑得 6 条，另 42 条归 unresolved；判据 B12.4/B12.5/B12.6 锁死这三类误报",
+      "when": "2026-08-09T12:30:00+08:00"
+    },
+    {
+      "claim": "真正该报警的判据不是「文件还在不在」，而是「路径是不是这条 source 里唯一的可复核物」：本仓库仅剩的 6 条悬空全部同时引了可重跑命令（探针文件写→观察→删），证据仍可到达，因此不进告警桶；而催生本次改动的那条（只引 run-final2.log 无命令）会被抓住",
+      "verified": true,
+      "source": "node -e 遍历 demo/*/task.origin.json 打印 6 条悬空的 claim/source，均含 node/rm/tail；判据 B12.2（催生用例）与 B12.8（反向：有命令兜底不进告警桶）；boot 体检仍报「10 份学历全部健康」",
+      "when": "2026-08-09T12:30:00+08:00"
+    },
+    {
+      "claim": "论文①草稿里「案例 10 乐观锁放过截断写入」写成 open 是错的——另一个会话已用 B11.0~B11.5 修好（必填字段校验 + 已验证事实缩水默认 denied + __allow_fact_loss 显式开关且不进指纹）。已改为 Fixed，并把「哈希锁证明的是新鲜度不是完整性，这是两个不变量」写进结论",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 输出 B11.0~B11.5 六条全绿；papers/self-attesting-evaluation.md §4 案例 10 行",
+      "when": "2026-08-09T12:30:00+08:00"
+    },
+    {
+      "claim": "影核与南桥的重叠靠架构文档定不下来——文档自己矛盾：第四章标题写「影核：南桥 + 驱动层」（影核 ⊃ 南桥），而「南桥：Intelligence → World」正文写「南桥找到影核：PowerPoint Driver」（影核 = 被调用的驱动）。裁决改按代码定：shadowcore-core.mjs 是 assessRisk/checkApproval/doWrite/doVerify+审计+幂等（决定与执行），southbridge-cli/mcp 是同一个核的两个入口且 parity 被验证 → 影核=action kernel，南桥=action channel",
+      "verified": true,
+      "source": "grep -n \"^# 四、影核\" 与 \"## 南桥：Intelligence\" ChatGPT-AI原生计算机架构 (3).md 两处并列；grep \"^export\" southbridge/shadowcore-core.mjs 得 assessRisk/checkApproval/doWrite/doVerify；TERMINOLOGY.md §1",
+      "when": "2026-08-09T13:30:00+08:00"
+    },
+    {
+      "claim": "credential 这个英译在公开仓库里已被占用两次：README 用 persists credentials 指学历，而 Trust Lane 的 trust.credential/proof_of_read 指授权凭证。已裁决 credential 只留给授权，学历的技术术语是 task state，并已改完 README 全文推送（2665b01）",
+      "verified": true,
+      "source": "git -C 2origin-harness log --oneline -1 得 2665b01；grep -n credential README.md 现仅剩 Trust Lane 三处 + 术语声明一处；TERMINOLOGY.md §2",
+      "when": "2026-08-09T13:30:00+08:00"
+    },
+    {
+      "claim": "公开仓库的参考实现里没有本象：existsSync/statSync/createHash 散落在全部 6 个 lib/*.js 里，每个部件自己当自己的观察者——这正是 RFC-0006 §0 说的自证结构性成因。已在 README 架构表里如实写明「not implemented here」而不是含糊过去",
+      "verified": true,
+      "source": "grep -c \"existsSync|statSync|createHash\" 2origin-harness/lib/*.js 六个文件全部命中（bundle 1 / extract 1 / northbridge 1 / southbridge 3 / state 2 / verify 3）；README.md Observer (本象) 行；提交 2665b01",
+      "when": "2026-08-09T13:30:00+08:00"
+    },
+    {
+      "claim": "「枚举单个文件的写法必然滞后于依赖增长」在同一个文件里第四次复发：verify-benjing 的沙箱把 benxiang/northbridge 改成整目录拷贝并留了注释，唯独 southbridge 仍逐个 copyFileSync；另一会话新增 southbridge/schema-check.mjs 当天整套判据 ERR_MODULE_NOT_FOUND 挂掉。只在三处中的两处应用修法等于没修",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 报 ERR_MODULE_NOT_FOUND …/southbridge/schema-check.mjs；改为遍历 southbridge/*.mjs 后 58/58 绿；该文件原注释「前三次事故都是新增跨部件依赖后沙箱漏拷」",
+      "when": "2026-08-09T13:30:00+08:00"
+    },
+    {
+      "claim": "判据 B11.3 断言的是已经变过的契约：护栏由「只拦 facts」推广到 5 个受护集合后返回字段从 facts_before/after 改成 shrunk[]，判据没同步，于是它红着却像是护栏坏了。已改判据并补 B11.3b 覆盖 decisions/artifacts 缩水，本境判据 57→58",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 修前报 B11.3 status=denied undefined→undefined，修后 58/58；southbridge/benjing-core.mjs 的 GUARDED=[facts,decisions,actions,learnings,artifacts]",
+      "when": "2026-08-09T13:30:00+08:00"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "现在不找记者",
+      "why": "单模型单任务单次、两跳探针已作废、对照臂全是自己写的。记者写成「AI 有记忆了」，第一个懂行的人一问就塌，而且塌一次以后再找就没人接。要给记者的是他能亲手验的东西——跨 harness / 跨模型接续同一任务的现场演示，而不是 benchmark 数字",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "what": "论文①与论文②必须分开投，不合并",
+      "why": "①不依赖②成立。合并会让①的可信度被②的证据不足拖下水，而①的全部价值恰恰在于「我们连自己的结论都撤回了」",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "what": "案例 8（source 只查形式）与案例 10（乐观锁放过截断写入）暂不修，作为 open 写进论文",
+      "why": "修掉会让 §6 的主张更漂亮但 §7 的诚实性变差。按本文自己的规则，未修就写未修",
+      "when": "2026-08-09T11:30:00+08:00"
+    }
+  ],
+  "actions": [],
+  "artifacts": [
+    "D:/uking编程/ShadowOS = Harness OS/papers/self-attesting-evaluation.md",
+    "D:/uking编程/2origin-harness/README.md",
+    "D:/uking编程/2origin-harness/bench/RESULTS-v3.md",
+    "D:/uking编程/ShadowOS = Harness OS/TERMINOLOGY.md"
+  ],
+  "verification": [],
+  "next_steps": [
+    "(a) 论文①：Appendix A 每行补确切 commit SHA 与行号，然后写 prose",
+    "TERMINOLOGY.md 定稿后同步一份到 2origin-harness（公开仓库的英文读者是主要受众）",
+    "southbridge/ 目录名实不符（本境/影核/南桥三样住一起）：记录在案，等有一次非做不可的改动时顺手做，别为它单开重构。改的时候用 B12 悬空报告逐条修 source",
+    "找一个项目外的读者试着证伪论文 §5 的六类判据",
+    "论文②的四项前置：真实 memory 系统对照、重采样与置信区间、多模型多任务、重做开卷天花板的探针",
+    "crosscheck 那条旧分歧（demo/task2/actionable-notes.md 无审计记录）要么补账要么说明"
+  ],
+  "learnings": [],
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "661d96e7-04c9-4e24-a6a1-72e6301c6a77",
+    "at": "2026-08-09T01:55:25.761Z"
+  },
+  "updated_at": "2026-08-09T01:55:25.762Z",
+  "content_hash": "ebd633e5b978f07e5108e16869cb26fba672287531f96c0c9e699f633bd765fc"
+}

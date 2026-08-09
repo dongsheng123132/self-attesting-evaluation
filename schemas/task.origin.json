@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "2origin/task.origin.json",
+  "title": "task.origin — AI 任务状态对象（本境协议 benjing/0.2）",
+  "description": "一个正在进行的 AI 任务的持久状态。目标：关窗再开、换 harness/换模型后，任务靠这份状态续上，而不是靠聊天记录重放。v0.2 相对 v0.1 的增量全部对应实测缺陷，见 rfcs/RFC-0005-benjing-v0.2.md。",
+  "type": "object",
+  "required": [
+    "spec", "kind", "id", "goal", "version", "updated_at", "current_state", "next_steps"
+  ],
+  "properties": {
+    "spec": {
+      "enum": ["2origin/0.1", "2origin/0.2"],
+      "description": "协议版本。0.1 仍可读（向后兼容），新写入一律 0.2。名词冻结，只升版本号不改名"
+    },
+    "kind": { "const": "task.origin", "description": "对象类型。加载器按这个字段认学历，不按文件名——schemas/task.origin.json 曾因同名被当成一份学历" },
+    "id": { "type": "string", "description": "任务唯一 ID，跨会话不变" },
+    "title": { "type": "string", "description": "任务标题" },
+    "goal": { "type": "string", "description": "任务目标（一句话，模型换脑也能看懂）" },
+
+    "version": {
+      "type": "integer",
+      "description": "内容版本号。**由 content_hash 变化驱动，不由会话次数驱动**。v0.1 每次 SessionEnd 无脑 +1，实测内容一字未变 version 从 1 涨到 4，导致版本号既判断不了状态是否变化、也不能用作乐观锁"
+    },
+    "content_hash": {
+      "type": "string",
+      "description": "学历内容指纹：sha256(canonical(状态 - {version,updated_at,content_hash,actor}))。写入学历时作为乐观锁凭据（--expect），语义同影核 v0.2 的 expect_sha256：证明你读过当前内容才准写"
+    },
+    "actor": {
+      "type": "object",
+      "description": "最后写入者。跨模型/跨 harness 继承学历是本架构的核心主张，但 v0.1 状态文件里 0 个 provenance 字段，主张无从举证",
+      "properties": {
+        "harness": { "type": "string", "description": "claude-code / codex / … 由环境变量观测得出" },
+        "model": { "type": "string", "description": "模型名。**观测不到就写 unobserved，不许编** —— 本机 Claude Code 与 codex 均无可靠的模型名环境变量" },
+        "session_id": { "type": "string" },
+        "at": { "type": "string", "description": "ISO 时间" }
+      }
+    },
+
+    "scope": { "type": "string", "description": "作用域，如 project:shadowos" },
+    "created_at": { "type": "string", "description": "ISO 时间" },
+    "updated_at": { "type": "string", "description": "ISO 时间。内容未变则不刷新" },
+
+    "current_state": {
+      "type": "string",
+      "description": "当前状态的一句话描述。不写聊天过程，写『世界此刻是什么样』。"
+    },
+    "facts": {
+      "type": "array",
+      "description": "验证过的事实，不是会话里说过的话",
+      "items": {
+        "type": "object",
+        "required": ["claim", "verified"],
+        "properties": {
+          "claim": { "type": "string" },
+          "verified": { "type": "boolean", "description": "是否被本象观察/测试证实" },
+          "source": {
+            "type": "string",
+            "description": "证据来源。**必须引用可复核物**：文件路径、可重跑的命令、或验证用例编号（如 T3.2）。纯自然语言断言（『我说的』『实测过』）判 unverifiable —— v0.1 只判此字段非空，实测把 9 条 source 全换成胡话判决仍是 VERIFIED"
+          },
+          "source_kind": { "enum": ["file", "command", "testcase", "trace", "mixed"], "description": "可选。缺省时由 source 文本启发式判定" },
+          "actor": { "type": "string", "description": "可选。哪个 harness/模型验证的" },
+          "when": { "type": "string" }
+        },
+        "if": { "properties": { "verified": { "const": true } } },
+        "then": { "required": ["claim", "verified", "source"] }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "description": "关键决策及理由（commit log，不是聊天记录）",
+      "items": {
+        "type": "object",
+        "required": ["what", "why"],
+        "properties": {
+          "what": { "type": "string" },
+          "why": { "type": "string" },
+          "when": { "type": "string" }
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "description": "已执行的动作（影核 action 记录，含结果）",
+      "items": {
+        "type": "object",
+        "required": ["verb", "status"],
+        "properties": {
+          "verb": { "type": "string", "description": "如 document.save / file.write" },
+          "target": { "type": "string" },
+          "status": { "enum": ["done", "failed", "skipped"] },
+          "result": { "type": "string" },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "产出的文件/产物路径（仓库根相对，或绝对路径）",
+      "items": { "type": "string" }
+    },
+    "verification": {
+      "type": "string",
+      "description": "对整体完成度的验证结论：已验证到什么程度，还差什么"
+    },
+    "next_steps": {
+      "type": "array",
+      "description": "下一步清单。换模型后靠这个接着干",
+      "items": { "type": "string" }
+    },
+    "learnings": {
+      "type": "array",
+      "description": "从这个任务里长出来的经验（学堂 xuetang/0.1）。经验不是笔记：status=verified 只能由 xuetang/exam.mjs 跑通 recheck 之后给，作者不能自己写——写经验的人不能同时判自己合格。",
+      "items": {
+        "type": "object",
+        "required": ["lesson", "status"],
+        "properties": {
+          "id": { "type": "string", "description": "learningId(lesson)：跨学历的同一条经验得到同一个 id，用于去重与考试记账" },
+          "lesson": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "status": { "enum": ["candidate", "verified", "deprecated"] },
+          "origin": {
+            "type": "object",
+            "description": "这条经验是从哪次任务、哪个时刻长出来的",
+            "properties": {
+              "task": { "type": "string" },
+              "when": { "type": "string" }
+            }
+          },
+          "recheck": {
+            "type": "object",
+            "description": "可重跑的动作。fact 的 source 必须引用可复核物；对称地，learning 的 recheck 必须是别人能再跑一遍的命令。没有它，这条经验永远无法被推翻，也就永远不该叫 verified。",
+            "required": ["kind", "run"],
+            "properties": {
+              "kind": { "enum": ["command"] },
+              "run": { "type": "string" },
+              "expect_exit": { "type": "integer" },
+              "expect_stdout": { "type": "string" }
+            }
+          },
+          "exam": {
+            "type": "object",
+            "description": "长循环考试记录，只由 xuetang/exam.mjs 写。一次成功不是永久真理，所以这里记的是次数而不是一个布尔。",
+            "properties": {
+              "runs": { "type": "integer" },
+              "passes": { "type": "integer" },
+              "fails": { "type": "integer" },
+              "errors": { "type": "integer" },
+              "last_run": { "type": "string" },
+              "last_result": { "enum": ["pass", "fail", "error", "unexaminable"] },
+              "last_detail": { "type": "string" },
+              "promoted_at": { "type": "string" },
+              "demoted_at": { "type": "string" },
+              "demoted_by": { "type": "string" }
+            }
+          }
+        },
+        "if": { "properties": { "status": { "const": "verified" } } },
+        "then": { "required": ["recheck", "exam"] }
+      }
+    }
+  }
+}

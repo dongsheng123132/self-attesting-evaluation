@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "shadowcore/action.result.json",
+  "title": "action.result — 影核动作结果（v0.2）",
+  "description": "任何影核动作必须产出的结果对象。核心约束：status 由『写后回头观察世界』决定，不由执行函数是否抛异常决定。见 rfcs/RFC-0004-shadowcore-v0.2.md",
+  "type": "object",
+  "required": ["spec", "kind", "action_id", "verb", "target", "status"],
+  "properties": {
+    "spec": { "const": "shadowcore/0.2" },
+    "kind": { "const": "action.result" },
+    "action_id": { "type": "string", "description": "本次动作的唯一 ID" },
+    "verb": { "type": "string", "description": "如 file.write / file.append / state.observe" },
+    "target": { "type": "string", "description": "动作目标（相对 ShadowOS 根）" },
+
+    "status": {
+      "enum": ["done", "failed", "denied", "requires_approval", "replayed", "diverged"],
+      "description": "done=执行且观察一致 / failed=出错或观察不符 / denied=硬边界拒绝 / requires_approval=风险未获批准，世界未改动 / replayed=幂等命中且与磁盘一致 / diverged=幂等命中但磁盘已被外部改变，不得声称成功"
+    },
+    "risk": {
+      "enum": ["low", "medium", "high", "denied"],
+      "description": "由纯函数判定：白名单 + 目标是否存在 + 是否受保护路径。模型不能通过声明来降级"
+    },
+    "approval": {
+      "enum": ["auto", "expect_sha256", "confirm", "none"],
+      "description": "expect_sha256 = 出示目标当前 hash，『证明你读过』，无头 harness 唯一拿得出的批准凭据"
+    },
+    "riskReason": { "type": "string", "description": "判级理由（人类可读）" },
+    "reason": { "type": "string", "description": "失败/拒绝/需批准的原因" },
+
+    "evidence": {
+      "type": "object",
+      "description": "动作后回头观察世界的结果。这是 status 的唯一依据，不是自报数据",
+      "required": ["exists"],
+      "properties": {
+        "exists": { "type": "boolean" },
+        "size_bytes": { "type": "integer", "description": "UTF-8 字节数，不是字符数" },
+        "sha256": { "type": ["string", "null"] },
+        "mtime": { "type": ["string", "null"] }
+      }
+    },
+    "state_diff": {
+      "type": "object",
+      "description": "动作前后的状态差分",
+      "properties": {
+        "before": { "type": "object", "properties": { "exists": { "type": "boolean" }, "sha256": { "type": ["string", "null"] } } },
+        "after": { "type": "object", "properties": { "exists": { "type": "boolean" }, "sha256": { "type": ["string", "null"] } } }
+      }
+    },
+    "bytes_written": { "type": "integer" },
+
+    "idempotency_key": { "type": ["string", "null"] },
+    "replayed_of": { "type": "string", "description": "重放时指向原动作 ID" },
+    "ledger_evidence": { "type": ["object", "null"], "description": "diverged 时：账本记录的 evidence，与当前 evidence 对照" },
+
+    "reversible": { "type": "boolean" },
+    "backup_path": { "type": ["string", "null"], "description": "覆盖前备份路径。reversible 的物证，协议不承诺自动回滚" },
+    "undo_hint": { "type": "string" },
+
+    "verdict": { "enum": ["exists", "missing", "match", "mismatch"], "description": "仅 state.observe 使用" }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "task9",
+  "title": "学堂协议 v0.1：把主板上最后一个空槽装上——让经验能被推翻",
+  "goal": "项目叫「学堂」，主板上却一直没有学堂。给 learnings 补上产生/升降级/装载的完整机制，核心是找到本境已有的那个对称：fact 的 source 必须引用可复核物，那么 learning 的 recheck 必须是可重跑的动作。没有可重跑检验的经验，永远无法被推翻，也就永远不该叫 verified。",
+  "version": 1,
+  "scope": "xuetang/ 全部 + schemas/task.origin.json 的 learnings 段 + northbridge/compile.mjs 的装载段 + .claude/hooks/guard-benjing.mjs",
+  "current_state": "**v0.1 已实现并通过验证**。xuetang/learning-core.mjs（纯逻辑，不碰磁盘写）+ exam.mjs（长循环考试，落盘走本境乐观锁）+ verify-xuetang.mjs（26 条判据，17 条反向）。schema 用 if/then 把「verified 必须带 recheck+exam」变成承重约束；北桥 compileRequest 增加独立预算的经验段，只调 verified。首轮实测：58 条经验全部「不可考」、49 条自称 verified 当场降级；挂上 6 条能辩护的 recheck 后，第三轮 6/6 通过并升级，52 条仍为 candidate（这是结论不是遗留——大部分经验没有机器可跑的检验，协议让这件事可见）。七个协议全绿。**未解见 RFC-0008 §6，其中最大的洞是：挂一个恒绿的命令就能骗过考试。**",
+  "facts": [],
+  "decisions": [],
+  "actions": [],
+  "artifacts": [
+    "xuetang/learning-core.mjs",
+    "xuetang/exam.mjs",
+    "xuetang/verify-xuetang.mjs",
+    "rfcs/RFC-0008-xuetang-v0.1.md"
+  ],
+  "next_steps": [],
+  "learnings": [],
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "8ae92f38-38bb-43a8-9456-61d218629ce9",
+    "at": "2026-08-09T07:03:53.703Z"
+  },
+  "updated_at": "2026-08-09T07:03:53.704Z",
+  "content_hash": "de42295dbef0e5126747d03a981f2f1415bf3b806f57c0bbe5c205bf6bdee472"
+}

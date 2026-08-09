@@ -1,0 +1,108 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "task7",
+  "title": "ShadowWork Bench v0.2：把「更有效」从构造出来的结论改成测出来的结论",
+  "goal": "给「状态优于对话流」这条主张建一个真 benchmark：真实语料（磁盘上的真实学历 + 真实 Claude Code 会话记录）、真实模型（同端点同 prompt，唯一变量是开场喂什么）、客观判分（真值取自磁盘字段，干扰项取自别的真实任务）。并复核 v0.1 的 bench 是否构成证据。",
+  "version": 3,
+  "scope": "D:/uking编程/2origin-harness/bench 与 D:/uking编程/2origin-computer/conformance",
+  "current_state": "v0.2 已实现并真跑完（shadowwork-bench-v2.mjs，4 臂 × 54 题 × deepseek-v4-flash）。结果：2origin 臂四选一 100% / 事实均衡准确率 97.5%；同预算的真实对话流 30.8% / 50.0%，与「什么都不喂」统计上分不开；给 10 倍预算（7.7x token）仍只到 46.2% / 45.0%。最重要的一条是定性的：对话流不反问、语气笃定、但把最近在忙的活当成任务本身——只有 none 臂老实说信息不足。v0.1 的 compare-bench 已查实是构造结论，conformance C9 已降级并撤回原结论，新增 C10 承担证据，10 项 9✅1⚠️，run-tests.sh 退出码 0。文档落在 bench/RESULTS-v2.md 与 conformance/README.md。**尚未 git commit**。",
+  "facts": [
+    {
+      "claim": "v0.1 的 compare-bench「传统 harness 无法无追问续作」是构造出来的，不是观察到的：genTranscript 生成的 transcript 从没把 goal / next_steps[0] 原文写进去，tradCanResume 恒为 false，而 success 的判定条件正是 !tradCanResume",
+      "verified": true,
+      "source": "复刻 genTranscript 逻辑跑一遍：transcript 含 goal 原文=false、含 step 原文=false → success 条件恒 true（bench/RESULTS-v2.md「与 v0.1 的关系」节）",
+      "when": "2026-08-08T21:30:00+08:00"
+    },
+    {
+      "claim": "同预算下重放真实对话流 ≈ 什么都不喂：9549 字节的真实会话尾部得 30.8%(四选一)/50.0%(事实均衡)，而空上下文得 30.8%/52.5%，两者都贴着瞎猜线(25%/50%)",
+      "verified": true,
+      "source": "node bench/shadowwork-bench-v2.mjs --facts 40 --mc-facts 10 --max-tokens 8000，deepseek-v4-flash temperature 0，明细 bench/results-v2.json",
+      "when": "2026-08-08T21:30:00+08:00"
+    },
+    {
+      "claim": "给传统对话流 10 倍预算仍追不平：transcript-10x 用 39916 输入 token（7.7x）只到 46.2%/45.0%，对比本境 bundle 5154 token 拿 100%/97.5%——不是 token 不够，是形态不对",
+      "verified": true,
+      "source": "同上一次运行的四臂对照表",
+      "when": "2026-08-08T21:30:00+08:00"
+    },
+    {
+      "claim": "对话流不会说「我不知道」，它会自信地续错任务：transcript 与 transcript-10x 都没反问、语气笃定，却把最近在忙的活(RFC-0002 带外观察面)当成任务本身；反而是「什么都不喂」那一臂老实说「信息不足，请告诉我任务是什么」",
+      "verified": true,
+      "source": "四臂开放续作题的原始回答，见 results-v2.json 各臂 resume_reply 与 resume_asked_back",
+      "when": "2026-08-08T21:30:00+08:00"
+    },
+    {
+      "claim": "判分器自己把 max_tokens 截断记成了「模型答错」：首轮 cap=2000，推理模型把 token 花在 reasoning_content 上导致 content 为空，空答按 0 分计——查 finish_reason 全是 length。且 2origin 臂未触顶(最大 1755)，所以这个 bug 只压低对照臂，方向上利于我方结论",
+      "verified": true,
+      "source": "首轮 results 里空答条目的 finish_reason 全为 length；改 cap=8000 重跑后 transcript-10x 由 40.0% 升到 45.0%，结论方向不变",
+      "when": "2026-08-08T21:30:00+08:00"
+    },
+    {
+      "claim": "状态还顺带省推理 token：2origin 臂平均输出 406 token，transcript/transcript-10x/none 分别 810/1066/972——喂结论时模型不用把原料再推一遍(约 2~2.6x)",
+      "verified": true,
+      "source": "results-v2.json 各臂 avg_completion_tokens",
+      "when": "2026-08-08T21:30:00+08:00"
+    },
+    {
+      "claim": "三道四选一的噪音会让地板线假高：n=3 时「什么都不喂」臂 MC 得 66.7%，扩到 n=13(加 10 道事实归属题)后降到 30.8%，才逼近瞎猜线 25%——题量不足时对照臂的分数不可读",
+      "verified": true,
+      "source": "首轮 n=3 与次轮 n=13 两次运行的 none 臂 MC 准确率对比",
+      "when": "2026-08-08T21:30:00+08:00"
+    },
+    {
+      "claim": "southbridge/benjing-put.mjs --create 不会创建父目录：目标 demo/task7/ 不存在时直接抛原始 ENOENT 栈(writeAtomic 写 .tmp 文件失败)，而不是建目录或给可读错误；mkdir -p 后同一条命令成功",
+      "verified": true,
+      "source": "node southbridge/benjing-put.mjs demo/task7/task.origin.json --create --from ... → ENOENT 栈，exit=1；mkdir -p demo/task7 后同命令 status=done exit=0",
+      "when": "2026-08-08T21:30:00+08:00"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "v0.1 的两个 bench 保留为「机制单元测试」而不是删掉，但在 README 顶部和 conformance C9 里明确撤回其「更有效」结论",
+      "why": "它们在「验 buildBundle 不丢事实」这个身份上是合格的。直接删会让「判据数变少」和「结论被推翻」在账面上分不清——这是 task6 那条「判据搬家必须留一条会跑的链子」的同一课",
+      "when": "2026-08-08T21:30:00+08:00"
+    },
+    {
+      "what": "C10 默认只跑 --dry-run(免费离线)，真打模型必须显式 SHADOWWORK_LIVE=1",
+      "why": "一次真跑约 270 万输入 token，要花钱。会悄悄花钱的 conformance 项本身就是缺陷——花钱必须是显式动作",
+      "when": "2026-08-08T21:30:00+08:00"
+    },
+    {
+      "what": "判分器单独统计 finish_reason=length 的条数，不为 0 时在报告里直接印警告并声明「该臂分数不可用」",
+      "why": "沉默的截断会被读成「覆盖了全部题目」。这和 bundle 谎报装载量、RFC 里过期的 36/36 是同一个病：不报告丢弃量等于谎报覆盖率",
+      "when": "2026-08-08T21:30:00+08:00"
+    },
+    {
+      "what": "干扰项一律取自别的真实任务的同类字段，不自己编",
+      "why": "编的干扰项太好认，会把对照臂的分数虚高抬起来，测出来的差距就不可信。真实任务的 goal/fact 同域同风格，才是硬干扰",
+      "when": "2026-08-08T21:30:00+08:00"
+    }
+  ],
+  "actions": [],
+  "artifacts": [
+    "D:/uking编程/2origin-harness/bench/shadowwork-bench-v2.mjs",
+    "D:/uking编程/2origin-harness/bench/RESULTS-v2.md",
+    "D:/uking编程/2origin-harness/bench/results-v2.json",
+    "D:/uking编程/2origin-computer/conformance/run-tests.sh",
+    "D:/uking编程/2origin-computer/conformance/README.md"
+  ],
+  "verification": [],
+  "next_steps": [
+    "git commit + push 两个仓库（2origin-harness 的 bench/ 与 2origin-computer 的 conformance/）——本轮全部改动尚未提交",
+    "v0.3 必须加 summary 臂与 RAG 臂：现在的对照只有「尾部截断」这一种传统做法，做了摘要/检索的传统 harness 会明显更好。不加这两臂，我们就是在打自己选的稻草人——那正是 v0.1 翻车的病",
+    "多模型 × 多任务 × 重采样：现在是单模型单任务单次，transcript 与 none 的差距在 n=13/39 上统计上分不开，只能说「都贴瞎猜线」，不能说「transcript 更差」",
+    "处理 2origin 臂的开卷效应：事实字面写在 bundle 里，四选一/是否题对它是开卷，100% 有天花板。要出一组「必须推理才能答」的题（如跨事实推论、时序先后），才能测出状态的上限",
+    "修 southbridge/benjing-put.mjs --create：父目录不存在时应建目录或给可读错误，而不是抛原始 ENOENT 栈"
+  ],
+  "learnings": [],
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "40108e1f-a109-40d0-89a5-4d0a8ef99f50",
+    "at": "2026-08-08T13:28:53.492Z"
+  },
+  "content_hash": "e218e1645eadc82b06e1b4deeac354ef1663e92b557c3b25ccdf7d5a695ed56e",
+  "updated_at": "2026-08-08T13:28:53.493Z"
+}

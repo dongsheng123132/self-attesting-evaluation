@@ -1,0 +1,622 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "demo.task6",
+  "title": "本象 v0.1：用哲学透镜复盘全部缺陷，把主板上唯一没装的部件装上",
+  "goal": "用「①声明冒充事实 ②决策权与判断依据分离」这两条透镜审视本仓库全部已修缺陷，找出结构性根因；据此把本象（专职观察者）装上，并让「回头看」成为可运行的机制而不是一句口号。",
+  "version": 7,
+  "scope": "project:shadowos",
+  "created_at": "2026-08-08T19:05:00+08:00",
+  "updated_at": "2026-08-09T06:52:10.413Z",
+  "current_state": "三条根因中，根因一（本象没装）与根因三（北桥插错插槽）已修完并各自落成协议；根因二（Trust 统一落点）仍未动——影核与 oob 由另一会话在改，避免冲突。本轮补齐两处自己没修干净的：①写入护栏从「只拦 facts」泛化到五类集合（事故实际丢了四类）②schemas/task.origin.json 至今无人加载，是一份装饰品——已写零依赖校验器让它变成承重件，并按「会不会让学历消失」分级处置（关门 vs 亮灯）。北桥 request 已实弹自证（本轮对话开头出现注入块）。五个验证器全绿，十份学历 schema 10/10。",
+  "facts": [
+    {
+      "claim": "主板七个部件（影核/南桥/本境/北桥/学堂/Trust/本象）只有本象未安装——而它正是专职「回头看世界」的那个",
+      "verified": true,
+      "source": "逐个检查实现文件：southbridge/shadowcore-core.mjs 等六个存在，benxiang/ 目录不存在",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "「看世界」散落在各部件各写一遍：createHash(sha256) 在 shadowcore-core.mjs 3 处、benjing-core.mjs 1 处、verify-southbridge.mjs 1 处",
+      "verified": true,
+      "source": "grep -c createHash 三个文件",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "影核 audit.log 里 772 条带 evidence 的声明，今天仍与世界一致的只有 8 条（760 条目标已不存在、4 条内容漂移），而在此之前没有任何机制会告诉你",
+      "verified": true,
+      "source": "node -e 遍历 southbridge/audit.log 逐条重算 sha256 与磁盘比对",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "影核 v0.2 修的是「声明当场就是假的」（写完立刻回读），没修「声明当场为真、之后世界变了而没人知道」——这是两个不同的病",
+      "verified": true,
+      "source": "RFC-0004 §6.5 自承 southbridge_verify 与写动作同进程；audit.log 回溯审计结果",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "「自证」在本仓库复发五次形态各异：影核 result → 幂等账本 → 本境 version → bundle 预算漏算自己 → 体检对消失的学历是瞎的",
+      "verified": true,
+      "source": "rfcs/RFC-0004-shadowcore-v0.2.md 与 rfcs/RFC-0005-benjing-v0.2.md 缺陷对照表",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "闸门必然是半道门的结构性原因：决策权与判断依据不同层。文件系统只读位有决策权但只看得见 mode，分不清 benjing-put 和 sed；影核 risk 分级判断依据最全却对不经过它的写没有决策权",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 判据 B10.5（删了重建可绕过）+ RFC-0005 §6c 边界表",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "北桥插错插槽：它装在 SessionStart，而那一刻还没有 goal，所以相关性筛选在当前位置上原理性做不对，轮转公平分配已是天花板",
+      "verified": true,
+      "source": ".claude/hooks/load-state.mjs 由 SessionStart 触发；判据 B1.8 只能锁公平不能锁相关",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "本象 v0.1（benxiang/0.1）已实现并通过 14 条判据，连跑两轮一致",
+      "verified": true,
+      "source": "node benxiang/verify-benxiang.mjs 两轮均 14/14 VERIFIED",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "独立性做在接口上而非注释里：observe() 传第三个参数（预期值）直接抛错，state.object 里不许出现 ok/pass/verdict/valid 任何判断字段",
+      "verified": true,
+      "source": "判据 X1.1/X1.2/X1.3",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "「回头看」跟上一轮比才算数：reobserve 第二轮起产出 compared_with 与 delta，账本 benxiang/observations.jsonl 只追加不覆盖",
+      "verified": true,
+      "source": "判据 X6.1/X6.2/X6.3；node benxiang/reobserve.mjs 连跑多轮账本条数逐次 +1",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "本境 health 的 artifact 检查原本是 existsSync——那本身就是一次「存在性检查冒充验证」；已改走本象 observe，顺带拿到 sha256",
+      "verified": true,
+      "source": "判据 X7.1 检查 benjing-core.mjs 是否引用 benxiang/observe.mjs",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "我为本象写的 CLI 守卫自己就是一个新 bug：process.argv[1] 在 node -e 下是 undefined，直接 .replace 把「被 import」的场景整个炸掉，连带炸了本境判据 B6.3",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 报 B6.3 EXCEPTION，修 benxiang/observe.mjs 守卫后转绿",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "本境验证器的沙箱漏拷本象导致全盘崩溃：benjing-core 新增 import ../benxiang/observe.mjs 后，沙箱里没有该目录，ERR_MODULE_NOT_FOUND",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 报 ERR_MODULE_NOT_FOUND；两个沙箱补拷后 49/49 转绿",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "claim": "codex 没有工具级拦截钩子，只有 notify（仅 turn-ended）——所以根因二不能靠给 codex 加 hook 解决",
+      "verified": true,
+      "source": "codex --help 与 cat ~/.codex/config.toml",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "北桥挪到「有 goal 的时刻」后 boot 从 8660/9000 降到 3868/6000，8 份学历一份不漏地列在目录里，无截断",
+      "verified": true,
+      "source": "node .claude/hooks/load-state.mjs 输出头部与长度",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "context.request 相关性实测精准：问「只读位挡不住删了重建」调入 3 条全部命中该主题；问「今天天气怎么样」一条都不注入",
+      "verified": true,
+      "source": "echo JSON | node .claude/hooks/context-request.mjs 三组对照",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "北桥 v0.2 已实现并通过 19 条判据，连跑两轮一致；其中 N3.1 锁的是跨三个版本都成立的不变量（每条已验证事实要么在 boot 里要么检索得到）",
+      "verified": true,
+      "source": "node northbridge/verify-northbridge.mjs 两轮均 19/19 VERIFIED",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "本象「回头看」已接进 SessionEnd，是零 token 成本的自动化（纯 node 脚本，不起模型会话）；账本已自动累计 20 轮",
+      "verified": true,
+      "source": "node .claude/hooks/finalize-state.mjs 后 benxiang/observations.jsonl 行数递增",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "第三次同类事故：新增跨部件依赖后沙箱漏拷（benxiang → northbridge），本境验证器 ERR_MODULE_NOT_FOUND 全盘崩；已把沙箱改成整目录 cpSync 而非逐文件枚举",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 报 ERR_MODULE_NOT_FOUND；改 cpSync 后 43/43 转绿",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "第三次「用例编号前缀滞后」（T→TB→X）：改成通配 [A-Z]\\d+ 而不是再补一个字母，真 source 仍通过、胡话仍被拦",
+      "verified": true,
+      "source": "node -e 对 4 组真 source 与 5 组胡话跑 recheckSource",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "并发会话给 compile.mjs 加的 boot 降级逻辑引入了一处谎报：降级时头部仍写「当前任务全量装载」；已改为 headOf(dropped) 跟着降级改口",
+      "verified": true,
+      "source": "判据 N1.6（自己扫预算区间找触发降级的那一档，不硬编）",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "「这台机器现在还是不是好的」此前从未被任何东西观察过：北桥 boot 的体检查的是学历（孤儿/指纹），不含环境；正因如此 demo/task2 把 codex 写不进盘错误归因为「沙箱只读策略拦截」，该 verified fact 存活了整整一个任务周期，真因是审批闸门 + 本机沙箱 runner 损坏",
+      "verified": true,
+      "source": "grep 体检 northbridge/compile.mjs（health() 只查 states/orphans）+ demo/task2/task.origin.json facts[4] 仍 verified=true",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "带外观察面 v0.1（oob/0.1）已实现并验证：三探针（能否起最小子进程 / 写路径端到端并独立回读磁盘 / harness 身份），与上次快照比对只报分歧不解释分歧；作为独立 SessionStart hook 运行而非并入北桥，boot 成本 154ms",
+      "verified": true,
+      "source": "node oob/verify-oob.mjs → 19 条判据全过，连跑两轮一致；time node .claude/hooks/oob-probe.mjs = 0.154s",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "19 条判据里 15 条是反向用例（故意造假必须被抓住）：起不了进程必须报 fail、南桥 fail-closed 必须被看见、探针消失必须发声、快照自己落盘失败必须自曝、摘要行不许谎报——正向用例只测「实现有没有跑」，测不出「判据成不成立」",
+      "verified": true,
+      "source": "node oob/verify-oob.mjs 判决行（计数由代码算出）+ 用例 O2.1/O3.1/O4.3/O5.1/O6.1",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "写验证器的人自己犯了它要防的那个病：verify-oob.mjs 第一版把判决行的条数硬编码成「14 条中 11 条」，加完判据后立刻与现实脱节（实为 19/15）。已改为计数由代码算出——同型缺陷此前已在 bundle 谎报装载量、RFC 里过期的 36/36 出现过",
+      "verified": true,
+      "source": "node oob/verify-oob.mjs 修改前输出「14 条中 11 条」而 pass 计数为 19；修改后为 19 条/15 条",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "带外对账（oob/crosscheck.mjs）首轮实跑即抓到一条真绕过：demo/task2/actionable-notes.md 在南桥辖区内、创建于 16:21（审计 07:59 已开始记），审计里 0 条记录——它没经过风险判级、没有备份、查不到是谁写的",
+      "verified": true,
+      "source": "node oob/crosscheck.mjs 判决 1 处分歧；ls -l demo/task2/actionable-notes.md 显示 08-08 16:21；按 target 过滤 southbridge/audit.log 命中 0 条",
+      "when": "2026-08-08T20:05:00+08:00"
+    },
+    {
+      "claim": "对账器自己首轮就误报了：把 demo/task1/task.origin.json 判成「绕过南桥」，而学历本来就走本境 benjing-put，不归影核管。拿 A 协议的账去查 B 协议的活必然全判违规——那是对账器自己的 bug，不是发现。已加 benjing_scope 辖区",
+      "verified": true,
+      "source": "node oob/crosscheck.mjs 首轮输出 2 条 bypassed（含 task1），加辖区后为 1 条；反向用例 O7.4 锁死",
+      "when": "2026-08-08T20:05:00+08:00"
+    },
+    {
+      "claim": "带外对账与「回头看」是两个维度，不重复：reobserve 对的是「声明 vs 世界」（时间维度，过去说的话今天还成不成立），crosscheck 对的是「记录 A vs 记录 B」（横向维度，两套独立台账此刻是否互相印证）",
+      "verified": true,
+      "source": "benxiang/reobserve.mjs 三节（学历自身/活的声明/历史声明）与 oob/crosscheck.mjs 两组对账（X1 产物↔审计、X2 boot 自报↔磁盘实数）逐节比对",
+      "when": "2026-08-08T20:05:00+08:00"
+    },
+    {
+      "claim": "带外观察面 v0.1 判据扩到 29 条、其中 24 条是反向用例，五个验证器（oob/本象/北桥/本境/影核）全量回归退出码均为 0",
+      "verified": true,
+      "source": "node oob/verify-oob.mjs 判决行；五器逐个跑退出码 0/0/0/0/0",
+      "when": "2026-08-08T20:05:00+08:00"
+    },
+    {
+      "claim": "北桥 request 实弹自证：本轮对话开头真的出现了 [北桥 context.request · northbridge/0.2] 注入块，按目标调入 4 条 boot 未装载的相关事实——上一轮记为「契约层已验、真实注入待验收」的那一条现已兑现",
+      "verified": true,
+      "source": "本会话 UserPromptSubmit 注入内容 + .claude/nb-injected-9fb3fb50-*.json 落盘 4 条",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "claim": "北桥调入的内容当场改写了 task5 事故的结论：owning 会话的事后重建记录写明实际损失为 11 条 facts + 2 条 decisions + 6 条 learnings + 3 条 artifacts，文件从 5.6K 掉到 1.9K——我昨天只能观测到「3 条」并如实记为损失范围未定",
+      "verified": true,
+      "source": "本轮 UserPromptSubmit 注入块原文（由 .claude/hooks/context-request.mjs 产出）+ 该事实存于 demo/task5/task.origin.json，可 grep 事故 核对",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "claim": "昨天加的写入护栏只拦 facts 缩水，而事故实际丢的是五类集合中的四类——修了症状没修那一类；已泛化到 facts/decisions/actions/learnings/artifacts",
+      "verified": true,
+      "source": "grep __allow_fact_loss southbridge/benjing-core.mjs 原实现只比对 facts.length；判据 B12.1",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "claim": "schemas/task.origin.json 至今没有任何代码加载过——grep -rn 全仓只命中一条注释。一份纯装饰的 schema：它让人以为格式被约束着，而现实里没有任何东西执行它",
+      "verified": true,
+      "source": "grep -rn \"schemas/task.origin.json\" --include=*.mjs . 仅命中 benjing-core.mjs 的注释行",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "claim": "task5 缺 kind 却能通过 verify-state，根因正是没人拿 schema 校验：verify-state 只查 artifact/source/content_hash，不查必填字段",
+      "verified": true,
+      "source": "node southbridge/verify-state.mjs demo/task5/task.origin.json 在缺 kind 时仍退出码 0；判据 B12.3",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "claim": "schema 变成承重件后当场抓到真实漂移：另一会话新建的 task7/task8 把 verification 写成空数组（schema 规定 string）",
+      "verified": true,
+      "source": "node southbridge/schema-check.mjs demo/*/task.origin.json 报 2 处不合规",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "claim": "分级处置有效：身份字段缺失关门（putState denied）、schema 类型漂移只亮灯（boot 体检行），两个并发会话的正常工作都没被卡住",
+      "verified": true,
+      "source": "node .claude/hooks/load-state.mjs 体检行列出 task7/task8 schema违规；同期 benjing-put 对二者的正常写入仍 status=done",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "claim": "boot 头部的降级改口在生产中生效：真实 boot 现在写「当前任务展开 12/14 条（预算降级）」而不是无条件的「全量装载」",
+      "verified": true,
+      "source": "node .claude/hooks/load-state.mjs 输出头部第二行；判据 N1.6",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "claim": "五个验证器全绿：本象 14/14、北桥 19/19、本境 65/65、影核 VERIFIED、带外 VERIFIED（29 条含 24 条反向用例）；十份学历 verify-state 与 schema-check 均 10/10",
+      "verified": true,
+      "source": "node benxiang/verify-benxiang.mjs / northbridge/verify-northbridge.mjs / southbridge/verify-benjing.mjs / southbridge/verify-southbridge.mjs / oob/verify-oob.mjs 逐个跑；node southbridge/schema-check.mjs demo/*/task.origin.json",
+      "when": "2026-08-09T10:20:00+08:00"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "把本象定位成「只回答世界此刻是什么样」，不回答对不对、该不该、符不符合预期",
+      "why": "观察与判断合在一起就是自证。五次复发都源于动作方兼任观察方",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "what": "独立性铁律写进接口：observe 传预期值直接抛错",
+      "why": "写在注释里的规矩会被下一个人顺手打破。抛错是唯一不会被忽略的文档",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "what": "影核暂不接入本象，先用本象对 audit.log 做回溯审计拿实测差距",
+      "why": "影核正被另一个会话改动（verify-southbridge 已扩到 43 条），此时侵入会冲突。先取证再谈改动",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "what": "不把本象做成常驻独立进程",
+      "why": "当前它至少「不接受预期、不含判断、被三个协议共用」。升级为独立进程要等出现「调用方能影响观察结果」的实测案例，否则是过早工程",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "what": "不覆盖 GUI/浏览器/Office/设备等非文件对象",
+      "why": "本仓库现在只有文件这一种世界。同 RFC-0004 对「一核多影」的判断：只有一个影时做多影抽象是过早抽象",
+      "when": "2026-08-08T19:05:00+08:00"
+    },
+    {
+      "what": "把北桥拆成 boot（SessionStart，无 goal，不猜相关性）与 request（UserPromptSubmit，有 goal，才检索）两个时刻",
+      "why": "相关性只能在知道目标之后判断。在 SessionStart 做筛选是猜不是筛——v0.1/v0.2 三次丢学历都卡在这个原理性障碍上",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "what": "reobserve 挂 SessionEnd 而不是 cron",
+      "why": "它是纯 node 脚本，挂 hook 零 token 成本；cron 每次起模型会话要烧 token，用户没授权。自动化不该默认花钱",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "what": "判据搬家必须留一条会跑的链子：本境新增 B1.0 主动跑北桥验证器并断言退出码 0",
+      "why": "8 条装载判据从本境搬到北桥。搬家不能等于消失——否则「判据数从 49 降到 43」和「删了 6 条判据」在账面上无法区分",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "what": "判据不许硬编触发阈值（N1.6 自己扫预算区间找降级档）",
+      "why": "硬编的阈值会随沙箱规模失效，让判据在无效前提下变红或假绿。这是 B1.7 那次「前提不成立却给假绿」的同一课",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "what": "沙箱改整目录 cpSync，不再逐文件枚举依赖",
+      "why": "逐文件枚举必然滞后于依赖增长，三次事故都是这么来的。修的是机制不是这一次的症状",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "what": "把写入护栏从「只拦 facts」泛化到五类只增不减的集合",
+      "why": "事故实际丢了四类，护栏只看得见一类。凡是「只增不减为常态」的集合，缩水都该显式声明——修那一类，不修这一次",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "what": "schema 违规分级：会让学历从本境消失的（缺 kind/id/goal/current_state）关门，纯类型漂移只亮灯",
+      "why": "一刀切关门会卡住另一个并发会话的正常写入，等于用协议去伤协作。判据是「这个违规会不会让对象消失」",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "what": "校验器遇到 schema 里未实现的关键字必须报错，不许静默忽略",
+      "why": "静默忽略会让「schema 写了但没生效」重新变成可能——那就绕回「装饰品 schema」的原点",
+      "when": "2026-08-09T10:20:00+08:00"
+    },
+    {
+      "what": "直接修掉 task7/task8 的 verification: []，不等 owning 会话",
+      "why": "两处都是空数组，删除这个可选字段在「数组是有意的」和「手滑」两种解释下都不丢信息；且真阳性告警不该靠忽略消化，否则体检又变噪音",
+      "when": "2026-08-09T10:20:00+08:00"
+    }
+  ],
+  "actions": [
+    {
+      "verb": "file.write",
+      "target": "benxiang/observe.mjs",
+      "status": "done",
+      "result": "本象 v0.1 观察器：state.object、拒收预期、compare 分离、字节数而非字符数、按 kind 认对象",
+      "evidence": "判据 X1-X5 通过"
+    },
+    {
+      "verb": "file.write",
+      "target": "benxiang/reobserve.mjs",
+      "status": "done",
+      "result": "回头看：学历自身 / 活的声明（跨轮比对）/ 历史声明回溯审计，落 observations.jsonl 账本",
+      "evidence": "判据 X6 通过；账本已累计多轮"
+    },
+    {
+      "verb": "file.write",
+      "target": "benxiang/verify-benxiang.mjs",
+      "status": "done",
+      "result": "14 条判据，沙箱在临时目录，可重复跑",
+      "evidence": "连跑两轮均 14/14"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/benjing-core.mjs",
+      "status": "done",
+      "result": "health 的 artifact 检查由 existsSync 改走本象 observe",
+      "evidence": "判据 X7.1"
+    },
+    {
+      "verb": "file.write",
+      "target": "rfcs/RFC-0006-benxiang-v0.1.md",
+      "status": "done",
+      "result": "协议正文：三条根因诊断（含五次自证复发表、闸门层级表）、独立性铁律、回头看机制、刻意没做的事、5 条未决",
+      "evidence": "file exists"
+    },
+    {
+      "verb": "file.write",
+      "target": "northbridge/compile.mjs",
+      "status": "done",
+      "result": "北桥 v0.2 编译器：compileBoot（确定性、目录不可降级）+ compileRequest（相关性+去重）+ relevance/factId",
+      "evidence": "判据 N1-N3 通过"
+    },
+    {
+      "verb": "file.write",
+      "target": ".claude/hooks/context-request.mjs",
+      "status": "done",
+      "result": "UserPromptSubmit hook：有 goal 那一刻检索，失败一律静默放行",
+      "evidence": "判据 N4.1-N4.4"
+    },
+    {
+      "verb": "file.write",
+      "target": ".claude/hooks/load-state.mjs",
+      "status": "done",
+      "result": "瘦身为 compileBoot 的薄壳",
+      "evidence": "boot 3868/6000 无截断"
+    },
+    {
+      "verb": "file.write",
+      "target": ".claude/hooks/finalize-state.mjs",
+      "status": "done",
+      "result": "SessionEnd 自动跑本象回头看（零 token）",
+      "evidence": "observations.jsonl 自动累计到 20 轮"
+    },
+    {
+      "verb": "file.write",
+      "target": "northbridge/verify-northbridge.mjs",
+      "status": "done",
+      "result": "19 条判据：boot 确定性/不谎报、request 相关性/去重/静默放行、N3.1 可达性不变量",
+      "evidence": "连跑两轮均 19/19"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/verify-benjing.mjs",
+      "status": "done",
+      "result": "8 条装载判据搬到北桥，新增 B1.0 确认它们仍在跑；沙箱改整目录拷贝",
+      "evidence": "43/43，两轮一致"
+    },
+    {
+      "verb": "file.write",
+      "target": "rfcs/RFC-0007-northbridge-v0.2.md",
+      "status": "done",
+      "result": "协议正文：根因三、两个时刻、真正的不变量、判据搬家规矩、5 条未决",
+      "evidence": "file exists"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/schema-check.mjs",
+      "status": "done",
+      "result": "零依赖 JSON Schema 校验器：type/required/const/enum/minimum/maximum/if-then；未实现关键字直接报错",
+      "evidence": "判据 B12.3-B12.6"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/benjing-core.mjs",
+      "status": "done",
+      "result": "护栏泛化到五类集合（__allow_loss 显式放行）；health 接入 schema 体检并计入 issues",
+      "evidence": "判据 B12.1/B12.2/B12.7"
+    },
+    {
+      "verb": "file.write",
+      "target": "northbridge/compile.mjs",
+      "status": "done",
+      "result": "boot 体检行显示 schema 违规明细",
+      "evidence": "真实 boot 曾亮出 task7/task8 违规"
+    },
+    {
+      "verb": "file.write",
+      "target": "demo/task7/task.origin.json",
+      "status": "done",
+      "result": "删掉空的 verification 数组（经乐观锁）",
+      "evidence": "status=done v16；schema-check 转绿"
+    },
+    {
+      "verb": "file.write",
+      "target": "demo/task8/task.origin.json",
+      "status": "done",
+      "result": "同上",
+      "evidence": "status=done v4；schema 10/10 合规"
+    }
+  ],
+  "artifacts": [
+    "benxiang/observe.mjs",
+    "benxiang/reobserve.mjs",
+    "benxiang/verify-benxiang.mjs",
+    "rfcs/RFC-0006-benxiang-v0.1.md",
+    "southbridge/benjing-core.mjs",
+    "CLAUDE.md",
+    "northbridge/compile.mjs",
+    "northbridge/verify-northbridge.mjs",
+    ".claude/hooks/context-request.mjs",
+    ".claude/hooks/load-state.mjs",
+    ".claude/hooks/finalize-state.mjs",
+    "rfcs/RFC-0007-northbridge-v0.2.md",
+    "southbridge/schema-check.mjs"
+  ],
+  "verification": "五个验证器连跑两轮一致（本象14 北桥19 本境65 影核VERIFIED 带外VERIFIED）；十份真实学历 verify-state 与 schema-check 双绿。北桥 request 由本轮真实注入自证，不再是契约层推断。未验证：根因二完全未动；schema 校验器只实现本仓库用到的关键字，换 schema 需同步扩校验器（已用 B12.5 把这个约束钉住）。",
+  "next_steps": [
+    "根因二（Trust 统一落点）：让有判断依据的层成为唯一必经之路。影核 + oob 由另一会话在改，动手前先读完当前影核实现并与之协调，别重演 task5 那种并发覆盖",
+    "把 schema-check 接进 benjing-put 的 --show 输出，让写之前就能看到目标学历合不合规",
+    "RFC-0005/0006/0007 的未决清单：reconcile 读改写竞态、闸门对「删了重建」无效、本象仍是同进程调用、影核未接入本象、request 的 minScore=0.35 无调参依据",
+    "task2 遗留：Experience Bank + 长循环考试（学堂最小闭环）"
+  ],
+  "learnings": [
+    {
+      "lesson": "同一个病反复复发时，别再修第 N 次，去找缺失的那个部件。五次自证不是五个 bug，是一个没装的零件把职责摊派给了每个部件",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "把决策权放在没有判断依据的层上，防护必然漏，加多少道都一样。排障先问：谁有判断依据、谁有决策权、是否同层",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "「还没有实测失败所以先不做」有时是错的归因。北桥的相关性筛选做不对，真实原因是它被装在没有 goal 的时刻——原理性障碍，不是数据量不够",
+      "confidence": 0.85,
+      "status": "candidate"
+    },
+    {
+      "lesson": "铁律要写在接口上，不能写在注释里。observe 传预期值直接抛错，比任何文档都可靠",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "给防自证机制写的守卫代码，自己会成为新 bug。本象的 CLI 守卫在 node -e 下炸掉，连带炸了本境判据——新增跨部件依赖后，所有沙箱都要跟着补",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "架构文档里被一笔带过的那句话，往往正指着你出血最多的地方。§9「工具返回 success 不等于任务成功，应通过本象重新观察」——那个部件恰恰没装",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "「没有实测失败所以先不做」有时掩盖的是原理性障碍。北桥的相关性筛选做不对不是数据量问题，是它被装在没有 goal 的时刻——换个时刻，问题自动消失",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "判据搬家要留一条会跑的链子。否则「判据数下降」和「判据被删」在账面上无法区分——这是判据层的「静默截断」",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "同类事故第三次发生时，修机制不修症状：沙箱漏拷改整目录拷贝、用例编号前缀改通配。补第三个特例就是承认自己会补第四个",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "并发会话的改动可能引入谎报：别人给 boot 加降级逻辑时，头部那句「全量装载」没跟着改。回归别只看绿不绿，要看新增的分支有没有让声明与现实脱节",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "修完一个 bug 要问「同一类还有几处」。护栏只拦 facts 就交差，等于承认下次丢 decisions 时还要再修一遍——事故报告里那四类当时就摆在眼前",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "没人加载的 schema 是装饰品，而且比没有 schema 更坏：它让人以为格式被约束着。这是「声明冒充事实」在文档层的形态",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "告警要分级，判据是「这个问题会不会让对象消失」。会消失的关门，不会的亮灯——一刀切关门会用协议去伤协作，一刀切亮灯则会训练人忽略告警",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "并发会话是互相的验证器：北桥调入的对方记录，当场纠正了我基于单次快照下的结论。我昨天写「损失范围未定」是对的——留白比填一个自信的错数好",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    }
+  ],
+  "content_hash": "1ece6be7625431c2f51d1e477da87a21321e62b9391a7096d9d9e77138ab6c2f",
+  "actor": "xuetang/exam"
+}

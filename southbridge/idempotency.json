@@ -1,0 +1,38 @@
+{
+  "hermes-t1": {
+    "request_hash": "e845453738af558dcdd1b0712740fd7d6b0632d42c14ee394a5e71961962bc50",
+    "action_id": "act:8d6ca84f",
+    "result": {
+      "spec": "shadowcore/0.2",
+      "kind": "action.result",
+      "action_id": "act:8d6ca84f",
+      "verb": "file.write",
+      "target": "demo/task4/hermes-writeback.md",
+      "idempotency_key": "hermes-t1",
+      "status": "done",
+      "risk": "low",
+      "approval": "auto",
+      "riskReason": "新建文件",
+      "evidence": {
+        "exists": true,
+        "size_bytes": 24,
+        "sha256": "8e5df262900243f85b96823f6375c7af3e56fe633863b7eaf09b9172676737ad",
+        "mtime": "2026-08-08T09:31:31.563Z"
+      },
+      "state_diff": {
+        "before": {
+          "exists": false,
+          "sha256": null
+        },
+        "after": {
+          "exists": true,
+          "sha256": "8e5df262900243f85b96823f6375c7af3e56fe633863b7eaf09b9172676737ad"
+        }
+      },
+      "bytes_written": 24,
+      "reversible": true,
+      "backup_path": null,
+      "undo_hint": "delete target"
+    }
+  }
+}

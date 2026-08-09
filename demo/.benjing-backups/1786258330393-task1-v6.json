@@ -1,0 +1,111 @@
+{
+  "spec": "2origin/0.1",
+  "kind": "task.origin",
+  "id": "demo.task1",
+  "title": "第一个学堂闭环 Demo：跑通 cross-session",
+  "goal": "验证「关窗再开，任务靠 task.origin 续上」：定义 schema、挂 Stop hook 保存、挂 SessionStart hook 加载、跑一个真实任务到一半、新会话自动接着干。",
+  "version": 6,
+  "scope": "project:shadowos",
+  "created_at": "2026-08-08T15:30:00+08:00",
+  "updated_at": "2026-08-08T15:25:00+08:00",
+  "current_state": "cross-session 验收通过：headless 全新会话通过 SessionStart hook 自动注入本状态摘要，准确报出任务标题与目标，无任何对话铺垫。Stop 每轮 trace + SessionEnd 退出归档(version 递增)均已实测。学堂闭环=绿。",
+  "facts": [
+    {
+      "claim": "这台机器同时装有 Claude Code(providers.json→deepseek) 和 Codex(codex-route.json→deepseek-v4-pro)，具备跨 harness 实测条件",
+      "verified": true,
+      "source": "cat ~/.uking/providers.json + codex-route.json",
+      "when": "2026-08-08T15:30:00+08:00"
+    },
+    {
+      "claim": "本象协议已在 GitHub dongsheng123132/2origin，Apache-2.0；本境协议无远端",
+      "verified": true,
+      "source": "git remote -v",
+      "when": "2026-08-08T15:30:00+08:00"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "task.origin 定位为『AI 任务状态对象』，不是聊天记录重放",
+      "why": "对照 LongHorizon-Harness：长期保存的是 State+Facts，不是 conversation",
+      "when": "2026-08-08T15:31:00+08:00"
+    },
+    {
+      "what": "命名冻结 2Origin 体系，第一台定义=「学历跨会话/跨 harness/跨模型继承」",
+      "why": "『全球最好』不可验证，『第一台能证明 X』可验证",
+      "when": "2026-08-08T15:35:00+08:00"
+    }
+  ],
+  "actions": [
+    {
+      "verb": "file.write",
+      "target": "schemas/task.origin.json",
+      "status": "done",
+      "result": "schema 定稿，含 required 字段与 learnings",
+      "evidence": "files exist"
+    },
+    {
+      "verb": "file.write",
+      "target": "demo/task1/task.origin.json",
+      "status": "done",
+      "result": "示例状态文件",
+      "evidence": "files exist"
+    },
+    {
+      "verb": "config.write",
+      "target": ".claude/settings.json",
+      "status": "done",
+      "result": "挂载 SessionStart/Stop/SessionEnd 三个 hook",
+      "evidence": "hooks 注册成功"
+    },
+    {
+      "verb": "hook.test",
+      "target": "load-state.mjs",
+      "status": "done",
+      "result": "输出合法 additionalContext JSON，含任务摘要",
+      "evidence": "node 实测 exit 0"
+    },
+    {
+      "verb": "hook.test",
+      "target": "save-state.mjs",
+      "status": "done",
+      "result": "模拟 Stop stdin，trace.jsonl 追加成功",
+      "evidence": "tail trace.jsonl 有记录"
+    },
+    {
+      "verb": "hook.test",
+      "target": "finalize-state.mjs",
+      "status": "done",
+      "result": "version 2→3 递增成功",
+      "evidence": "before/after 对比"
+    }
+  ],
+  "artifacts": [
+    "schemas/task.origin.json",
+    "demo/task1/task.origin.json"
+  ],
+  "verification": "cross-session 闭环已实测通过：独立 headless 新会话(claude -p) 自动收到注入学历并报出任务标题。SessionStart/Stop/SessionEnd 三 hook 全链路绿。",
+  "next_steps": [
+    "demo/task2：跨 harness 学籍——Claude Code(providers.json→deepseek) 干一半，Codex(codex-route.json→deepseek-v4-pro) 接读同一份 task.origin 接着干",
+    "跨机器本境复刻：把本境(.claude/skills/memory/task.origin)复制到测试机，在那边验证 SessionStart 同样注入（验证『环境即镜像』/AI 转学）",
+    "记录 token 对比：重定向注入 vs 完整转录重放的开销差"
+  ],
+  "learnings": [
+    {
+      "lesson": "AI 任务持久化的关键是 State+Facts，不是压缩聊天记录",
+      "confidence": 0.9,
+      "status": "verified"
+    },
+    {
+      "lesson": "『环境即镜像』：同模型更聪明=上下文状态差，本境可复制",
+      "confidence": 0.85,
+      "status": "candidate"
+    }
+  ],
+  "content_hash": "a77ce3b36e078cc41ca93895e40b7df23e5f99334d4af4f657ae17d6aac664ea",
+  "actor": {
+    "harness": "claude-code",
+    "model": "unobserved",
+    "session_id": "0ce4fbd1-6e08-449f-b7a6-12838e62c6f7",
+    "at": "2026-08-08T09:29:20.643Z"
+  }
+}

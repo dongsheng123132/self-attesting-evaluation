@@ -1,0 +1,113 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "task9",
+  "title": "学堂协议 v0.1：把主板上最后一个空槽装上——让经验能被推翻",
+  "goal": "项目叫「学堂」，主板上却一直没有学堂。给 learnings 补上产生/升降级/装载的完整机制，核心是找到本境已有的那个对称：fact 的 source 必须引用可复核物，那么 learning 的 recheck 必须是可重跑的动作。没有可重跑检验的经验，永远无法被推翻，也就永远不该叫 verified。",
+  "version": 2,
+  "scope": "xuetang/ 全部 + schemas/task.origin.json 的 learnings 段 + northbridge/compile.mjs 的装载段 + .claude/hooks/guard-benjing.mjs",
+  "current_state": "**v0.1 已实现并通过验证**。xuetang/learning-core.mjs（纯逻辑，不碰磁盘写）+ exam.mjs（长循环考试，落盘走本境乐观锁）+ verify-xuetang.mjs（26 条判据，17 条反向）。schema 用 if/then 把「verified 必须带 recheck+exam」变成承重约束；北桥 compileRequest 增加独立预算的经验段，只调 verified。首轮实测：58 条经验全部「不可考」、49 条自称 verified 当场降级；挂上 6 条能辩护的 recheck 后，第三轮 6/6 通过并升级，52 条仍为 candidate（这是结论不是遗留——大部分经验没有机器可跑的检验，协议让这件事可见）。七个协议全绿。**未解见 RFC-0008 §6，其中最大的洞是：挂一个恒绿的命令就能骗过考试。**",
+  "facts": [
+    {
+      "claim": "学堂缺的不是字段而是机制，且真相比「空」更难看：10 份学历共 58 条经验，其中 49 条自称 status=verified、confidence 0.85~0.95，但 0 条带可被任何人重跑的检验、0 条被任何代码读取过。这是「作者给自己发证」跑了 58 次",
+      "verified": true,
+      "source": "node -e 按 demo/*/task.origin.json 统计 learnings 得 58 条、按状态 {\"candidate\":9,\"verified\":49}；grep -rn learnings --include=*.mjs 只命中缩水守卫与判据夹具，无读写路径",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "claim": "学堂的主心骨是本境已有的那个对称：本境要求 fact.source 引用可复核物（recheckSource），对称地 learning.recheck 必须是可重跑的动作。由此机械地推出「没有 recheck 就最高只能 candidate」，不需要再发明新原则",
+      "verified": true,
+      "source": "xuetang/learning-core.mjs 的 checkRecheck/checkLearning 与 southbridge/benjing-core.mjs 的 recheckSource 并列；判据 X1.1（node xuetang/verify-xuetang.mjs）",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "claim": "首轮考试把 49 条自封 verified 全部降级为 candidate，写回全部走本境乐观锁且 0 次失败；学历自检仍 10/10 ✅",
+      "verified": true,
+      "source": "node xuetang/exam.mjs 输出「结算：通过 0 挂了 0 跑不起来 0 不可考 58」与 49 行 verified → candidate；写回失败 0；随后 node southbridge/verify-state.mjs demo/*/task.origin.json 全部 VERIFIED",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "claim": "挂 recheck 后第二轮有两条挂了，原因是本轮 schema 改动打破了 verify-benjing 自己的判据夹具：B12.1 的 fixture 写 learnings status=verified 却无 recheck/exam，B12.6「合规状态不被误报」随之判红。学堂上线第一天就用一条经验的 recheck 揪出一次回归失败",
+      "verified": true,
+      "source": "node xuetang/exam.mjs 第二轮输出两条 ✗ 挂了 均为 node southbridge/verify-benjing.mjs 退出码 1；node southbridge/verify-benjing.mjs 报 ❌ B12.6 判决 64/65；改夹具 status 为 candidate 后回到 65/65",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "claim": "最终 6 条经验通过考试升为 verified、52 条仍是 candidate。52 这个数字是结论不是遗留：大部分经验没有机器可跑的检验，协议让这件事可见，而不是让它们继续挂着 verified: 0.9",
+      "verified": true,
+      "source": "node xuetang/exam.mjs 第三轮输出「结算：通过 6 挂了 0 跑不起来 0 不可考 52 共 58 条」",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "claim": "PreToolUse 守卫按文件名认学历，把 schemas/task.origin.json（JSON Schema 本身）也拦了——这正是 benjing-core 在缺陷⑥里已修过并写下结论的同一个错：「必须按 kind 认，不能按文件名认」。已按同一条规则放行（有 $schema 且无 kind），文件不存在时仍拦",
+      "verified": true,
+      "source": ".claude/hooks/guard-benjing.mjs 与 southbridge/benjing-core.mjs:141 注释并列；三种情形实测：demo/task7 学历→退出码 2、schemas/task.origin.json→0、不存在的新学历→2",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "claim": "判据框架自己是「声明冒充事实」的高发区：verify-xuetang 第一版 t() 不 await，异步判据返回 Promise 被 r===true 判成失败，报出来是 [object Promise]——它说「这条挂了」，其实是它没读懂结果",
+      "verified": true,
+      "source": "xuetang/verify-xuetang.mjs 的 runAll()（改为登记后顺序 await）；修复前 X5.1/X5.2/X7.3 三条报 [object Promise]，修复后 26/26",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "claim": "判据 X7.3 第一版要求「学堂白名单与本境命令词相同」，跑出来红了（本境有 rm/touch），但那个差异是对的：本境只是认出一句话提到了命令（从不执行），学堂是反复自动执行。判据被改成「学堂 ⊆ 本境，且差集必须写明理由并确实被拦住」，并据此从学堂白名单去掉 bash（bash x.sh 会把「跑命令不跑脚本」从后门绕过）",
+      "verified": true,
+      "source": "xuetang/learning-core.mjs 的 EXECUTION_DENIED 与 ALLOWED_CMDS；判据 X7.3/X7.4/X7.5（node xuetang/verify-xuetang.mjs）",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "claim": "北桥装载实测生效：目标写「我要改本境协议的乐观锁，注意并发会话」时，request 精准调入那两条通过考试的经验，并标明它们靠哪条命令过的考试",
+      "verified": true,
+      "source": "echo 带该 prompt 管道进 node .claude/hooks/context-request.mjs，输出含「按本轮目标调入 2 条**已通过长循环考试**的经验」两行；判据 X5.1 反向锁死 candidate 不得注入",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "claim": "七个协议全部绿：本象 14 / 北桥 19 / 本境 65 / 影核 43 / 带外 29 / 待办 14 / 学堂 26（17 条反向），合计 210 条判据",
+      "verified": true,
+      "source": "依次跑 node benxiang/verify-benxiang.mjs、northbridge/verify-northbridge.mjs、southbridge/verify-benjing.mjs、southbridge/verify-southbridge.mjs、oob/verify-oob.mjs、southbridge/verify-todo.mjs、xuetang/verify-xuetang.mjs 退出码全 0",
+      "when": "2026-08-09T15:35:00+08:00"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "经验存在各自的学历里（它从哪个任务长出来就挂在哪），不新建一个集中的经验库",
+      "why": "新建集中库就得新开一条写路径，而学堂自己开写路径就是 task5 那次学历被吃掉的复刻。挂在学历里可以直接复用本境的乐观锁与缩水守卫，跨学历聚合放在读取侧（collect）做",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "what": "error（命令跑不起来）不升不降，与 fail 分开",
+      "why": "把 error 当 fail，会让「环境坏了」冒充「经验错了」——那是一个新的自证来源。X3.3 反向锁死",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "what": "只挂 6 条 recheck，其余 52 条如实留在 candidate，不为了好看硬凑",
+      "why": "recheck 必须是「这条经验被违反时会变红的那个验证器」。挂一个恒绿的命令能骗过考试——那正是 RFC-0008 §6 记下的最大的洞，我不能一边写下这个洞一边去踩它",
+      "when": "2026-08-09T15:35:00+08:00"
+    },
+    {
+      "what": "schema 改动打破 verify-benjing 夹具后，改夹具不改 schema",
+      "why": "本仓库已有结论：新检查器抓到历史数据的问题时，默认应改数据不改检查器。为了让夹具通过而放宽 schema，等于把承重件退回装饰品",
+      "when": "2026-08-09T15:35:00+08:00"
+    }
+  ],
+  "actions": [],
+  "artifacts": [
+    "xuetang/learning-core.mjs",
+    "xuetang/exam.mjs",
+    "xuetang/verify-xuetang.mjs",
+    "rfcs/RFC-0008-xuetang-v0.1.md"
+  ],
+  "next_steps": [
+    "deprecated 没有入口：现在只有 candidate ⇄ verified 两态在动，一条经验被新事实推翻时该由谁标记 deprecated 未定",
+    "52 条不可考的经验需要一种比「跑命令」更弱、但仍非自述的检验（例如要求引用一条 verified fact 的 id），否则它们会永远沉在 candidate",
+    "考试接 cron 才叫「长循环」，现在只是「可重跑」——手动跑的考试等于没有时间维度",
+    "RFC-0008 §6 最大的洞：recheck 与经验的语义绑定靠人判断，挂一个恒绿命令就能骗过考试。需要一条「recheck 必须能被证明会因该经验被违反而变红」的机制",
+    "经验去重只在读取侧做，写入侧允许同一条经验落在多份学历里，跨学历重复会随任务数增长（呼应 benjing-todo --dupes 那条）",
+    "先于本轮存在的 schema 漂移：6 份老学历的 actor 是字符串而 schema 规定 object（task1~task6）。与 learnings 无关，按「改数据不改检查器」应逐份修，但那是改历史元数据，需单独决定"
+  ],
+  "learnings": [],
+  "actor": "xuetang/task9",
+  "updated_at": "2026-08-09T07:05:01.624Z",
+  "content_hash": "85df8f44a0d416062fec447eba8bec635d14df056150def5fa7b4c29327d18d0"
+}

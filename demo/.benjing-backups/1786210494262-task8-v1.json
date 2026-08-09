@@ -1,0 +1,83 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "task8",
+  "title": "把成果转成对外产出：论文 / 开源 / 宣发的取舍",
+  "goal": "判断这套东西能写几篇论文、各自缺什么证据，把能立刻做的对外产出做掉（公开仓库的诚实 README、论文①的证据齐备稿），并明确暂不做什么（找记者）及其理由",
+  "version": 1,
+  "scope": "D:/uking编程/ShadowOS = Harness OS/papers 与 D:/uking编程/2origin-harness（公开仓库）",
+  "current_state": "已盘点：能立项的是 2 篇论文 + 1 篇 position + 1 个开源项目。论文①（自证的评测：十一次自己骗自己）证据齐备、零新实验，草稿已落 papers/self-attesting-evaluation.md，含 11 个案例、5 类判据、证据索引与投稿前 TODO。公开仓库 README 已改成「结果表 + 诚实边界 + 判分器自己的 bug」并推送（7931f50）。论文②（状态 vs 对话流）证据不足，已列出四项前置。记者暂不接触，理由见 decisions。",
+  "facts": [
+    {
+      "claim": "公开仓库的 README 已改成先摆结果表再摆边界，并把判分器自己的四个 bug 印在正文里，已推送到公开仓库",
+      "verified": true,
+      "source": "git -C D:/uking编程/2origin-harness log --oneline -1 得 7931f50；git push 输出 b490d9c..7931f50 HEAD -> master；README.md「Benchmark: does structured state actually beat a transcript?」节",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "claim": "论文①的证据从 5 个案例扩到 11 个，且横跨两个独立子系统（判分器 7 个 + 状态层 4 个），这使「我们在一个文件里粗心」这个替代解释不成立，是把工程日志升格成结构性主张的关键",
+      "verified": true,
+      "source": "papers/self-attesting-evaluation.md §4 两张表 + §5 五类判据映射；证据索引见 Appendix A",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "claim": "另一个会话在我写 README 的同时删掉了 bench/run-final.log 与 run-final2.log 并提交了 RESULTS-v3.md（b490d9c）：我 README 里的链接和 30 分钟前写进 task7 的两条 source 同时悬空。source 形式校验查不出这种悬空（它只查引没引可复核物，不查还在不在），是人工发现的",
+      "verified": true,
+      "source": "ls bench/ 显示两个 log 已不在盘上；git log b490d9c；task7 v11 的两条 fact 仍写着 run-final2.log；southbridge/benjing-core.mjs:392 注释自陈该边界",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "claim": "公开仓库的 .gitignore 是一行含字面 \n 的坏文件（.backups/\naudit.log\nnode_modules/），从建仓起就没生效过；audit.log 侥幸没被提交，不是被拦住的",
+      "verified": true,
+      "source": "od -c .gitignore 显示  n 为两个字符；git ls-files | grep -iE \"audit|.backups\" 无输出；已改为逐行并加 bench/cache/",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "claim": "公开仓库里曾有一份由私有会话记录蒸馏的产物（bench/cache/summary-task6-9634.txt，9479 字节）随 0831752 推出去，而同一 commit 的 corpus.json 明写「会话记录不该进公开仓库」。扫描无路径/邮箱/密钥/人名，风险低；已停止跟踪并 gitignore，历史未重写",
+      "verified": true,
+      "source": "gh repo view 得 visibility=PUBLIC；git show 0831752:bench/cache/summary-task6-9634.txt 可取出；git rm --cached bench/cache 已随 7931f50 生效",
+      "when": "2026-08-09T11:30:00+08:00"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "现在不找记者",
+      "why": "单模型单任务单次、两跳探针已作废、对照臂全是自己写的。记者写成「AI 有记忆了」，第一个懂行的人一问就塌，而且塌一次以后再找就没人接。要给记者的是他能亲手验的东西——跨 harness / 跨模型接续同一任务的现场演示，而不是 benchmark 数字",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "what": "论文①与论文②必须分开投，不合并",
+      "why": "①不依赖②成立。合并会让①的可信度被②的证据不足拖下水，而①的全部价值恰恰在于「我们连自己的结论都撤回了」",
+      "when": "2026-08-09T11:30:00+08:00"
+    },
+    {
+      "what": "案例 8（source 只查形式）与案例 10（乐观锁放过截断写入）暂不修，作为 open 写进论文",
+      "why": "修掉会让 §6 的主张更漂亮但 §7 的诚实性变差。按本文自己的规则，未修就写未修",
+      "when": "2026-08-09T11:30:00+08:00"
+    }
+  ],
+  "actions": [],
+  "artifacts": [
+    "D:/uking编程/ShadowOS = Harness OS/papers/self-attesting-evaluation.md",
+    "D:/uking编程/2origin-harness/README.md",
+    "D:/uking编程/2origin-harness/bench/RESULTS-v3.md"
+  ],
+  "verification": [],
+  "next_steps": [
+    "论文①：把 Appendix A 每一行补上确切 commit SHA 与行号，然后写 prose（现在是骨架 + 证据表）",
+    "定对外术语表：本境/本象/影核/北桥/南桥/学历 的英文标准词，并先解决影核与南桥的职责重叠（两者都叫「行」，且影核住在 southbridge/ 目录里）",
+    "找一个项目外的读者试着证伪 §5 的五类判据——自己给自己的判据打分正是本文批评的那件事",
+    "论文②的四项前置：真实 memory 系统对照（mem0/Letta/LangMem/Zep）、重采样与置信区间、多模型多任务、重做开卷天花板的探针",
+    "给 source 校验加「引用物是否还在」的解引用检查——案例 3 那次悬空就是它漏掉的"
+  ],
+  "learnings": [],
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "661d96e7-04c9-4e24-a6a1-72e6301c6a77",
+    "at": "2026-08-08T17:19:40.777Z"
+  },
+  "updated_at": "2026-08-08T17:19:40.777Z",
+  "content_hash": "2957633403b78d3cb3f75e22c72f6366e2e5cdb244bced6df4b15addba7fe73a"
+}

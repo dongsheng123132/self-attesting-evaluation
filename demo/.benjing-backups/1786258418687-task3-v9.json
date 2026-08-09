@@ -1,0 +1,491 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "demo.task3",
+  "title": "影核协议 v0.2：把架构文档里有实测支撑的部分落成可验证协议",
+  "goal": "基于《ChatGPT-AI原生计算机架构》文档，只采纳能消灭本仓库已实测缺陷的影核改动，落成 shadowcore/0.2 并用取自磁盘真相的验证器证明；明确拒绝无实测支撑的部分（verb→driver 抽象、改名、自动回滚）。",
+  "version": 9,
+  "scope": "project:shadowos",
+  "created_at": "2026-08-08T17:00:00+08:00",
+  "updated_at": "2026-08-09T06:52:10.400Z",
+  "current_state": "影核 v0.2 已加固并通过 43/43 验证（可重跑）。Trust 层三项 + 差分幂等全部落地：审计 fail-closed、账本追加式抗并发、账本容量上限+淘汰审计、追加写按 footprint 做区间观察。跨 harness 写权限已打通并二次验证。RFC-0004 §6 未决清单从 6 条降到 2 条（§6.5 独立观察者、§6.6 codex MCP 闸门）。",
+  "facts": [
+    {
+      "claim": "影核 v0.1 的 action result 是自证的：写完由外部删除文件，audit.log 仍记 status:done，无任何再观察能力",
+      "verified": true,
+      "source": "复现：southbridge_write 写 demo/_probe_evidence.md → rm → tail audit.log 仍为 done，ls 报 No such file",
+      "when": "2026-08-08T16:53:00+08:00"
+    },
+    {
+      "claim": "v0.1 审计日志的 bytes 用 content.length（JS 字符数）当字节数：写 '# 我存在过\\n' 报 7，实际 UTF-8 为 15 字节——连自证都证错了",
+      "verified": true,
+      "source": "node -e 比对 s.length=7 vs Buffer.byteLength=15",
+      "when": "2026-08-08T16:54:00+08:00"
+    },
+    {
+      "claim": "v0.1 无幂等：同一 append 请求重放两次，磁盘文件变成两行",
+      "verified": true,
+      "source": "复现：两次相同 tools/call 后 wc -l = 2",
+      "when": "2026-08-08T16:52:00+08:00"
+    },
+    {
+      "claim": "影核 v0.2（shadowcore/0.2）已实现，18 条判据全部通过且验证器可重复跑",
+      "verified": true,
+      "source": "node southbridge/verify-southbridge.mjs 连跑两轮均 VERIFIED",
+      "when": "2026-08-08T17:03:00+08:00"
+    },
+    {
+      "claim": "幂等账本若只信自己的记录，会成为第二个『声明与现实脱节』来源——第一轮验证实测：key 命中返回 replayed + 旧 evidence(exists:true)，但磁盘上文件已不存在。已补 diverged 状态修复",
+      "verified": true,
+      "source": "第一轮重跑验证器崩溃 + idempotency.json 内容比对；修复后 T2.5 通过",
+      "when": "2026-08-08T17:01:00+08:00"
+    },
+    {
+      "claim": "expect_sha256 乐观锁可作为无头 harness 的批准凭据：正确 hash 放行、过期 hash 被拒、被拒时磁盘未变",
+      "verified": true,
+      "source": "验证用例 T3.2/T3.3/T3.4/T3.6",
+      "when": "2026-08-08T17:03:00+08:00"
+    },
+    {
+      "claim": "覆盖动作留下真实备份文件，reversible 有物证而非形容词",
+      "verified": true,
+      "source": "T3.5 + ls southbridge/.backups 存在 1786179788296-t3.md 等",
+      "when": "2026-08-08T17:03:00+08:00"
+    },
+    {
+      "claim": "C5 状态验证器 verify-state.mjs 本身是坏的：artifact 路径只按状态文件所在目录解析，而所有状态写的是仓库根相对路径，导致对 task1/task2/task3 全部误报 artifact 缺失——我们那套『结果可验证』当时是空的",
+      "verified": true,
+      "source": "复现：node southbridge/verify-state.mjs demo/task2/task.origin.json → 三个磁盘上存在的 artifact 全判缺失，退出码 1",
+      "when": "2026-08-08T17:08:00+08:00"
+    },
+    {
+      "claim": "修复后（两个基准都试）task1/task2/task3 三份状态全部 VERIFIED",
+      "verified": true,
+      "source": "node southbridge/verify-state.mjs demo/task{1,2,3}/task.origin.json 三连绿",
+      "when": "2026-08-08T17:09:00+08:00"
+    },
+    {
+      "claim": "南桥 MCP 已注册进 codex 且握手成功：codex mcp get southbridge 显示 enabled，会话 rollout 里 southbridge_verify 出现在工具清单中（无 mcp__codex_apps__ 前缀），证明 server 正常启动并响应了 tools/list",
+      "verified": true,
+      "source": "codex mcp get southbridge + ~/.codex/sessions/2026/08/08/rollout-*019fe0a5*.jsonl 工具清单",
+      "when": "2026-08-08T17:20:00+08:00"
+    },
+    {
+      "claim": "codex exec 的 southbridge_write/southbridge_verify 调用从未到达南桥进程：南桥 audit.log 最后一条是 09:06:57（我本地跑验证器），两次 codex 运行（09:14、09:20+）零记录，demo/task4 未创建",
+      "verified": true,
+      "source": "tail southbridge/audit.log 时间戳比对 + ls demo/task4 报 No such file",
+      "when": "2026-08-08T17:22:00+08:00"
+    },
+    {
+      "claim": "codex exec v0.147.0 在 headless 下没有 per-tool 的 MCP 批准通道：tools/call 一律返回 'user cancelled MCP tool call'；-c approval_policy=never 不覆盖 MCP 工具；execpolicy ~/.codex/rules/default.rules 只有 shell 的 prefix_rule，grep mcp 命中 0 次；唯一能过的 --approve-for-me / --dangerously-bypass 都是全局关闸",
+      "verified": true,
+      "source": "两次 codex exec 输出 + grep -ic mcp ~/.codex/rules/default.rules = 0 + codex exec --help",
+      "when": "2026-08-08T17:24:00+08:00"
+    },
+    {
+      "claim": "本机 codex 的 Windows 沙箱 runner 本身是坏的：CreateProcessAsUserW failed: 5 (拒绝访问)，连只读的 Get-Date 都起不来。这与 task2 记录的『沙箱策略拦截写』是不同故障",
+      "verified": true,
+      "source": "codex exec 报错原文 + config.toml 中 [windows] sandbox = \"elevated\"",
+      "when": "2026-08-08T17:15:00+08:00"
+    },
+    {
+      "claim": "MCP 通道被 harness 审批堵死后，第二条驱动（CLI）不再是过早抽象——已抽出 shadowcore-core.mjs 共享核心，MCP/CLI 两驱动共用同一风险判级、批准规则与写后观察",
+      "verified": true,
+      "source": "southbridge/shadowcore-core.mjs + 验证用例 T6.1/T6.3/T6.6 三场景两通道判决字节级一致",
+      "when": "2026-08-08T17:35:00+08:00"
+    },
+    {
+      "claim": "ActionParity 已被验证而非声称：同一动作走 MCP 与 CLI 得到相同 action.result 判决（low/medium/denied 三场景），CLI 退出码 0/2/3 与 status 对应",
+      "verified": true,
+      "source": "node southbridge/verify-southbridge.mjs T6.1-T6.7，29/29 通过且可重跑",
+      "when": "2026-08-08T17:35:00+08:00"
+    },
+    {
+      "claim": "跨 harness 写权限打通：Hermes（第三个 harness）经南桥 CLI 落盘成功，status=done risk=low approval=auto，磁盘实测 24 字节 sha256=8e5df262... 与 CLI 自报完全一致",
+      "verified": true,
+      "source": "hermes -z 运行 + ls -l demo/task4/hermes-writeback.md + 独立重算 sha256",
+      "when": "2026-08-08T17:35:00+08:00"
+    },
+    {
+      "claim": "审计日志能定通道责任：task4 相关记录 southbridge_cli 2 条、southbridge_mcp 0 条，证明这次写确实走 shell 通道而非 MCP",
+      "verified": true,
+      "source": "node 解析 southbridge/audit.log 按 actor 分组统计",
+      "when": "2026-08-08T17:35:00+08:00"
+    },
+    {
+      "claim": "CLI 驱动存在 footgun：漏给内容来源会静默写出 0 字节文件并报 done，且完全符合『写后观察一致』，验证器抓不出来——只能在入口拦。已改为要求显式 --content/--content-file/--stdin",
+      "verified": true,
+      "source": "复现：node southbridge-cli.mjs write --relpath demo/_s3.md < /dev/null → status done size_bytes 0；修复后 T6.10/T6.11 通过",
+      "when": "2026-08-08T17:35:00+08:00"
+    },
+    {
+      "claim": "幂等账本的读改写并发 bug 是实测的不是推断：模拟 v0.2 初版整体读改写，8 进程并发写 8 个不同 key，账本最后只剩 2 条（丢 6 条）；改追加式 JSONL 后同条件 8/8 一条不丢",
+      "verified": true,
+      "source": "/d/tmp/oldledger.mjs 8 并发复现 → key 数=2；新实现验证用例 T7.4/T7.5",
+      "when": "2026-08-08T17:50:00+08:00"
+    },
+    {
+      "claim": "审计已 fail-closed：审计路径不可写时写动作被拒（status=denied, audit=unavailable）且目标文件未创建；审计恢复后同一动作正常执行",
+      "verified": true,
+      "source": "验证用例 T7.1/T7.2/T7.3（用目录当审计路径制造 EISDIR）",
+      "when": "2026-08-08T17:50:00+08:00"
+    },
+    {
+      "claim": "账本超上限自动压缩（按最近活跃保留，tmp+rename 原子替换），压缩后最近的 key 仍命中 replayed；淘汰会写 kind:ledger.compact 审计而非静默",
+      "verified": true,
+      "source": "验证用例 T7.6/T7.7（SHADOWCORE_LEDGER_MAX=3）",
+      "when": "2026-08-08T17:50:00+08:00"
+    },
+    {
+      "claim": "Hermes 仅凭仓库根 AGENTS.md 自主走通 medium 风险闸门：先被 requires_approval 拒，自行 verify 拿 sha256，再带 --expect-sha256 重试成功——无头 harness 的授权模型在真实 agent 上可用，不只是设计上自洽",
+      "verified": true,
+      "source": "hermes -z 运行；证据在 southbridge/audit.log：09:44:58 requires_approval(medium/none) → 09:45:02 action.intent → 09:45:02 action.result done(expect_sha256)",
+      "when": "2026-08-08T17:50:00+08:00"
+    },
+    {
+      "claim": "reversible 的回滚真的可行：Hermes 覆盖动作留下的备份 24 字节，sha256 与覆盖前完全一致",
+      "verified": true,
+      "source": "独立重算 southbridge/.backups/1786182302089-hermes-writeback.md 的 sha256 = 8e5df262...（覆盖前值）",
+      "when": "2026-08-08T17:50:00+08:00"
+    },
+    {
+      "claim": "Node 把 MSYS 风格路径 /c/tmp/x.md 按 cwd 盘符解析成 D:\\c\\tmp\\x.md；git-bash 会先替你翻译所以看不出问题，Hermes 这类不翻译的 shell 才会 ENOENT。原先照抄 Hermes 报告记成「Node 一律解析失败」是错的",
+      "verified": true,
+      "source": "node -e path.resolve(\"/c/tmp/x.md\") 输出 D:\\c\\tmp\\x.md；同一路径在 git-bash 下经 MSYS 翻译后 southbridge-cli.mjs 写入成功(退出码 0)",
+      "when": "2026-08-08T17:50:00+08:00"
+    },
+    {
+      "claim": "幂等校验的观察范围没跟动作的作用范围对齐，会诱发它本要防的重复写：A 追加一行后 B 也往同一文件追加，A 原样重试被判 diverged（尽管 A 那行原封不动还在），调用方按退出码 4 换 key 重试 → 文件变成 [X,Y,X]",
+      "verified": true,
+      "source": "node southbridge/probe-append-idempotency.mjs 修复前 2/2 场景复现，退出码 1",
+      "when": "2026-08-08T18:05:00+08:00"
+    },
+    {
+      "claim": "已修：追加写的 action.result 带 footprint{offset,length,sha256}，重放只读回那段字节比对；覆盖写仍比整文件 sha。反向判据（那段被改写 / 文件被截断）仍判 diverged，没有把校验放水",
+      "verified": true,
+      "source": "node southbridge/verify-southbridge.mjs T8.1-T8.7，43/43 连跑两轮均 VERIFIED；probe 脚本修复后退出码 0",
+      "when": "2026-08-08T18:05:00+08:00"
+    },
+    {
+      "claim": "架构文档《ChatGPT-AI原生计算机架构》对影核唯一有实测支撑的建议是 §5「Agent 应优先消费 Diff，而不是重复读取整个世界」——它对上了本仓库可复现的 §6.3 缺陷。其余建议（verb→driver 抽象矩阵、Job/异步、自动 rollback、改名本源南北桥、铺满 RFC-0000~0060）在本仓库均无对应的可复现缺陷，继续拒绝",
+      "verified": true,
+      "source": "逐条比对 'ChatGPT-AI原生计算机架构 (3).md' §8/§9/§15 与 rfcs/RFC-0004-shadowcore-v0.2.md §6 未决清单；§6.3 缺陷由 node southbridge/probe-append-idempotency.mjs 复现",
+      "when": "2026-08-08T18:05:00+08:00"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "只采纳架构文档中能消灭已实测缺陷的 3 条（evidence / idempotency / risk 分级），其余不动",
+      "why": "文档约 60% 篇幅是命名、许可证、商业分层、发布节奏，不改协议一行。采纳理由必须是『我们这台机器在这处出过血』，不是『文档说得对』",
+      "when": "2026-08-08T16:55:00+08:00"
+    },
+    {
+      "what": "不做 verb→driver 抽象（『一核多影』）",
+      "why": "本仓库当前只有 1 个 driver(Node fs)。只有一个影时做多影抽象是过早抽象。U-King 的 46 个 Action 是另一个仓库的资产，不能算作此处进度",
+      "when": "2026-08-08T16:55:00+08:00"
+    },
+    {
+      "what": "不采纳文档的改名建议（本源南北桥 / 2Origin Northbridge）",
+      "why": "CLAUDE.md 命名冻结一季度更值钱；改名收益为零，成本是所有已有状态文件 spec 字段全乱",
+      "when": "2026-08-08T16:55:00+08:00"
+    },
+    {
+      "what": "reversible 只承诺备份路径，不承诺自动回滚",
+      "why": "写文件能备份，启动进程/发消息/改注册表不能。写进协议就是空头支票",
+      "when": "2026-08-08T17:00:00+08:00"
+    },
+    {
+      "what": "推翻 RFC-0004 §5『不做一核多影』的决定，抽出 shadowcore-core.mjs 并新增 CLI 驱动",
+      "why": "当初拒绝的理由是『只有 1 个 driver 时属过早抽象』。2026-08-08 实测 MCP 通道被 harness 审批闸门整体堵死（南桥 audit.log 零记录），第二条通道有了存在的必要——抽象的理由是实测，不是对称美",
+      "when": "2026-08-08T17:35:00+08:00"
+    },
+    {
+      "what": "不使用 codex --approve-for-me / --dangerously-bypass 绕过审批闸门",
+      "why": "两者都是全局关闸，与影核的分级授权主张背道而驰；且需用户显式授权。改走 shell 通道，用另一个 harness 证明南桥授权模型本身有效",
+      "when": "2026-08-08T17:35:00+08:00"
+    },
+    {
+      "what": "CLI 内容来源必须显式，不猜 stdin",
+      "why": "漏给内容会静默清空目标且判决全绿，是验证机制照不到的死角。宁可用法错也不猜",
+      "when": "2026-08-08T17:35:00+08:00"
+    },
+    {
+      "what": "审计失败按 fail-closed 处理：动世界前先记 action.intent，记不下就拒绝执行",
+      "why": "『所有关键 Action 必须可审计』不是口号——审计零记录正是定责 codex MCP 闸门那次唯一救场的能力。写得进世界却写不进审计，等于这次动作事后无法追责",
+      "when": "2026-08-08T17:50:00+08:00"
+    },
+    {
+      "what": "账本淘汰不静默：写 kind:ledger.compact 审计并列出被淘汰的 key",
+      "why": "容量淘汰会让老 key 的幂等保证失效（append 模式会重复追加）。代价必须可查，不能假装账本永远有效",
+      "when": "2026-08-08T17:50:00+08:00"
+    },
+    {
+      "what": "在仓库根新建 AGENTS.md，并把 task2/AGENTS.md 里『直接更新 task.origin.json』改为走乐观锁",
+      "why": "原文教的是直接 Write，会打断 content_hash 并吃掉并发会话的学历；且根目录原本没有 AGENTS.md，任何在本仓库跑的 codex 都拿不到这些规则",
+      "when": "2026-08-08T17:50:00+08:00"
+    }
+  ],
+  "actions": [
+    {
+      "verb": "file.write",
+      "target": "southbridge/southbridge-mcp.mjs",
+      "status": "done",
+      "result": "重写为影核 v0.2：写后回读 evidence、幂等账本+diverged、risk 三级、expect_sha256 乐观锁、覆盖备份、修 UTF-8 字节数、新增 southbridge_verify 再观察工具",
+      "evidence": "验证器 18/18 通过"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/verify-southbridge.mjs",
+      "status": "done",
+      "result": "一致性验证器，18 条判据全部取自磁盘真相，可重复跑",
+      "evidence": "连跑两轮均 VERIFIED"
+    },
+    {
+      "verb": "file.write",
+      "target": "rfcs/RFC-0004-shadowcore-v0.2.md",
+      "status": "done",
+      "result": "协议正文：缺陷对照表、status 语义、风险判级纯函数、无头 harness 授权模型、刻意没做的事、5 条未决问题",
+      "evidence": "file exists"
+    },
+    {
+      "verb": "file.write",
+      "target": "schemas/action.result.json",
+      "status": "done",
+      "result": "action.result JSON Schema（shadowcore/0.2）",
+      "evidence": "file exists"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/verify-state.mjs",
+      "status": "done",
+      "result": "修复 artifact 基准路径 bug（根相对 / 状态目录相对两个基准都试）",
+      "evidence": "task1/task2/task3 三份状态由全红转全绿"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/shadowcore-core.mjs",
+      "status": "done",
+      "result": "抽出影核动作核心，MCP/CLI 共用",
+      "evidence": "T6 三场景两通道判决一致"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/southbridge-cli.mjs",
+      "status": "done",
+      "result": "CLI 驱动：stdout 一行 JSON、stderr 给人、退出码 0/2/3/4 可判、内容走文件或 stdin 不走 argv",
+      "evidence": "Hermes 实跑落盘成功"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/southbridge-mcp.mjs",
+      "status": "done",
+      "result": "瘦身为纯 MCP 传输适配器（310→60 行）",
+      "evidence": "验证器 MCP 路径 T1-T5 仍全绿"
+    },
+    {
+      "verb": "action.invoke",
+      "target": "hermes → southbridge-cli → demo/task4/hermes-writeback.md",
+      "status": "done",
+      "result": "跨 harness 写权限打通",
+      "evidence": "磁盘 24 字节 sha256 一致 + 审计 CLI 通道 2 条 MCP 0 条"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/shadowcore-core.mjs",
+      "status": "done",
+      "result": "Trust 加固：审计 fail-closed + 账本改追加式 JSONL + 容量压缩与淘汰审计 + 环境变量覆盖路径（供验证器制造故障）",
+      "evidence": "T7.1-T7.7 通过"
+    },
+    {
+      "verb": "file.write",
+      "target": "AGENTS.md",
+      "status": "done",
+      "result": "仓库根无头 harness 操作规则：南桥 CLI 落盘、学历乐观锁、铁律、回归命令",
+      "evidence": "Hermes 仅凭此文件自主走通 medium 闸门"
+    },
+    {
+      "verb": "action.invoke",
+      "target": "hermes → AGENTS.md → southbridge-cli 覆盖 demo/task4/hermes-writeback.md",
+      "status": "done",
+      "result": "AGENTS.md 已被真实 agent 验证可用",
+      "evidence": "审计链 requires_approval→intent→done + 备份 sha256 与覆盖前一致"
+    }
+  ],
+  "artifacts": [
+    "southbridge/southbridge-mcp.mjs",
+    "southbridge/verify-southbridge.mjs",
+    "southbridge/verify-state.mjs",
+    "rfcs/RFC-0004-shadowcore-v0.2.md",
+    "schemas/action.result.json",
+    "southbridge/shadowcore-core.mjs",
+    "southbridge/southbridge-cli.mjs",
+    "demo/task4/hermes-writeback.md",
+    "AGENTS.md"
+  ],
+  "verification": "影核 36/36（判据取自磁盘真相，可重跑）。RFC-0004 §6 未决五条已解三条（1 账本增长、2 审计静默、4 并发），每条都先复现旧 bug 再验新实现。跨 harness 写权限二次验证：Hermes 仅凭 AGENTS.md 自主通过 medium 风险闸门，备份可回滚。仍未解：§6.3 append 的 diverged 判定偏严、§6.5 观察者不独立、§6.6 codex MCP 闸门（harness 侧）。",
+  "next_steps": [
+    "RFC §6.6 v0.3 主命题：影核的 risk/approval 需要一种能被上游 harness 审批闸门理解或继承的表达（文档的 Trust Plane 只给了名词，没给机制，这块得自己发明）",
+    "RFC §6.5：southbridge_verify 与写动作同进程，不算独立观察者。真正的本象验证应由外部进程做",
+    "codex MCP 闸门（harness 侧，南桥已无可做）：等 per-server 授信，或用 --approve-for-me 做一次性证明（需用户授权）",
+    "本机 codex Windows 沙箱 runner 修复（CreateProcessAsUserW failed: 5）——环境故障",
+    "task2 遗留：Experience Bank + 长循环考试（学堂最小闭环）"
+  ],
+  "learnings": [
+    {
+      "lesson": "架构文档的采纳判据应是『我们实测过这个缺陷』，不是『论述自洽』。同一份文档里，能绑上复现命令的 3 条值得立刻做，其余 60% 篇幅（命名/许可证/商业分层）对协议零增量",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "任何『记录层』都会重演自证问题：修好了 action result 的自证，幂等账本立刻成为新的自证来源。凡是缓存过去结论的地方，命中时都必须回头看世界一眼",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "自己写的验证器不能自证——第一轮 18/18 通过，重跑一次就崩了（账本污染 + 账本自证）。验证器至少要能重复跑，否则测的是运气",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "无头 harness 的授权凭据应是『证明你读过』(expect_sha256 乐观锁)，而不是弹窗确认——agent 弹不出窗，但读得了文件、算得出 hash",
+      "confidence": 0.7,
+      "status": "candidate"
+    },
+    {
+      "lesson": "验证器要定期拿已知答案回归。verify-state.mjs 坏了不知多久，对全部三份状态误报缺失——一个从不被验证的验证器，跟没有验证器等价。规则：每次改协议顺手拿历史状态回归一次",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "Trust 层是跨层的，不能只在南桥做。南桥把 risk/approval 设计得再完备，只要 harness 自己的工具审批闸门在前面，请求连南桥都到不了（审计零记录即铁证）。协议要么能被 harness 审批层继承，要么就得走 harness 已授信的通道",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "端到端实验失败时，先用审计日志定责：请求到没到达我方进程，决定了是『我方设计不行』还是『根本没机会生效』。这两者的后续行动完全相反",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "『过早抽象』的判据是有没有第二个真实用例，不是有没有对称美。我先拒了一核多影（只有 1 个 driver），实测出 MCP 通道被堵后立刻做了——同一个决定，两次都对，因为证据变了",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "被一条通道堵死时，先问『这条路是不是唯一的路』。南桥的授权模型没问题，问题是它只接了一条会被 harness 掐断的线；换 shell 通道立刻通了",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "有些缺陷验证机制照不到：写 0 字节空文件完全符合『写后观察一致』，所有判据全绿。这类只能在入口用『必须显式』拦，不能指望事后验证",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "测试通过不等于 bug 存在过。写完 T7.4 我先模拟旧实现跑了一遍，确认 8 并发只剩 2 条，这条测试才不是稻草人。加固类改动尤其要先复现旧 bug",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "文档写完必须让真实 agent 只读文档走一遍。Hermes 照 AGENTS.md 自主通过了 medium 闸门，同时踩出 MSYS 路径坑——这个坑我自己怎么读文档都发现不了",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "Trust 层的能力要在它救场时才看得出价值。审计从『可有可无的日志』变成 fail-closed 前置条件，是因为定责 codex 闸门那次，审计零记录是唯一的铁证",
+      "confidence": 0.8,
+      "status": "candidate"
+    },
+    {
+      "lesson": "别把 agent 的报告直接写成 fact。Hermes 报「/c/ 路径 ENOENT」，我照抄进学历，一复现就被推翻——真实机制是 shell 翻不翻译的差异。是验证器抓出我 source 不可复核、逼我去复现，才发现结论本身错了",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    }
+  ],
+  "content_hash": "338ce4f410bb0fbe9a6bf710ecdea0567c0ca818440c9227f3ab332f4d99f654",
+  "actor": "xuetang/exam"
+}

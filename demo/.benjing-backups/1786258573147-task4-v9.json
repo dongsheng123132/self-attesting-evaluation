@@ -1,0 +1,665 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "demo.task4",
+  "title": "本境协议 v0.2：把学历从「只有最后一个扇区可读的硬盘」修成真硬盘",
+  "goal": "基于《ChatGPT-AI原生计算机架构》文档评估本境协议，只采纳能消灭本仓库已实测缺陷的改动，落成 benjing/0.2 并用取自磁盘真相的验证器证明；明确拒绝无实测支撑的部分（SQLite 存储层、十类记录、改名、context.request 双对象）。",
+  "version": 9,
+  "scope": "project:shadowos",
+  "created_at": "2026-08-08T17:35:00+08:00",
+  "updated_at": "2026-08-09T06:54:13.438Z",
+  "current_state": "本境 v0.2 通过 48/48 一致性验证（连跑两轮）。六条 v0.1 缺陷 + 落成后三条未决全部关闭。本轮新增第二道闸门（文件系统只读位，harness 无关）与孤儿检测。**闸门是半道**：挡得住就地修改（writeFileSync/shell 重定向/rename 覆盖 全 EPERM），挡不住删了重建（sed -i 实测穿过）。**codex 决定性实验未做成**——本机 codex Windows 沙箱 runner 是坏的，它没走到写文件那一步，不能算闸门生效。测闸门时 sed 打穿 task1 并顺带挖出体检盲区（kind 坏掉的学历会从本境静默消失），已修并用 content_hash 证明还原精确。",
+  "facts": [
+    {
+      "claim": "本境 v0.1 只加载最后一个扇区：磁盘 4 份学历 19 条已验证事实，SessionStart 只注入 9 条，另 10 条本次会话完全不可见且无告知",
+      "verified": true,
+      "source": "node .claude/hooks/load-state.mjs 注入 9 条 vs 遍历 demo/task*/task.origin.json 计得 19 条",
+      "when": "2026-08-08T17:12:00+08:00"
+    },
+    {
+      "claim": "v0.1 的 version 是自证式会话计数器：内容指纹一字未变，连跑 3 次 SessionEnd，version 从 1 涨到 4",
+      "verified": true,
+      "source": "沙箱 node .claude/hooks/finalize-state.mjs 跑 3 次，内容 sha256 前后均为 3660607ee7c7",
+      "when": "2026-08-08T17:16:00+08:00"
+    },
+    {
+      "claim": "v0.1 的 verify-state CHECK2 是存在性检查冒充验证：把 9 条 source 全换成一句胡话，判决仍是 VERIFIED",
+      "verified": true,
+      "source": "node southbridge/verify-state.mjs 跑改过 source 的 task3 副本 → 退出码 0",
+      "when": "2026-08-08T17:15:00+08:00"
+    },
+    {
+      "claim": "学历无并发保护会静默丢失更新：两个 harness 各读各写，后写者吃掉前者一条已验证事实，双方 version 都以为自己 +1，零告警",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 的判据 B4.0（反向判据，主动复现 v0.1 行为）",
+      "when": "2026-08-08T17:18:00+08:00"
+    },
+    {
+      "claim": "缺陷②④不是推演：本会话进行中另一会话往 demo/task3 追加了 facts 10-13，而 version 仍为 1、updated_at 仍为旧值——上下文已过期且无任何机制告知",
+      "verified": true,
+      "source": "会话中两次读盘对比 9 条→13 条；node southbridge/benjing-put.mjs --show demo/task3/task.origin.json 报 in_sync:false",
+      "when": "2026-08-08T17:25:00+08:00"
+    },
+    {
+      "claim": "v0.1 按文件名认学历，把 schemas/task.origin.json（JSON Schema 本身）也当成一份学历；它一旦 mtime 最新，SessionStart 会把 schema 当任务状态注入、SessionEnd 会往 schema 里塞 version 字段",
+      "verified": true,
+      "source": "findStates 遍历结果含 schemas/task.origin.json 且 kind=undefined；判据 B1.4",
+      "when": "2026-08-08T17:28:00+08:00"
+    },
+    {
+      "claim": "本境 v0.2（benjing/0.2）已实现，25 条判据全部通过且验证器可重复跑",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 连跑两轮均 25/25 VERIFIED",
+      "when": "2026-08-08T17:32:00+08:00"
+    },
+    {
+      "claim": "v0.2 bundle 实测把装载量从 9/19 提到 27/27 条已验证事实，占 5436/9000 字符预算，无丢弃",
+      "verified": true,
+      "source": "node .claude/hooks/load-state.mjs 头部声明 装载 5/5 份学历 · 已验证事实 27/27 条 · 无丢弃",
+      "when": "2026-08-08T17:33:00+08:00"
+    },
+    {
+      "claim": "乐观锁实弹通过：用 benjing-put --expect 修 task3 一条 source，写入 status=done、version 1→2，另一会话追加的 facts 10-13 完整保留",
+      "verified": true,
+      "source": "node southbridge/benjing-put.mjs demo/task3/task.origin.json --expect 带哈希 → status done, version 2；facts 仍 13 条",
+      "when": "2026-08-08T17:34:00+08:00"
+    },
+    {
+      "claim": "归档改由内容驱动后可重复：第一轮四份 migrated（不涨版本号）、task3 unchanged；第二轮五份全部 unchanged，version 一个没动",
+      "verified": true,
+      "source": "连续两次 node -e 调 reconcile 遍历全部学历，输出 migrated→unchanged",
+      "when": "2026-08-08T17:34:00+08:00"
+    },
+    {
+      "claim": "source 形式复核对真实学历 27 条中 26 条通过，抓出的 1 条是真问题（把结论当证据），修 source 后五份学历全绿",
+      "verified": true,
+      "source": "node southbridge/verify-state.mjs 对 demo 下五份 task.origin.json 五连绿",
+      "when": "2026-08-08T17:34:00+08:00"
+    },
+    {
+      "claim": "CLAUDE.md 里的环境快照本轮没有漂移：Node v22.14.0、git 2.49.0.windows.1 与硬编码值完全一致——因此不给环境事实加 as_of/重验机制",
+      "verified": true,
+      "source": "node -v 与 git --version 比对 CLAUDE.md 顶部快照",
+      "when": "2026-08-08T17:14:00+08:00"
+    },
+    {
+      "claim": "actor.model 在本机不可观测：环境里只有 CLAUDE_CODE_SESSION_ID/ENTRYPOINT/EFFORT，没有模型名；写 unobserved 不编造",
+      "verified": true,
+      "source": "env | grep -iE 前缀 CLAUDE/ANTHROPIC/CODEX/OPENAI 输出 8 条均无模型名；判据 B5.2",
+      "when": "2026-08-08T17:20:00+08:00"
+    },
+    {
+      "claim": "模型名在本机是可观测的，只是不在环境变量里：Claude Code 的 ~/.claude/projects/<slug>/<session_id>.jsonl 记 \"model\":\"claude-opus-5\"（125 次），codex 的 ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl 的 session_meta 记 \"model\":\"gpt-5.5\"",
+      "verified": true,
+      "source": "grep -o 里 \"model\":\"[^\"]*\" 分别对两份 jsonl 取值；detectActor() 返回 model_source=transcript",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "claim": "PreToolUse 硬拦截实弹通过：本会话尝试用 Write 工具写 demo/_guard-probe/task.origin.json，被 guard-benjing.mjs 当场阻断（退出码 2），且磁盘上未产生该文件",
+      "verified": true,
+      "source": "ls demo/_guard-probe 报不存在；判据 B8.1-B8.5",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "claim": "Claude Code 的 hook 配置是动态加载的：改完 .claude/settings.json 无需重启会话，同一会话内立即生效",
+      "verified": true,
+      "source": "改完 .claude/settings.json 后立刻用 Write 工具写 demo/_guard-probe/task.origin.json，被 .claude/hooks/guard-benjing.mjs 阻断（未重启会话）",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "claim": "原子替换写实测抗并发：8 个进程各写 60 次 60KB 状态文件，读者在 2.5 秒窗口内高频读取，0 次读到损坏 JSON",
+      "verified": true,
+      "source": "判据 B7.2（writeAtomic 临时文件 + rename）",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "claim": "bundle 预算核算漏算了自己：header（含丢弃清单）和 footer 没进账，学历涨到 54 条时冲到 9400/9000 被兜底静默砍掉 400 字符，而头部仍写着「装载 46/51」",
+      "verified": true,
+      "source": "node .claude/hooks/load-state.mjs 输出长度 9400 且头部计数与正文不符",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "claim": "固定预留也不够：丢弃清单会随任务数无限变长，15 份学历时二次撑爆（8967 字符仍触发硬截断标记）",
+      "verified": true,
+      "source": "判据 B1.6 第一次运行报「长度 8967，硬截断=true」",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "claim": "修完后真实 bundle 装载 50/54 条、8738/9000 字符、无硬截断，丢弃的 4 条如实上报",
+      "verified": true,
+      "source": "node .claude/hooks/load-state.mjs 头部「装载 6/6 份学历 · 已验证事实 50/54 条 · ⚠ 未装载 4 条」",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "claim": "本境 v0.2 判据从 25 条扩到 40 条并可重复跑（新增体检、硬拦截、原子写、模型观测、预算不谎报）",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 连跑两轮均 40/40 VERIFIED",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "claim": "每次归档跑的便宜体检能当场揪出问题：实测发现另一会话新增的 3 条 fact source 不可复核，直接亮在 SessionStart 头部，随后被修掉",
+      "verified": true,
+      "source": "node .claude/hooks/load-state.mjs 头部由「⚠ 体检 1/6 份有问题 source不可复核×3」变为「✔ 体检 6 份学历全部健康」",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "claim": "codex 侧做不出 PreToolUse 等价物：codex --help 与 ~/.codex/config.toml 里只有 notify（仅支持 turn-ended），没有工具级拦截钩子",
+      "verified": true,
+      "source": "codex --help 输出与 cat ~/.codex/config.toml 检查",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "claim": "Windows 只读位（0o444）挡得住「就地修改」：node fs.writeFileSync 覆盖、shell 重定向 > 与 >>、rename 覆盖，三种写法一律 EPERM，磁盘一字未改",
+      "verified": true,
+      "source": "判据 B10.2；另 node -e 三连实测均报 EPERM",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "claim": "只读位挡不住「删了重建」：sed -i 打穿了 demo/task1/task.origin.json，且穿完把 mode 恢复成 444 不留痕迹；node fs.unlinkSync 对只读文件同样成功",
+      "verified": true,
+      "source": "判据 B10.5（反向判据）；sed -i 后 node -e 查 mode 仍为 444",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "claim": "sed 事故顺带挖出体检盲区：它把 \"kind\":\"task.origin\" 改成 \"TASK.origin\"，那份学历直接从本境消失，而体检照报「全部健康」——比「被改」更危险的是「消失」",
+      "verified": true,
+      "source": "复现：node -e 造 kind=TASK.origin 的 task.origin.json → findStates 认出 0 份、health 报 states=0 issues=0；判据 B9.3",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "claim": "content_hash 使精确还原可证：反向跑一遍 sed 后实算指纹与文件自记指纹相等，逐字节等同事故前",
+      "verified": true,
+      "source": "node -e 反向 replace 后比对 contentHash(s) === s.content_hash",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "claim": "孤儿检测的假阳性会把体检训练成噪音：JSON Schema 本身（schemas/task.origin.json）曾被每次报成孤儿，按 $schema 字段精确排除后体检转绿",
+      "verified": true,
+      "source": "判据 B9.5；node .claude/hooks/load-state.mjs 头部由「⚠ 体检 1 处问题」变为「✔ 全部健康，无孤儿」",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "claim": "本境 v0.2 判据扩到 48 条并可重复跑（新增孤儿检测 B9.3-B9.5、文件系统闸门 B10.1-B10.5）",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 连跑两轮均 48/48 VERIFIED",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "claim": "判据自己会被闸门挡住：B2.3/B2.5/B9.1 原用 fs.writeFileSync 模拟「绕过协议的写入」，上闸门后这三条全报 EPERM——模拟必须走真实存在的绕过路径（解锁→改→恢复只读），不能走已被堵死的那条",
+      "verified": true,
+      "source": "node southbridge/verify-benjing.mjs 加闸门后 3 条判据报 EXCEPTION: EPERM（B2.3/B2.5/B9.1），改用 bypassWrite 后转绿",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "claim": "贪心按 mtime 填 bundle 会让「学历沉底」换个原因复发：一份 27 条的大任务吃光预算，task2/uking-triage/heartbeat 三份被整份归零（丢 25/76 条）；改轮转分配后无一份归零（丢 21/76，只截断最大的那份）",
+      "verified": true,
+      "source": "node .claude/hooks/load-state.mjs 改前后头部对比；判据 B1.8",
+      "when": "2026-08-08T18:40:00+08:00"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "只采纳架构文档中能绑上复现命令的 6 条本境改动，拒绝 SQLite 存储层 / 十类记录 / 改名 / context.request 双对象",
+      "why": "纯文本 JSON 让学历能 git diff、人能读、AI 能改，这是当前最值钱的性质；5 份学历 5436 字符远未触到预算，上 SQLite 是过早优化且会毁掉可读性。判据是「我们这处出过血」，不是「文档说得对」",
+      "when": "2026-08-08T17:22:00+08:00"
+    },
+    {
+      "what": "version 改由 content_hash 驱动，且 content_hash 排除 version/updated_at/actor",
+      "why": "不排除 actor 的话，换个 harness 原样存一次就让版本通胀——那是缺陷②换个马甲。判据 B2.4 锁住",
+      "when": "2026-08-08T17:24:00+08:00"
+    },
+    {
+      "what": "source 只判「引没引可复核物」，不判「可复核物还在不在」",
+      "why": "很多 fact 描述的恰恰是「文件被删了 / 命令报错了」，要求路径存在会把真事实判成假。判据 B3.3 锁住",
+      "when": "2026-08-08T17:26:00+08:00"
+    },
+    {
+      "what": "抓到 task3 一条 source 不可复核时，修 source 不修检查器",
+      "why": "检查器判对了：那条 source 写的是结论不是复现方式。为了让历史全绿而放宽判据，等于把验证器再变回存在性检查",
+      "when": "2026-08-08T17:33:00+08:00"
+    },
+    {
+      "what": "bundle 装不下时必须显式报「未装载 X 条」",
+      "why": "静默截断会让人以为学历全在，比丢学历更坏——v0.1 丢了 10 条整整一版没人发现",
+      "when": "2026-08-08T17:30:00+08:00"
+    },
+    {
+      "what": "把「模型名不可观测」从未决问题里划掉：改从 transcript/rollout 观测，并新增 model_source 字段标注证据来源",
+      "why": "环境变量里没有不等于观测不到。transcript 是磁盘真相，env 只是声明——两者可信度不同，必须分开记，否则又是一次「声明冒充观测」",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "what": "乐观锁改为 PreToolUse 硬拦截，而不是只写在文档里劝",
+      "why": "提供了安全带但不强制系，缺陷④只算修了一半。本机多会话并发是常态，靠自觉必然出事",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "what": "bundle 头部的可变部分（丢弃清单、体检明细）必须有上界，条数照实报、明细只列前几项",
+      "why": "否则清单本身会撑爆它要守的预算——统计者把自己排除在统计之外，跟自证式版本号是同一类错",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "what": "兜底截断永远不许静默，触发时在末尾写死「装载计数不可信」",
+      "why": "谎报装载量比丢学历更坏：丢了还知道去找，谎报了连找都不会去找",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "what": "把过期的判据 B5.2 改写而不是删除，并在 RFC 里记下改写理由",
+      "why": "它锁的是 v0.2 落成时的能力边界（模型名观测不到），不是协议的不变量。判据要锁不变量，不要锁当时的限制——否则能力一进步判据就变红",
+      "when": "2026-08-08T17:55:00+08:00"
+    },
+    {
+      "what": "把强制点下沉到文件系统只读位，而不是等 codex 出 hook",
+      "why": "codex 只有 turn-ended 通知，工具级拦截做不出来。文件系统层是 harness 无关的，一次改动覆盖所有写入者",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "what": "把「只读位挡不住删了重建」写成反向判据 B10.5，而不是当作缺陷藏起来",
+      "why": "闸门的真实边界必须可执行地记录下来。哪天这条变红说明环境变了，整套闸门强度要重估——藏起来就等于以为自己有一道完整的门",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "what": "codex 决定性实验没做成就如实记未验证，不拿「codex 没写成」冒充「闸门挡住了」",
+      "why": "codex 失败的原因是本机 Windows 沙箱 runner 坏了（CreateProcessAsUserW failed: 5），根本没走到写文件那一步。把无关原因算作己方成效，正是这套协议一直在修的「声明与现实脱节」",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "what": "孤儿按 $schema 精确排除，而不是把 schemas/ 目录整个跳过",
+      "why": "目录级排除会漏掉真放在 schemas/ 下的学历；假阳性则会训练人忽略体检行，等于把体检废掉",
+      "when": "2026-08-08T18:30:00+08:00"
+    }
+  ],
+  "actions": [
+    {
+      "verb": "file.write",
+      "target": "southbridge/benjing-core.mjs",
+      "status": "done",
+      "result": "本境 v0.2 共享核心：canonical / contentHash / detectActor / findStates(按kind) / putState(乐观锁+回读) / reconcile / recheckSource",
+      "evidence": "25/25 判据通过"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/benjing-put.mjs",
+      "status": "done",
+      "result": "学历写入唯一合法入口，--show 拿凭据 / --expect 乐观锁，退出码 3=diverged 4=denied",
+      "evidence": "判据 B4.5 校验退出码；实弹修 task3 成功"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/verify-benjing.mjs",
+      "status": "done",
+      "result": "25 条判据一致性验证器，沙箱在临时目录，含反向判据 B4.0",
+      "evidence": "连跑两轮均 25/25"
+    },
+    {
+      "verb": "file.write",
+      "target": ".claude/hooks/load-state.mjs",
+      "status": "done",
+      "result": "改写为 bundle 编译器：全量学历 + 字符预算 + 丢弃必报",
+      "evidence": "装载量 9/19 → 27/27"
+    },
+    {
+      "verb": "file.write",
+      "target": ".claude/hooks/finalize-state.mjs",
+      "status": "done",
+      "result": "改写为按 content_hash 逐份对账，内容没变不写盘",
+      "evidence": "第二轮 reconcile 全部 unchanged"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/verify-state.mjs",
+      "status": "done",
+      "result": "CHECK2 升级为 source 可复核性判定；新增 CHECK4 content_hash 对账",
+      "evidence": "胡话 source 退出码由 0 翻为 1（判据 B3.4）"
+    },
+    {
+      "verb": "file.write",
+      "target": "schemas/task.origin.json",
+      "status": "done",
+      "result": "schema v0.2：content_hash / actor / source_kind，verified 事实强制要求 source，spec 兼容 0.1",
+      "evidence": "file exists"
+    },
+    {
+      "verb": "file.write",
+      "target": "rfcs/RFC-0005-benjing-v0.2.md",
+      "status": "done",
+      "result": "协议正文：六条缺陷对照表、乐观锁语义、刻意没做的事、6 条未决问题",
+      "evidence": "file exists"
+    },
+    {
+      "verb": "file.write",
+      "target": "demo/task3/task.origin.json",
+      "status": "done",
+      "result": "经 benjing-put 乐观锁修一条不可复核 source",
+      "evidence": "status=done version 1→2，facts 仍 13 条"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/benjing-core.mjs",
+      "status": "done",
+      "result": "新增 observeModel/detectHarness/writeAtomic/health；detectActor 记 model_source；reconcile 接受 transcriptPath；三处状态写改为原子替换",
+      "evidence": "判据 B6/B7/B9 通过"
+    },
+    {
+      "verb": "file.write",
+      "target": ".claude/hooks/guard-benjing.mjs",
+      "status": "done",
+      "result": "PreToolUse 硬拦截 Write/Edit/MultiEdit/NotebookEdit 对 task.origin.json 的写，退出码 2 + 引号安全的替代命令提示",
+      "evidence": "实弹拦截成功，探针文件未生成"
+    },
+    {
+      "verb": "file.write",
+      "target": ".claude/settings.json",
+      "status": "done",
+      "result": "挂上 PreToolUse hook",
+      "evidence": "判据 B8.5 校验配置真的接上了"
+    },
+    {
+      "verb": "file.write",
+      "target": ".claude/hooks/load-state.mjs",
+      "status": "done",
+      "result": "预算核算纳入 header/footer；头部可变部分上界；结转事实去 source 并截断 claim；硬截断不再静默；体检行接入头部",
+      "evidence": "bundle 由 9400/9000 硬截断变为 8738/9000 无截断"
+    },
+    {
+      "verb": "file.write",
+      "target": ".claude/hooks/finalize-state.mjs",
+      "status": "done",
+      "result": "从 SessionEnd stdin 取 transcript_path 观测模型名；体检结果落 .claude/benjing-health.json",
+      "evidence": "体检文件生成，6 份 0 问题"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/verify-benjing.mjs",
+      "status": "done",
+      "result": "判据 25 → 40：B1.6/B1.7 预算不谎报、B6 模型观测、B7 原子写、B8 硬拦截、B9 体检；B5.2 改写为锁不变量",
+      "evidence": "连跑两轮均 40/40"
+    },
+    {
+      "verb": "file.write",
+      "target": "rfcs/RFC-0005-benjing-v0.2.md",
+      "status": "done",
+      "result": "§4 补预算翻车记录与三条对策；§6 拆为「已关闭三条」+「仍未决六条」；§7 更新为 40 条并说明三条特殊判据",
+      "evidence": "file exists"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/benjing-core.mjs",
+      "status": "done",
+      "result": "新增 isLocked/lockState/unlockState + writeAtomic 的 relock；reconcile 自愈重新上锁；scanStateFiles 返回 states+orphans；health 计入孤儿",
+      "evidence": "判据 B9.3-B9.5、B10.1-B10.5 通过"
+    },
+    {
+      "verb": "file.write",
+      "target": "southbridge/verify-benjing.mjs",
+      "status": "done",
+      "result": "判据 40 → 48：孤儿检测三条 + 文件系统闸门五条；三条旧判据改用 bypassWrite 模拟真实绕过路径",
+      "evidence": "连跑两轮均 48/48"
+    },
+    {
+      "verb": "file.write",
+      "target": "rfcs/RFC-0005-benjing-v0.2.md",
+      "status": "done",
+      "result": "新增 §6c（第二道闸门与其真实边界、codex 实验未做成的如实记账）与 §6d（体检盲区与精确还原）",
+      "evidence": "file exists"
+    },
+    {
+      "verb": "shell",
+      "target": "codex exec -s workspace-write",
+      "status": "failed",
+      "result": "决定性实验未完成：本机 Windows 沙箱 runner 报 CreateProcessAsUserW failed: 5，codex 未走到写文件步骤；--dangerously-bypass-approvals-and-sandbox 未获授权",
+      "evidence": "codex 输出原文含 windows sandbox: runner failed during SpawnChild"
+    }
+  ],
+  "artifacts": [
+    "southbridge/benjing-core.mjs",
+    "southbridge/benjing-put.mjs",
+    "southbridge/verify-benjing.mjs",
+    "southbridge/verify-state.mjs",
+    ".claude/hooks/load-state.mjs",
+    ".claude/hooks/finalize-state.mjs",
+    "schemas/task.origin.json",
+    "rfcs/RFC-0005-benjing-v0.2.md",
+    ".claude/hooks/guard-benjing.mjs",
+    ".claude/settings.json"
+  ],
+  "verification": "协议层已验证：48 条判据取自磁盘真相，连跑两轮一致；七份真实学历 verify-state 全绿；影核验证器未被破坏。PreToolUse 硬拦截为实弹验证。**未验证：文件系统闸门能否挡住 codex 的原生写路径**——两条实验路径分别被本机坏掉的沙箱 runner 和未获授权的旁路标志堵死。",
+  "next_steps": [
+    "决定性实验待跑：文件系统闸门能否挡住 codex 的 apply_patch。前置条件二选一——修好本机 codex Windows 沙箱 runner（CreateProcessAsUserW failed: 5），或由人明确授权 --dangerously-bypass-approvals-and-sandbox 把闸门隔离成唯一变量",
+    "跨 harness 强制点下沉到影核：学历文件已在影核受保护路径名单里，让 codex 的写一律经南桥 CLI，比在文件系统层堵更彻底",
+    "RFC-0005 §6b 未决：reconcile 读改写竞态（归档走 expect 需定重试策略）；闸门对「删了重建」无效；diverged 后无合并策略；bundle 无相关性筛选",
+    "把 verify-benjing.mjs + verify-southbridge.mjs 接进 cron，让两个协议自动回归（当前只有便宜体检是自动的）",
+    "task2 遗留：Experience Bank + 长循环考试（学堂最小闭环）"
+  ],
+  "learnings": [
+    {
+      "lesson": "「记录层自证」这个病会在每一层重演：影核修了 action result，幂等账本接着犯；本境的 version 是同一个病的第三次发作。规则：任何声称「状态是什么」的字段，都要能被一个不看它的观察者复算出来",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "验证器的判据里要有一条反向判据（B4.0：主动复现旧缺陷）。全绿有两种可能——真修好了，或复现路径失效了。没有反向判据分不出来",
+      "confidence": 0.85,
+      "status": "verified",
+      "id": "L-f0483edbc510",
+      "recheck": {
+        "kind": "command",
+        "run": "node oob/verify-oob.mjs",
+        "expect_exit": 0
+      },
+      "origin": {
+        "task": "task4",
+        "when": "2026-08-09T06:53:38.682Z"
+      },
+      "exam": {
+        "runs": 1,
+        "last_run": "2026-08-09T06:53:54.510Z",
+        "last_result": "pass",
+        "last_detail": "退出码 0",
+        "passes": 1,
+        "promoted_at": "2026-08-09T06:53:54.510Z"
+      }
+    },
+    {
+      "lesson": "新检查器抓到历史数据的问题时，默认应改数据不改检查器。为了让历史全绿而放宽判据，等于把验证器退化回存在性检查——那正是要修的东西",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "实现「防自证」的代码本身也会自证：putState 先算指纹再改 spec 字段，回读必然对不上，被它自己的 B4.6 判据当场抓住。写防御机制时必须给防御机制本身也写判据",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "多会话并发是本机常态，不是理论风险——写这份协议的过程中就撞上了一次真实的并发追加。任何「读进内存→改→整体写回」的模式在这台机器上都会丢学历",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:53:54.510Z",
+        "last_result": "fail",
+        "last_detail": "退出码 1，期望 0",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam",
+        "runs": 1,
+        "fails": 1
+      },
+      "id": "L-927e89712a9d",
+      "recheck": {
+        "kind": "command",
+        "run": "node southbridge/verify-benjing.mjs",
+        "expect_exit": 0
+      },
+      "origin": {
+        "task": "task4",
+        "when": "2026-08-09T06:53:38.682Z"
+      }
+    },
+    {
+      "lesson": "source 可复核性检查抓到的第一个受害者是我自己刚写的学历：用例编号 B4.0 不被识别，因为检查器只认影核的 T 前缀。检查器的规则集要跟着验证器一起长，否则新验证器的产出会被老规则判成不可复核",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "「观测不到」要区分「真的没有」和「没找对地方」。模型名在环境变量里确实没有，但在 transcript 里躺着——报 unobserved 之前应该先把磁盘找一遍",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "统计者必须把自己算进统计。bundle 预算漏算了 header/footer 而超支，跟 version 自己给自己 +1 是同一类错：负责记账的那部分把自己排除在账本之外",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "判据要锁不变量，不要锁当时的能力边界。B5.2 原文锁「模型名观测不到」，能力一进步它就变红——正确写法是锁 model 与 model_source 的自洽关系",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "判据自己也要能判「前提不成立」。B1.7 第一次写时造的数据没撑爆预算，判据在无效前提下给了假绿——测边界的判据必须先确认边界真的被触到了",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "光提供安全工具不够，得有强制点。乐观锁写进文档时还能被 Write 工具绕过；接上 PreToolUse 之后才真正生效。协议的强度等于它最弱的绕行路径",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "实验失败要先归因再记账。codex 没改成文件不等于闸门挡住了——它压根没走到写文件那一步。把无关原因算作己方成效，就是这套协议一直在修的那个病换了个场合",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "防护机制的真实边界要写成可执行的反向判据，不是写在文档注意事项里。B10.5 主动验证「删了重建能绕过」，边界一变就报警",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "「消失」比「被改」危险：被改还在账上，消失连账都没有。任何按特征识别对象的清点逻辑，都必须同时报告「像但认不出的」，否则清点结果天然乐观",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "检测的假阳性会把检测废掉。schemas/task.origin.json 每次被报成孤儿，几轮之后人就会自动忽略体检行——宁可多花一点精度成本，也不能让告警变成噪音",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "上了强制点之后，要回头检查「模拟攻击」的测试还成不成立。三条判据原来用已被堵死的路径模拟绕过，上闸门后自己先失败了——测试用的是真实攻击路径才有意义",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "同一个病会换着原因复发。「学历沉底」v0.1 的原因是「只读最后一个扇区」，修完之后又以「先到先得」的形式回来了——判据要锁住的是症状（有学历一条都进不来），不是某一次的成因",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    }
+  ],
+  "content_hash": "cff36365f2ee4ee8101d3b18ef80b5fe2edf2b19186dbd50cf87bd542175bca2",
+  "actor": "xuetang/exam"
+}

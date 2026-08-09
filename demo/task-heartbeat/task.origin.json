@@ -1,0 +1,63 @@
+{
+  "spec": "2origin/0.1",
+  "kind": "task.origin",
+  "id": "task-heartbeat",
+  "title": "uking 心跳健康观测",
+  "goal": "持续观测 uking 心跳健康，区分真崩溃与退出检测误报，沉淀 learnings。",
+  "version": 1,
+  "scope": "machine:local",
+  "created_at": "2026-08-08T08:52:26.014Z",
+  "updated_at": "2026-08-08T08:52:26.014Z",
+  "current_state": "⚠️ 疑似误报：进程存活+心跳新鲜，但 crash.log 记为 unclean_exit。这是退出检测 bug，进程本身健康。",
+  "facts": [
+    {
+      "claim": "pid 21476 心跳距今 10s，进程存活",
+      "verified": true,
+      "source": ".session.json + tasklist"
+    },
+    {
+      "claim": "crash.log 有 21476 的 unclean_exit 记录",
+      "verified": true,
+      "source": "crash.log"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "uking unclean_exit 需区分真崩溃与误报",
+      "why": "存活+心跳新鲜时 unclean_exit 是退出检测残留，非崩溃",
+      "when": "2026-08-08T08:52:26.014Z"
+    }
+  ],
+  "actions": [
+    {
+      "verb": "observe",
+      "target": ".session.json + crash.log + tasklist",
+      "status": "done",
+      "result": "⚠️ 疑似误报：进程存活+心跳新鲜，但 crash.log 记为 unclean_exit。这是退出检测 bug，进程本身健康。"
+    }
+  ],
+  "artifacts": [
+    "C:/Users/ZhuanZ/.uking/logs/.session.json",
+    "C:/Users/ZhuanZ/.uking/logs/crash.log"
+  ],
+  "verification": "⚠️ 疑似误报：进程存活+心跳新鲜，但 crash.log 记为 unclean_exit。这是退出检测 bug，进程本身健康。",
+  "next_steps": [
+    "若判定误报：uking 应在启动时清理残留心跳（真正修复点）",
+    "持续观测：心跳过期阈值建议 5 分钟",
+    "把多次误报反馈给 uking 开发者修退出检测"
+  ],
+  "learnings": [
+    {
+      "lesson": "uking unclean_exit 常是残留心跳误报，进程本身健康；判据=存活+心跳新鲜",
+      "confidence": 0.8,
+      "status": "candidate"
+    }
+  ],
+  "content_hash": "b096f30c278ecf0dc4a174b1557ab54d207cc759bae87b7b86bbb37cfca9bdb5",
+  "actor": {
+    "harness": "claude-code",
+    "model": "unobserved",
+    "session_id": "0ce4fbd1-6e08-449f-b7a6-12838e62c6f7",
+    "at": "2026-08-08T09:29:20.642Z"
+  }
+}

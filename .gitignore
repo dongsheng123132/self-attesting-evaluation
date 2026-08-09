@@ -1,0 +1,21 @@
+# 聊天记录是「影」，不是状态 —— 按本仓库铁律，trace 是学堂原料，不进版本控制。
+# 它同时也是私人工作内容：整份会话逐轮文本，公开出去与 corpus.json 的取舍自相矛盾。
+.claude/trace.jsonl
+
+# 每会话的装载账本 / 缓存体检 / 锁文件：派生物与临时态，可由代码重算
+.claude/nb-injected-*.json
+.claude/benjing-health.json
+.claude/scheduled_tasks.lock
+
+# 临时中转文件（本仓库多次用 *.tmp.json / *.tmp.mjs 做 benjing-put 的入参）
+*.tmp.json
+*.tmp.mjs
+node_modules/
+
+# ── 刻意**不**忽略的（写下来，免得以后有人"顺手"加进去）──
+# southbridge/audit.log        只追加审计日志。ACCEPTANCE.md §2 的跨模型复算全靠它，
+#                              第三方要能按行切片复原当时口径，删了这条主张就没了凭证。
+# demo/.benjing-backups/       论文 self-attesting-evaluation.md 案例 8~13 的唯一凭证。
+#                              论文 §7 已如实写明「这些凭证由被记录者自己产生」——
+#                              进了 git 之后，那条弱点才算真的被修掉。
+# benxiang/observations.jsonl  「上次被独立观察是什么时候」的唯一答案来源。

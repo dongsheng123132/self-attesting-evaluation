@@ -1,0 +1,10 @@
+{"kind":"todo.closure","t":"2026-08-08T15:49:58.273Z","substr":"git commit 2origin-harness","reason":"已提交 2origin-harness@0831752，工作区干净（git status 空）。未 push，待用户决定","files":["demo/task7/task.origin.json"],"results":[{"file":"demo/task7/task.origin.json","ok":true,"removed":1}]}
+{"kind":"todo.closure","t":"2026-08-08T15:49:58.745Z","substr":"summary 臂与 RAG 臂","reason":"v0.3 六臂已实现并于 23:43 真跑（2origin-harness@0831752）。但对照臂分数因 --max-tokens 8000 截断不可用，重跑另立待办——臂加上了不等于结论有了","files":["demo/task7/task.origin.json"],"results":[{"file":"demo/task7/task.origin.json","ok":true,"removed":1}]}
+{"kind":"todo.closure","t":"2026-08-08T15:52:28.544Z","substr":"压根不存在的子串","reason":"测试","files":[],"results":[]}
+{"kind":"todo.closure","t":"2026-08-08T15:52:51.107Z","substr":"压根不存在的子串","reason":"测试","files":[],"results":[]}
+{"kind":"todo.closure","t":"2026-08-08T17:31:24.642Z","substr":"压根不存在的子串","reason":"测试","files":[],"results":[]}
+{"kind":"todo.closure","t":"2026-08-08T17:32:49.450Z","substr":"压根不存在的子串","reason":"测试","files":[],"results":[]}
+{"kind":"todo.closure","t":"2026-08-09T01:54:40.167Z","substr":"压根不存在的子串","reason":"测试","files":[],"results":[]}
+{"kind":"todo.closure","t":"2026-08-09T04:24:12.686Z","substr":"压根不存在的子串","reason":"测试","files":[],"results":[]}
+{"kind":"todo.closure","t":"2026-08-09T06:37:38.360Z","substr":"压根不存在的子串","reason":"测试","files":[],"results":[]}
+{"kind":"todo.closure","t":"2026-08-09T07:01:41.333Z","substr":"压根不存在的子串","reason":"测试","files":[],"results":[]}

@@ -1,0 +1,256 @@
+{
+  "spec": "2origin/0.2",
+  "kind": "task.origin",
+  "id": "demo.task5",
+  "title": "跨模型学历继承：同一 harness，四模型三厂商",
+  "goal": "验证「第一台」的第 3 条主张——AI 学历跨模型继承。把模型作为唯一变量隔离：同一 harness（Hermes）、同一份 task.origin.json、只换模型，看后续模型能否仅凭状态无追问续作。",
+  "version": 16,
+  "scope": "project:shadowos",
+  "created_at": "2026-08-08T18:30:00+08:00",
+  "updated_at": "2026-08-09T06:56:13.150Z",
+  "current_state": "跨模型继承【已验证，含非同源】：四个模型、三家厂商（DeepSeek flash/pro、OpenAI gpt-5-mini、Moonshot kimi-k2.6）在同一 harness、同一份状态文件上接力，提示词均不含任务描述，全部零追问续作；四组数字对只追加审计日志逐行复算分毫不差。**本状态曾在 STEP-D/E 期间被覆写丢失大量学历，已重建并已修补协议缺口，详见 facts 与 learnings。**",
+  "facts": [
+    {
+      "claim": "本机 DeepSeek 官方 API 同时提供 deepseek-v4-flash 与 deepseek-v4-pro，同一把 key 均可用",
+      "verified": true,
+      "source": "curl https://api.deepseek.com/v1/models 返回两个 id；hermes -m deepseek-v4-pro --provider deepseek 探针正常",
+      "when": "2026-08-08T18:25:00+08:00"
+    },
+    {
+      "claim": "hermes 指定 -m 时走 models_dev 的 provider 解析，必须显式设 DEEPSEEK_API_KEY，否则 HTTP 401 Missing Authentication header",
+      "verified": true,
+      "source": "hermes -m deepseek-v4-pro 不带 key 报 401；带 DEEPSEEK_API_KEY 后同一命令正常",
+      "when": "2026-08-08T18:28:00+08:00"
+    },
+    {
+      "claim": "模型 A（deepseek-v4-flash）统计 southbridge/audit.log 得 cli=806 / mcp=708（口径：前 1517 行），产物 demo/task5/channel-stats.md（事故后重建：原文在 D/E 覆写中丢失，本条按主会话上下文重述，语义准确但非逐字原文）",
+      "verified": true,
+      "source": "node 按行切片重算 southbridge/audit.log 前 1517 行得 806/708，与产物一致",
+      "when": "2026-08-08T18:27:00+08:00"
+    },
+    {
+      "claim": "模型 B（deepseek-v4-pro）仅凭状态文件零追问续作，复算得 cli=893 / mcp=766（前 1662 行），并正确核销与 A 的 145 条增量（事故后重建：原文在 D/E 覆写中丢失，本条按主会话上下文重述，语义准确但非逐字原文）",
+      "verified": true,
+      "source": "node 按行切片重算前 1662 行得 893/766；增量 87+58=145 与 B 的解释吻合；产物 demo/task5/cross-model-check.md",
+      "when": "2026-08-08T18:40:00+08:00"
+    },
+    {
+      "claim": "虾盘云网关（api.u-claw.org.cn）提供 194 个模型、其中文本类 160 个，覆盖 OpenAI/Anthropic/Google/Moonshot/Alibaba/Zhipu/MiniMax/xAI 等多家厂商",
+      "verified": true,
+      "source": "curl -H Authorization https://api.u-claw.org.cn/v1/models 返回 194 条 data",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "hermes 可用 OPENAI_BASE_URL + OPENAI_API_KEY 环境变量覆盖端点指向虾盘云，从而在同一 harness 内切换任意厂商模型——这是把「模型」隔离成唯一变量的关键手段",
+      "verified": true,
+      "source": "OPENAI_BASE_URL=https://api.u-claw.org.cn/v1 hermes -m gpt-5-mini -z 探针返回正常",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "Vendor D 复算：actor=southbridge_cli 1490 条、actor=southbridge_mcp 1172 条（全文件 2665 行）",
+      "verified": true,
+      "source": "grep -c on disk and southbridge write+verify demo/task5/vendor-check-D.md",
+      "when": "2026-08-08T11:25:00.000Z"
+    },
+    {
+      "claim": "Vendor E 复算：actor=southbridge_cli 1623 条、actor=southbridge_mcp 1259 条（全文件 2885 行）",
+      "verified": true,
+      "source": "grep -c on disk and southbridge write+verify demo/task5/vendor-check-E.md",
+      "when": "2026-08-08T11:25:09.000Z"
+    },
+    {
+      "claim": "审计日志自 D 统计后继续追加 220 行（cli +133、mcp +87），D→E 期间增量可按 actor 拆分",
+      "verified": true,
+      "source": "diff between D (2665 lines) and E (2885 lines) grep counts",
+      "when": "2026-08-08T11:25:09.000Z"
+    },
+    {
+      "claim": "跨非同源模型继承成立：四个模型三家厂商（DeepSeek flash → DeepSeek pro → OpenAI gpt-5-mini → Moonshot kimi-k2.6）在同一 harness、同一份 task.origin.json 上接力，提示词均不含任何任务描述，全部零追问续作",
+      "verified": true,
+      "source": "node 按行切片复算 southbridge/audit.log：前1517行=806/708(A)、前1662行=893/766(B)、前2665行=1490/1172(D)、前2885行=1623/1259(E)，四组自报数字全部一致",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "【事故】本境 v0.2 的乐观锁挡不住「合法但截断」的写入：模型 D 读到正确 content_hash 后，提交的 next.json 只含 1 条 fact 且 current_state 为空，benjing-put 判定 expect 匹配、正常放行；E 又在 D 的残骸上继续，导致 STEP-A/B/C 的 11 条 facts、2 条 decisions、6 条 learnings、3 条 artifacts 全部丢失",
+      "verified": true,
+      "source": "node 读 demo/task5/next.json 得 facts=1、current_state 长度 0；覆写后 task.origin.json 从 5.6K 掉到 1.9K；本条状态为事后重建",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "乐观锁与「防截断」是两个不同问题：expect_sha256 回答「你读的是不是最新的」，回答不了「你有没有把读到的内容带上」。前者防并发竞态，后者防单方截断，二者互不覆盖",
+      "verified": true,
+      "source": "本次事故：D 的 expect 完全正确、锁正常放行，学历照样丢；见 southbridge/benjing-core.mjs putState 的 shrink 守卫与验证用例",
+      "when": "2026-08-08T19:30:00+08:00"
+    },
+    {
+      "claim": "benjing-put 的乐观锁只验「你读过盘上内容」，不验「你写进去的还是不是一份合法学历」：交上只含 version/updated_at/actor/actions/facts/next_steps 的对象即被照单全收，导致 demo/task5 丢失 kind/id/title/goal/current_state，整份从本境消失（体检报 kind=undefined 孤儿）。**事实条数的损失范围未定**：19:29 观测到 3 条，19:37 修复时已是 12 条——期间 owning 会话在补写，无法区分「丢了又补回」与「从未丢」。",
+      "verified": true,
+      "source": "19:29 node -e 读盘得 facts=3、1978 字节、无 kind；19:37 修复前读盘得 facts=12 仍无 kind；demo/task5/next.json 仅 6 个字段；判据 B11.0",
+      "when": "2026-08-08T19:35:00+08:00"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "用同一 harness（Hermes）+ 多个模型，而不是换 harness 来测跨模型",
+      "why": "task2 的 Claude Code→Codex 同时换了 harness 和模型，两个变量混在一起，证不出「跨模型」这一条。要隔离变量",
+      "when": "2026-08-08T18:30:00+08:00"
+    },
+    {
+      "what": "验收任务设计成「后一棒复算前一棒的数字」，而不是「后一棒产出看起来对的东西」",
+      "why": "审计日志只追加，所以任何第三方都能按行切片复原当时口径，四组数字谁都伪造不了。这比「产物看起来对」强一个量级",
+      "when": "2026-08-08T18:45:00+08:00"
+    },
+    {
+      "what": "事故后不回滚 D/E 的成果，而是重建丢失部分并修补协议缺口",
+      "why": "D/E 的复算数字本身是有效证据（已独立复验）。真正该修的是让这种丢失不再可能——加 shrink 守卫",
+      "when": "2026-08-08T19:30:00+08:00"
+    }
+  ],
+  "actions": [
+    {
+      "verb": "action.invoke",
+      "target": "hermes(deepseek-v4-flash) → STEP-A",
+      "status": "done",
+      "result": "统计审计通道并落盘 channel-stats.md",
+      "evidence": "前 1517 行复算 806/708 一致"
+    },
+    {
+      "verb": "action.invoke",
+      "target": "hermes(deepseek-v4-pro) → STEP-B",
+      "status": "done",
+      "result": "零追问续作，复算并核销差额",
+      "evidence": "前 1662 行复算 893/766 一致"
+    },
+    {
+      "verb": "action.invoke",
+      "target": "hermes(gpt-5-mini, OpenAI) → STEP-D",
+      "status": "done",
+      "result": "非同源模型零追问续作，落盘 vendor-check-D.md",
+      "evidence": "前 2665 行复算 1490/1172 一致"
+    },
+    {
+      "verb": "action.invoke",
+      "target": "hermes(kimi-k2.6, Moonshot) → STEP-E",
+      "status": "done",
+      "result": "第三家厂商零追问续作，落盘 vendor-check-E.md",
+      "evidence": "前 2885 行复算 1623/1259 一致"
+    },
+    {
+      "verb": "file.write",
+      "target": "ACCEPTANCE.md",
+      "status": "done",
+      "result": "对外验收报告，报告内命令已逐条实跑自校验",
+      "evidence": "§2 复算片段与 §6 CLI 示例均实跑通过"
+    },
+    {
+      "verb": "state.recover",
+      "target": "demo/task5/task.origin.json",
+      "status": "done",
+      "result": "事故后重建被覆写丢失的学历，重建条目已标注",
+      "evidence": "本状态 facts/decisions/learnings 已恢复并新增事故记录"
+    }
+  ],
+  "artifacts": [
+    "demo/task5/channel-stats.md",
+    "demo/task5/cross-model-check.md",
+    "demo/task5/vendor-check-D.md",
+    "demo/task5/vendor-check-E.md",
+    "ACCEPTANCE.md"
+  ],
+  "verification": "跨模型继承已验证，含非同源：四模型三厂商全部零追问续作，四组数字对只追加日志逐行复算一致（前1517/1662/2665/2885 行）。判据不采信任何一方自述。本状态曾因协议缺口被覆写丢失，已重建；缺口已修补（putState shrink 守卫）。",
+  "next_steps": [
+    "影核 RFC §6.5：southbridge_verify 与写动作同进程，不算独立观察者",
+    "codex MCP 闸门：harness 侧缺 per-server 授信，南桥侧已无可做",
+    "清理 demo/task5 下的过程文件（next.json、vendor-check-D-body.md），它们是入参不是交付物"
+  ],
+  "learnings": [
+    {
+      "lesson": "要证明「跨模型」就必须把模型作为唯一变量隔离。同时换 harness 和模型的实验证不出这一条",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "设计跨主体交接的验收任务时，让第二棒去复算第一棒的数字——只追加日志使这种复算可被第三方逐行复原，谁都伪造不了",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "agent 的自述和它自带的校验器可能同时「都对」却互相矛盾，因为说的是不同动作。别急着判谁撒谎，先查磁盘",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "对外报告必须自校验：写完把报告里每条命令逐字跑一遍，否则「可复现」三个字本身就是未经验证的自述",
+      "confidence": 0.9,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    },
+    {
+      "lesson": "【最贵的一条】乐观锁只回答「你读的是不是最新的」，回答不了「你有没有把读到的内容带上」。放一个只提交 1 条 fact 的合法写入进去，学历照样清零。凡是「整份替换」语义的写入口，都必须额外有防截断守卫",
+      "confidence": 0.95,
+      "status": "verified",
+      "exam": {
+        "last_run": "2026-08-09T06:55:55.681Z",
+        "last_result": "pass",
+        "last_detail": "退出码 0",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam",
+        "runs": 2,
+        "fails": 1,
+        "passes": 1,
+        "promoted_at": "2026-08-09T06:55:55.681Z"
+      },
+      "id": "L-edf77d4b794e",
+      "recheck": {
+        "kind": "command",
+        "run": "node southbridge/verify-benjing.mjs",
+        "expect_exit": 0
+      },
+      "origin": {
+        "task": "task5",
+        "when": "2026-08-09T06:53:38.682Z"
+      }
+    },
+    {
+      "lesson": "让 agent 更新共享文档时，「读—改—整份写回」这个模式本身就是危险的。它把「我这次要加什么」悄悄变成了「这份文档应该长什么样」，而模型对后者的判断很容易是残缺的",
+      "confidence": 0.85,
+      "status": "candidate",
+      "exam": {
+        "last_run": "2026-08-09T06:52:10.378Z",
+        "last_result": "unexaminable",
+        "last_detail": "没有 recheck：这条经验无法被任何人重跑，只能当 candidate",
+        "demoted_at": "2026-08-09T06:52:10.378Z",
+        "demoted_by": "exam"
+      }
+    }
+  ],
+  "content_hash": "4b9532d3ae51e59fbbdf59fa1cee4cbd0ae23fe43100080481c68e1e3a4131c4",
+  "actor": "xuetang/exam"
+}
