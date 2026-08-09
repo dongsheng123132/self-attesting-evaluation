@@ -4,8 +4,8 @@
   "id": "holmes-untold",
   "title": "证明层：华生「未叙案件」状态化基准 —— 预注册因子实验",
   "goal": "用福尔摩斯正典中华生明确提及但从未展开的案件作为多个同构任务实例，做预注册的「模型 × 记忆形式」因子实验，检验「持久状态能否替代模型规模」。判据分可见集与隐藏集，隐藏集在生成阶段不可见并以 sha256 预先封存。本轨是全项目唯一承担因果主张的地方。",
-  "version": 4,
-  "updated_at": "2026-08-09T14:48:59.675Z",
+  "version": 3,
+  "updated_at": "2026-08-09T14:34:25.544Z",
   "created_at": "2026-08-09T00:00:00Z",
   "governance": {
     "tenant_id": "uking",
@@ -16,7 +16,7 @@
     "export_policy": "allow",
     "retention_days": 0
   },
-  "current_state": "V/H 判据已拆分并封存，预注册文书已成草案 v1（未生效）。 V 可见集 6 条；H 隐藏集：正典/编年 14 条（全部锚定到语料某一行，剔除 0）、跨实例 5 条、逐实例种子忠实 32 条。 H 不进 git，构造脚本进；SEAL.json 记 sha256=4a989f0e…，权威时间戳是它那次 git commit。 **尚未跑任何一次生成，也不允许跑**——预注册 §10 的四个生效条件里，污染基线实验与提示词模板哈希两条未完成。",
+  "current_state": "P0 实例清单已冻结：从完整正典（4 长篇 + 5 短篇集，共 9 卷）抽出 32 个「华生提及但从未展开」的案件，每条带卷名、篇名、行号与原文引语，探针命中率 32/32、篇名定位 32/32。远超多实例实验所需的 12 个。 语料已全部落盘记指纹并纳入 demo/fetch-corpus.mjs（13 条全绿）。 仍未做：柯南·道尔版权状态核实、正典底本判别流程、V/H 判据拆分与 H 封存、预注册文书、污染基线实验。一次生成都还没跑。",
   "facts": [
     {
       "claim": "本轨源自 codex 独立审视的第 7 条建议与「如果只能改一件事」结论：改为预注册的模型×记忆形式因子实验，多任务实例、等算力预算、判据独立制定且生成阶段不可见",
@@ -99,38 +99,6 @@
       "source_kind": "file",
       "actor": "claude-code",
       "when": "2026-08-09"
-    },
-    {
-      "claim": "隐藏判据集 H 已构造并封存：正典/编年 14 条全部锚定到语料具体行（未锚定剔除 0）、跨实例 5 条、逐实例种子忠实 32 条；主要终点为 H2 跨实例一致性",
-      "verified": true,
-      "source": "可重跑命令：node demo/holmes-untold/seal.mjs --verify（退出码 0，报 hidden_sha256=4a989f0ef06bcafd6be4113f0c75bfbcea1cee4a091266da130830cd32ddd160）",
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-09"
-    },
-    {
-      "claim": "H 的构造是确定性的：连续三次 build-hidden.mjs --stdout 的 sha256 完全一致，封存因此有意义",
-      "verified": true,
-      "source": "可重跑命令：for i in 1 2 3; do node demo/holmes-untold/build-hidden.mjs --stdout | sha256sum; done（三行相同）",
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-09"
-    },
-    {
-      "claim": "封条经实弹证明能认出篡改：改动盘上的 H（221B→222B）被判「盘上的 H 文件与封条不符」；改动构造脚本被同时判出「构造脚本已被修改」与「重建的 H 与封条不符」",
-      "verified": true,
-      "source": "可重跑命令：改动后跑 node demo/holmes-untold/seal.mjs --verify，退出码 2 并列出不符项；还原后退出码 0",
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-09"
-    },
-    {
-      "claim": "H 采取「可复现的派生物」而非「秘密文件」：构造脚本提交进 git、H 本身 gitignore、只提交 SEAL.json。任何人可重建 H 并核对哈希",
-      "verified": true,
-      "source": "文件：demo/holmes-untold/build-hidden.mjs 顶部说明、demo/holmes-untold/seal.mjs 顶部说明、.gitignore 第 44 行",
-      "source_kind": "file",
-      "actor": "claude-code",
-      "when": "2026-08-09"
     }
   ],
   "decisions": [
@@ -168,44 +136,21 @@
       "what": "把文本规范化收进本象，而不是在每个脚本里各写一遍；并为它配一个经实弹证明能变红的验证器",
       "why": "同一个「逐行匹配漏跨行短语」的病在一个会话里被独立犯了两次（collate.mjs 的 D1、extract-instances 的 UC31）。按 RFC-0006 §0 的判断，复发不是「不小心」而是缺失部件的职责被摊派给了每个调用方——跟 sha256 曾在三个文件里各写一遍是同一个形状。光写经验不算数：必须挂一个被违反时会变红的验证器，并实弹证明它真的会红。",
       "when": "2026-08-09"
-    },
-    {
-      "what": "隐藏判据集做成可复现的派生物，不做成秘密文件",
-      "why": "「隐藏」要防的是生成阶段的上下文里出现 H，不是公众看到 H。藏一个谁也验不了的秘密文件，可信度反而更低——外界无法确认它在实验前就固定了。构造脚本入 git + H 的 sha256 入 git，使「H 在第一次生成之前已固定」成为可被任何人独立核对的事实，权威时间戳是 commit 时间而非任何字段。",
-      "when": "2026-08-09"
-    },
-    {
-      "what": "主要终点定为 H2 跨实例一致性，且一个臂内的实例按固定顺序串行生成",
-      "why": "跨实例一致性是唯一直接检验「持久状态」的量：它要求模型记得自己在前几个实例里说过什么。它对生成方不可见，因此无法被爬分。其余判据（正典事实、种子忠实）测的更多是单次生成质量，作为次要终点。",
-      "when": "2026-08-09"
-    },
-    {
-      "what": "写明反证标准：M3 打不过 M1 就发布「协议化状态未能优于等 token 的原始聊天记录」",
-      "why": "不写反证标准的预注册等于没预注册。M1（等 token 原始聊天记录）与 M2（等长静态摘要）是两个必须存在的对照——只跟 M0 比，赢的可能只是上下文更长或摘要写得好。",
-      "when": "2026-08-09"
     }
   ],
   "artifacts": [
     "demo/holmes-untold/extract-instances.mjs",
     "demo/holmes-untold/corpus/",
-    "demo/fetch-corpus.mjs",
-    "demo/holmes-untold/PREREGISTRATION.md",
-    "demo/holmes-untold/SEAL.json",
-    "demo/holmes-untold/build-hidden.mjs",
-    "demo/holmes-untold/seal.mjs",
-    "demo/holmes-untold/constraints-visible.json"
+    "demo/fetch-corpus.mjs"
   ],
   "next_steps": [
-    "P0【生效条件 1/4】把 SEAL.json 与 PREREGISTRATION.md 提交进 git —— 这一刻之后才允许跑生成",
-    "P0【生效条件 2/4】写死 frontier 的具体型号与版本并公布",
-    "P0【生效条件 3/4】提示词模板定稿并公布其 sha256",
-    "P0【生效条件 4/4】跑污染基线实验：各模型在 M0 条件下凭记忆复现正典细节与既有仿作情节的比率，先公布",
-    "P1 实现四种记忆条件的等 token 装配器（M0/M1/M2/M3），M1 与 M2 的 token 数必须由 M3 实测值反推",
-    "P1 设计 H2 的裁决流程：自动筛查 + 盲审，并测评审一致率；一致率过低的判据作废",
     "P0 正典底本判别：仿 demo/ulysses-19/collate.mjs 建一套探针，确认 9 卷 Gutenberg 文本的版本身份——#4300 的教训是「文件名写着 1922 不等于它是 1922」",
     "P0 核实并落盘柯南·道尔版权状态记录",
+    "P0 制定判据集并拆分 V/H；H 封存后公开 sha256（预注册的密码学承诺）",
+    "P0 写预注册文书：假设、臂、样本量、分析计划、停止规则，发布后才允许跑第一次生成",
     "P1 训练集污染基线实验（M0 条件下的正典细节复现率）",
-    "P1 设计盲审裁决流程与评审一致率测量（自动筛查判不了的那部分判据）"
+    "P1 设计盲审裁决流程与评审一致率测量（自动筛查判不了的那部分判据）",
+    "P1 与展示层的发布节奏对齐：证明层先出预注册，展示层后出产物"
   ],
   "learnings": [
     {
@@ -242,12 +187,12 @@
     }
   ],
   "actions": [],
-  "content_hash": "eae7d1f1034310c61ae5b5a2d154168a76ebea778b0b24a748f9c1135ec4ad8a",
+  "content_hash": "db5dbc5a3b8427b11ab695f9916a09506a965beda04f86e30c104c966160353a",
   "actor": {
     "harness": "claude-code",
     "model": "claude-opus-5",
     "model_source": "transcript",
     "session_id": "3edfadfa-cb79-4242-b356-7ac79e8d313e",
-    "at": "2026-08-09T14:48:59.674Z"
+    "at": "2026-08-09T14:34:25.543Z"
   }
 }

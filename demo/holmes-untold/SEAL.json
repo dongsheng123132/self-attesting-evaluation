@@ -1,0 +1,27 @@
+{
+  "spec": "holmes-untold/seal-v1",
+  "note": "本文件封存隐藏判据集 H 的指纹。权威时间戳是本文件的 git commit 时间，不是任何字段。",
+  "hidden_file": "demo/holmes-untold/hidden/constraints-hidden.json",
+  "hidden_sha256": "4a989f0ef06bcafd6be4113f0c75bfbcea1cee4a091266da130830cd32ddd160",
+  "builder": "demo/holmes-untold/build-hidden.mjs",
+  "builder_sha256": "7c89ef572ec0531a96b2da2882f073fa025eea3bc53310650878251d05be68d4",
+  "counts": {
+    "canon_and_chronology": 14,
+    "cross_instance": 5,
+    "seed_fidelity": 32,
+    "dropped_unanchored": 0
+  },
+  "primary_endpoint": "H2",
+  "corpus_sha256": {
+    "pg108.txt": "8c4de14b3a1952417eca4673fcb1b8aa8f946f8a4164f10ec761368af34d5e5a",
+    "pg1661.txt": "922e2a12ccb43a4c9544c260b2166c6ad2097aeb5957faeee113f173bb857cd0",
+    "pg2097.txt": "4cdea89cf6cd2567a556d0e6901edb89949dd79e200dbaf4ced4cabf1d5d2c26",
+    "pg2350.txt": "b1afb9459790ed4601453097d5c9bcece0b84f0dbe93a9a34510a9acb844f53f",
+    "pg244.txt": "b1ce37ab30c24d470681c3c2bc746be7555d2a9b63d64eb7f477fe73e09d1a8f",
+    "pg2852.txt": "f7c8c68729d32a5f6a04a5a9ad73d184176e66a6c76b3992c41c1ab47b427d98",
+    "pg3289.txt": "380bfdbf3ab3b2a9e1e059a17de187929f3ac91629225daa093d01b6cb348d48",
+    "pg69700.txt": "91f86e29b576c27576d199a8889a85bdb297e214d18e71e12b5efe3c69c425cd",
+    "pg834.txt": "509da3f8bbdc6c3857073e74911f628eef8fea557fcb5bca9e1713c846e43ec3"
+  },
+  "how_to_verify": "node demo/holmes-untold/build-hidden.mjs --stdout | 去掉末尾换行后取 sha256，应等于 hidden_sha256"
+}

@@ -39,3 +39,6 @@ __pycache__/
 demo/ulysses-19/corpus/
 demo/spenser-7-1/corpus/
 demo/holmes-untold/corpus/
+
+# 隐藏判据集 H：只提交 SEAL.json（哈希）与构造脚本，H 本身不进 git
+demo/holmes-untold/hidden/
