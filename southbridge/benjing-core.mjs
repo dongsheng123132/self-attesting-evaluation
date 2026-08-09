@@ -290,7 +290,23 @@ export function putState(p, next, { expect = null, actor = null } = {}) {
   const changed = newHash !== prevHash;
 
   body.content_hash = newHash;
-  body.actor = actor || detectActor();
+  // actor 是 provenance 字段。schema 里写着它存在的**理由**：
+  // 「跨模型/跨 harness 继承学历是本架构的核心主张，但 v0.1 状态文件里 0 个
+  //   provenance 字段，主张无从举证」。
+  //
+  // 而 v0.2 写的是 `actor || detectActor()` —— 调用方随手传个字符串标签
+  // （'xuetang/exam'、'naming-review'）就能把观测到的 harness/model/model_source
+  // 整个盖掉。实测代价：盘上 11 份学历有 8 份的 actor 是字符串，举证材料被擦掉了。
+  //
+  // 这是那条已验证经验在字段粒度上的复发：「让 agent 更新共享文档时，
+  // 读—改—整份写回这个模式本身就危险——它把『我这次要加什么』悄悄换成了
+  // 『这份文档应该长什么样』」。这里换的是『actor 应该长什么样』。
+  //
+  // 改法：调用方给的只能是**标签**，观测到的部分永远保留、永远不被覆盖。
+  const observed = detectActor();
+  body.actor = (actor && typeof actor === 'object')
+    ? { ...observed, ...actor }
+    : (actor ? { ...observed, by: String(actor) } : observed);
   body.version = changed ? ((current?.state.version || 0) + 1) : (current?.state.version || 1);
   body.updated_at = new Date().toISOString();
 

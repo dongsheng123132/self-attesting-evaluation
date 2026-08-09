@@ -222,14 +222,7 @@
     "把 TERMINOLOGY.md 同步一份到 2origin-harness（本轮已补学堂/经验/长循环考试三行与「名字的债」一节）"
   ],
   "learnings": [],
-  "actor": {
-    "harness": "claude-code",
-    "model": "claude-opus-5",
-    "model_source": "transcript",
-    "session_id": "8ae92f38-38bb-43a8-9456-61d218629ce9",
-    "at": "2026-08-09T07:51:45.236Z",
-    "by": "actor-repair"
-  },
-  "updated_at": "2026-08-09T07:51:45.236Z",
+  "actor": "naming-review",
+  "updated_at": "2026-08-09T07:39:01.592Z",
   "content_hash": "0aa3ba7afb9a472612c4400ac780dc5b95b1f58c1c12e345641d876c4a27f463"
 }

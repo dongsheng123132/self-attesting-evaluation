@@ -4,7 +4,7 @@
   "id": "task9",
   "title": "学堂协议 v0.1：把主板上最后一个空槽装上——让经验能被推翻",
   "goal": "项目叫「学堂」，主板上却一直没有学堂。给 learnings 补上产生/升降级/装载的完整机制，核心是找到本境已有的那个对称：fact 的 source 必须引用可复核物，那么 learning 的 recheck 必须是可重跑的动作。没有可重跑检验的经验，永远无法被推翻，也就永远不该叫 verified。",
-  "version": 4,
+  "version": 3,
   "scope": "xuetang/ 全部 + schemas/task.origin.json 的 learnings 段 + northbridge/compile.mjs 的装载段 + .claude/hooks/guard-benjing.mjs",
   "current_state": "**v0.1 已实现并通过验证**。xuetang/learning-core.mjs（纯逻辑，不碰磁盘写）+ exam.mjs（长循环考试，落盘走本境乐观锁）+ verify-xuetang.mjs（26 条判据，17 条反向）。schema 用 if/then 把「verified 必须带 recheck+exam」变成承重约束；北桥 compileRequest 增加独立预算的经验段，只调 verified。首轮实测：58 条经验全部「不可考」、49 条自称 verified 当场降级；挂上 6 条能辩护的 recheck 后，第三轮 6/6 通过并升级，52 条仍为 candidate（这是结论不是遗留——大部分经验没有机器可跑的检验，协议让这件事可见）。七个协议全绿。**未解见 RFC-0008 §6，其中最大的洞是：挂一个恒绿的命令就能骗过考试。**",
   "facts": [
@@ -97,30 +97,6 @@
       "verified": true,
       "source": "node xuetang/verify-xuetang.mjs 判决行「29 条判据，其中 19 条是反向用例」退出码 0；七个 verify-*.mjs 依次跑退出码全 0",
       "when": "2026-08-09T17:10:00+08:00"
-    },
-    {
-      "claim": "学堂的考试一轮就抹掉了 8 份学历的 provenance：putState 写的是 `actor || detectActor()`，调用方传的字符串标签（xuetang/exam）会把观测到的 harness/model/model_source 整个盖掉。actor 存在的理由写在 schema 里——「跨模型/跨 harness 继承是核心主张，v0.1 状态文件里 0 个 provenance 字段，主张无从举证」——被覆盖后举证材料就没了",
-      "verified": true,
-      "source": "southbridge/benjing-core.mjs putState 原写法 body.actor = actor || detectActor()；node southbridge/schema-check.mjs demo/*/task.origin.json 报 6 份 actor 类型应为 object 实为 string；修复后 11/11 合规",
-      "when": "2026-08-09T17:45:00+08:00"
-    },
-    {
-      "claim": "我把自己造成的破坏归因给了历史，且用它当过推迟的理由：先前把 actor 漂移说成「先于本轮存在的 schema 漂移」并写进待办。核对备份定责——demo/.benjing-backups/ 里每份学历最早的备份 actor 都是完整 object（harness=claude-code），证明字符串是今天的考试运行写进去的",
-      "verified": true,
-      "source": "node 遍历 demo/.benjing-backups/ 取每份学历最早备份的 actor 类型，9 份全部为 object 且 harness=claude-code；对照当时 schema-check 输出的 6 份 string",
-      "when": "2026-08-09T17:45:00+08:00"
-    },
-    {
-      "claim": "修法是改数据也改写入方：putState 改为「调用方给的只能是标签，观测到的部分永远保留」（object 则合并，string 则落到 by 字段），并加 B13.1/B13.2 两条判据锁死；本境判据从 65 涨到 67",
-      "verified": true,
-      "source": "southbridge/benjing-core.mjs 的 body.actor 三元表达式；node southbridge/verify-benjing.mjs 判决 67/67 ✅ VERIFIED，其中 B13.1 为反向判据（传字符串 actor 时 harness 不许消失）",
-      "when": "2026-08-09T17:45:00+08:00"
-    },
-    {
-      "claim": "第一次修复脚本里写了「观测已丢失且无法追回」——那句话没验证就写下了，而备份里就有；它最终没落盘只是因为 putState 总会用观测值重写 actor。11 份学历现在全是完整 provenance（harness=claude-code、model=claude-opus-5 或 unobserved）",
-      "verified": true,
-      "source": "node 遍历 demo/*/task.origin.json 打印 actor 类型与 harness/model，11 份全部 object；node southbridge/schema-check.mjs demo/*/task.origin.json 得 11/11 合规",
-      "when": "2026-08-09T17:45:00+08:00"
     }
   ],
   "decisions": [
@@ -153,16 +129,6 @@
       "what": "不做变异测试去主动证明考题的判别力",
       "why": "要机械证明「违反这条经验时它会变红」，得对被检验的代码做定向破坏再跑一遍，代价与收益不成比例。v0.1 选择测量而不是证明，并把这个选择写进 RFC §6 而不是藏起来",
       "when": "2026-08-09T17:10:00+08:00"
-    },
-    {
-      "what": "actor 的修法选「合并」而不是「拒绝字符串」",
-      "why": "拒绝会让所有已有调用点当场报错，而它们传标签的意图是合理的——想记「这次写入是谁触发的」。合并既保住举证材料，又保住调用方的意图，且 B13.2 正向判据锁住合并语义",
-      "when": "2026-08-09T17:45:00+08:00"
-    },
-    {
-      "what": "不用「无法追回」这类未经核对的措辞写进修复记录",
-      "why": "证据在 demo/.benjing-backups/ 里躺着，写「无法追回」是没查就下结论。这条和本轮 corpus 可得性那次是同一个错：先断言后（不）验证",
-      "when": "2026-08-09T17:45:00+08:00"
     }
   ],
   "actions": [],
@@ -180,8 +146,7 @@
     "经验去重只在读取侧做，写入侧允许同一条经验落在多份学历里，跨学历重复会随任务数增长（呼应 benjing-todo --dupes 那条）",
     "先于本轮存在的 schema 漂移：6 份老学历的 actor 是字符串而 schema 规定 object（task1~task6）。与 learnings 无关，按「改数据不改检查器」应逐份修，但那是改历史元数据，需单独决定",
     "discriminating 目前只有 proven/unproven 两态，缺一条「长期未证明」的升级路径：一条考题连续 N 轮考试都不红，是它没判别力还是被检验的东西一直是好的？现在分不出来",
-    "branch-safety 是约定不是强制点（与乐观锁同性质）：git 侧没有 pre-checkout 钩子，precheck 要人主动跑。若要真强制，得包一层 git 别名或改用 worktree 隔离",
-    "全仓库审一遍还有哪些「调用方传参能覆盖观测值」的地方——actor 这次是被 schema-check 偶然抓到的，不是被判据主动找出来的"
+    "branch-safety 是约定不是强制点（与乐观锁同性质）：git 侧没有 pre-checkout 钩子，precheck 要人主动跑。若要真强制，得包一层 git 别名或改用 worktree 隔离"
   ],
   "learnings": [],
   "actor": {
@@ -189,9 +154,9 @@
     "model": "claude-opus-5",
     "model_source": "transcript",
     "session_id": "8ae92f38-38bb-43a8-9456-61d218629ce9",
-    "at": "2026-08-09T07:54:29.676Z",
-    "by": "actor-incident"
+    "at": "2026-08-09T07:51:45.252Z",
+    "by": "actor-repair"
   },
-  "updated_at": "2026-08-09T07:54:29.677Z",
-  "content_hash": "de11888a17e5fd64d5fb628240b1f23386a5686da1793a3d8ae90f05a96efbf2"
+  "updated_at": "2026-08-09T07:51:45.252Z",
+  "content_hash": "11b8c763aca2025f0e6972bca362460dec360e36f09e76c3fe2dd25d8e39df98"
 }

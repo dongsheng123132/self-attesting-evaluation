@@ -13,7 +13,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  SPEC, learningId, checkRecheck, checkLearning, normalizeForWrite, applyExam, collect, ALLOWED_CMDS, EXECUTION_DENIED
+  SPEC, learningId, checkRecheck, checkLearning, normalizeForWrite, applyExam, collect, ALLOWED_CMDS, EXECUTION_DENIED, discriminating
 } from './learning-core.mjs';
 import { checkState } from '../southbridge/schema-check.mjs';
 import { putState, contentHash, readState } from '../southbridge/benjing-core.mjs';
@@ -203,6 +203,22 @@ t('X7.4', '【反向】本境认、学堂不认的每一个命令都必须在 EX
 t('X7.5', '【反向】被拒的破坏性命令确实过不了 checkRecheck（写了理由不等于真拦住）', () => {
   const leaked = Object.keys(EXECUTION_DENIED).filter(c => checkRecheck({ kind: 'command', run: `${c} x` }).ok);
   return leaked.length === 0 || `写了理由却仍能当考题: ${JSON.stringify(leaked)}`;
+});
+
+// ───────── 考题的判别力（RFC-0008 §6 那个最大的洞的可测量部分）─────────
+t('X8.1', '判别力只认考试账本（fails>0），不认任何自称字段', () => {
+  const proven = discriminating(L({ exam: { runs: 2, passes: 1, fails: 1 } }));
+  const faked = discriminating(L({ discriminating: 'proven', proven: true, exam: { runs: 9, passes: 9, fails: 0 } }));
+  return (proven === 'proven' && faked === 'unproven') || `proven=${proven} faked=${faked}`;
+});
+t('X8.2', '【反向】恒绿考题不许被判成有判别力——跑 9 次全绿仍是 unproven', () => {
+  return discriminating(L({ recheck: RC, exam: { runs: 9, passes: 9, fails: 0 } })) === 'unproven'
+    || '恒绿考题被判成 proven，那正是「挂 node --version 骗过考试」这个洞';
+});
+t('X8.3', '【反向】exam 必须把「判别力未证明」的条数打出来（不报未证明量 = 谎报证明强度）', () => {
+  const src = fs.readFileSync(path.join(here, 'exam.mjs'), 'utf8');
+  return (/discriminating_unproven/.test(src) && /判别力未证明|判别力\*\*未证明\*\*/.test(src))
+    || 'exam 没有单独报告未证明量，「N 条通过考试」会被读成「N 条被证明为真」';
 });
 
 // ───────── 报告 ─────────

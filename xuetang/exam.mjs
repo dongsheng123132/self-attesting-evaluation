@@ -23,7 +23,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { findStates, readState, putState, contentHash } from '../southbridge/benjing-core.mjs';
-import { SPEC, checkRecheck, applyExam, learningId, normalizeForWrite } from './learning-core.mjs';
+import { SPEC, checkRecheck, applyExam, learningId, normalizeForWrite, discriminating } from './learning-core.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
@@ -146,12 +146,24 @@ if (changes.length) {
   log('\n状态变更：');
   for (const c of changes) log(`  ${c.from} → ${c.to}　${c.id}　${String(c.lesson).slice(0, 52)}\n      因为：${c.why}`);
 } else log('无状态变更');
+// 判别力：一条考题只有被观察到红过，才算证明了它分得开好坏。
+// 不报这个数，「6 条经验通过考试」会被读成「6 条经验被证明为真」——而其中可能
+// 有恒绿考题。不报告未证明量，等于谎报证明强度（与判分器不报截断量同型）。
+const examined = results.filter(r => r.result !== 'unexaminable');
+const unproven = examined.filter(r => discriminating(r.l) === 'unproven');
+log('');
+log(`判别力：${examined.length - unproven.length}/${examined.length} 条考题曾被观察到红过（证明它分得开好坏）`);
+if (unproven.length) {
+  log(`⚠ ${unproven.length} 条考题从未红过，判别力**未证明**——恒绿考题与真考题在账面上长得一样：`);
+  for (const r of unproven) log(`    ${r.id}  ${r.l.recheck.run}　${String(r.l.lesson).slice(0, 38)}`);
+}
 if (DRY) log('\n(--dry-run：以上变更未写回)');
 
 if (JSONOUT) {
   console.log(JSON.stringify({
     spec: SPEC, when: now, states: files.length, learnings: results.length,
     pass: n('pass'), fail: n('fail'), error: n('error'), unexaminable: n('unexaminable'),
+    discriminating_proven: examined.length - unproven.length, discriminating_unproven: unproven.length,
     changes, write_failed: writeFailed,
     results: results.map(r => ({ id: r.id, from: r.rel, result: r.result, detail: r.detail, ms: r.ms }))
   }, null, 2));

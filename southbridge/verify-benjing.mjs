@@ -584,6 +584,27 @@ t('B12.5', 'schema 用了校验器没实现的关键字 → 报错，不许静�
   const problems = checkState({ a: 1 }, sp);
   return problems.some(p => /未实现的关键字/.test(p.msg)) || `静默忽略了未实现关键字: ${JSON.stringify(problems)}`;
 });
+// ── B13 provenance 不许被调用方的标签抹掉（2026-08-09 实测被自己抹过）──
+// actor 是「跨模型/跨 harness 继承」这条核心主张的举证材料。v0.2 写的是
+// `actor || detectActor()`，于是学堂的考试传了个字符串标签 'xuetang/exam'，
+// 一轮就把 8 份学历观测到的 harness/model/model_source 全盖掉了。
+t('B13.1', '【反向】调用方传字符串 actor 时，观测到的 provenance 不许被抹掉', () => {
+  const p = J('demo/prov1/task.origin.json');
+  writeJ(p, mkState('prov1'));
+  const cur = readJ(p);
+  putState(p, { ...cur, goal: 'changed' }, { expect: contentHash(cur), actor: 'some/label' });
+  const a = readJ(p).actor;
+  return (a && typeof a === 'object' && typeof a.harness === 'string' && a.by === 'some/label')
+    || `actor=${JSON.stringify(a)}`;
+});
+t('B13.2', '正向：传 object actor 时与观测值合并，不是二选一', () => {
+  const p = J('demo/prov2/task.origin.json');
+  writeJ(p, mkState('prov2'));
+  const cur = readJ(p);
+  putState(p, { ...cur, goal: 'changed' }, { expect: contentHash(cur), actor: { by: 'x', extra: 1 } });
+  const a = readJ(p).actor;
+  return (a.harness && a.by === 'x' && a.extra === 1) || `actor=${JSON.stringify(a)}`;
+});
 t('B12.6', '合规状态不被误报（校验器不能只会喊狼来了）', () =>
   checkState(readJ(B12P)).length === 0 || `合规状态被报了 ${JSON.stringify(checkState(readJ(B12P)))}`);
 t('B12.7', 'health 把 schema 违规计入 issues 并逐条列出（只校验不上报等于没校验）', () => {
