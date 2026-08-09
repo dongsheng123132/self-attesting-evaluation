@@ -68,7 +68,9 @@ export const INCLUDE_RULES = [
   { id: 'verifiers', test: r => /^[a-z]+\/verify-[a-z0-9-]+\.mjs$/.test(r) },
   {
     id: 'protocol-docs',
-    test: r => ['ACCEPTANCE.md', 'TERMINOLOGY.md', 'CLAUDE.md', 'AGENTS.md', 'NAMING-REVIEW.md', '.gitignore'].includes(r)
+    // README/LICENSE 是对外主张本身（许可证条款、可核验步骤），必须锚定
+    test: r => ['ACCEPTANCE.md', 'TERMINOLOGY.md', 'CLAUDE.md', 'AGENTS.md', 'NAMING-REVIEW.md',
+      'README.md', 'LICENSE', '.gitignore'].includes(r)
   }
 ];
 

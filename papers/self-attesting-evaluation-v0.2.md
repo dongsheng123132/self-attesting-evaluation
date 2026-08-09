@@ -301,14 +301,43 @@ That asymmetry is itself a finding. **Reader-side defects present immediately as
 so they can be reasoned about a priori. Writer-side defects sit quietly on disk for months.**
 They are found by accident, by an independent observer, or not at all.
 
-The work sits alongside two other traditions. From software engineering, the practice of
-mutation testing shares our central move — a test suite that cannot fail on a deliberately
-broken subject is not a test suite — and our negative cases are a hand-built, domain-specific
-instance of it. From experimental methodology, the discipline of pre-registration and of
-reporting attrition addresses the same asymmetry we call class E, in a setting where the
-discarding component is a human rather than a program. We claim novelty not in the underlying
-insight but in the observation that an agent-memory stack reproduces all of these failure modes
-at once, in a codebase small enough that a single team can enumerate them.
+Concretely: systems work on agent memory proposes architectures and then measures how well the
+agent answers afterwards. MemGPT [6] manages tiered virtual context in the manner of an operating
+system; Mem0 [2] extracts and consolidates salient conversational information and is evaluated on
+LOCOMO across four question types. Both evaluate the *reader*. Liu et al. [5] give the canonical
+reader-side result — accuracy degrades when the relevant span sits in the middle of a long
+context — and it is a reader-side result precisely because it is visible in the answer. None of
+our fifteen would appear in an end-to-end answer-quality score, because in each case the state
+that reached the reader was internally consistent; it was merely wrong about the world, or
+smaller than what had been written, and nothing said so.
+
+**Benchmark validity.** Bowman and Dahl [1] argue that NLU benchmarking is broken because
+unreliable systems score too highly, leaving no headroom to demonstrate real progress; Raji et
+al. [7] attack the construct validity of benchmarks treated as general measures of intelligence.
+Both critique what a benchmark *measures*. We are asking a narrower and prior question: whether
+the apparatus is capable of reporting that it failed. A benchmark with poor construct validity
+still produces an honest number about something. Our case 1 produced a number that no behaviour
+of the subject could have changed.
+
+**Leakage.** The closest relative is Kapoor and Narayanan [4], whose taxonomy of eight leakage
+types across 329 papers in 17 fields is the model we followed in collapsing anecdotes into
+classes. The difference is location: their leakage is in the subject's data pipeline, ours is in
+the instrument. Our case 2 is a leak their taxonomy does not have a slot for, because it assumes
+a leak flatters the treatment — ours flattered the *floor arm*, which is worse, since a floor
+that beats chance invalidates the metric rather than the arm. The heuristic the floor exploited —
+"pick the longest option" — is a shortcut in the sense of Geirhos et al. [3], with the twist that
+it was available to a control that was supposed to have nothing to work with.
+
+**Mutation testing.** From software engineering, mutation testing [8] shares our central move: a
+suite that cannot fail on a deliberately broken subject is not a suite. Our negative cases are a
+hand-built, domain-specific instance — instead of mutating the subject automatically, we
+construct one synthetic violation per guard and require it to be caught. We make no claim to
+have improved on that literature; we claim that it has not reached agent-memory evaluation,
+where the guards are currently shipped unfired.
+
+We claim novelty not in any single insight above but in the observation that an agent-memory
+stack reproduces all of these failure modes at once, in a codebase small enough that a single
+team can enumerate them and publish the enumeration.
 
 ---
 
@@ -359,6 +388,39 @@ the taxonomy down and then produced two more instances of it while writing.
 
 ---
 
+## References
+
+Every entry below was resolved against its publisher or arXiv record on 2026-08-10 rather than
+recalled. This is not a flourish: an unresolved citation is class G — a reference that outlives
+its referent — and it would be a poor look in this particular paper.
+
+[1] S. R. Bowman and G. E. Dahl. *What Will it Take to Fix Benchmarking in Natural Language
+Understanding?* NAACL 2021. arXiv:2104.02145.
+
+[2] P. Chhikara, D. Khant, S. Aryan, T. Singh, and D. Yadav. *Mem0: Building Production-Ready AI
+Agents with Scalable Long-Term Memory.* 2025. arXiv:2504.19413.
+
+[3] R. Geirhos, J.-H. Jacobsen, C. Michaelis, R. Zemel, W. Brendel, M. Bethge, and F. A.
+Wichmann. *Shortcut Learning in Deep Neural Networks.* Nature Machine Intelligence, 2020.
+arXiv:2004.07780.
+
+[4] S. Kapoor and A. Narayanan. *Leakage and the Reproducibility Crisis in ML-based Science.*
+2022. arXiv:2207.07048.
+
+[5] N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang. *Lost in
+the Middle: How Language Models Use Long Contexts.* TACL, 2023. arXiv:2307.03172.
+
+[6] C. Packer, S. Wooders, K. Lin, V. Fang, S. G. Patil, I. Stoica, and J. E. Gonzalez. *MemGPT:
+Towards LLMs as Operating Systems.* 2023. arXiv:2310.08560.
+
+[7] I. D. Raji, E. M. Bender, A. Paullada, E. Denton, and A. Hanna. *AI and the Everything in the
+Whole Wide World Benchmark.* NeurIPS 2021 Datasets and Benchmarks Track. arXiv:2111.15366.
+
+[8] Y. Jia and M. Harman. *An Analysis and Survey of the Development of Mutation Testing.* IEEE
+Transactions on Software Engineering, 37(5):649–678, 2011.
+
+---
+
 ## Appendix A — evidence index
 
 Line numbers are 2026-08-10 values in a repository that concurrent sessions write to, and must be
@@ -394,14 +456,24 @@ does not depend on that one being right.
       notified 2026-07-11 and the conference runs Dec 6–13; individual workshop CFP deadlines
       are typically late Sep–Oct. **Pin the specific workshop and its deadline once the accepted
       list is public** — as of 2026-08-10 the NeurIPS virtual site lists none.
-- [ ] **Start the arXiv endorsement request now** — cs.* requires endorsement from a prior
-      author in the category, and it has a waiting period. A workshop acceptance is one route;
-      a qualifying co-author or a direct request are the others. This is the only step on the
-      critical path with an external wait.
+- [x] ~~Add real citations to §7~~ — eight references, each resolved against its publisher or
+      arXiv record on 2026-08-10 rather than recalled
 - [ ] Convert to the venue's LaTeX template and cut to the page limit; §3 tables are the most
       compressible, §4 and §5 are not
-- [ ] Add real citations to §7 — it currently argues against a literature it does not cite,
-      which is the one section that will not survive review as written
+
+### Fallback if no workshop fits (decided 2026-08-10)
+
+Publish the artifact publicly and let the work earn its own endorsement, in this order:
+
+1. **Public GitHub repository** — the paper, the nine conformance suites, and the externally
+   anchored evidence manifests. This is the fallback that requires nobody's permission.
+2. **Written up for a general audience** (blog / HN / Lobsters). The retraction narrative is the
+   hook, not the system.
+3. **Then** request arXiv endorsement. Note the mechanism: arXiv issues a private endorsement
+   code to be sent to a specific person who can vouch for the work — it is **not** a public
+   invitation link, and broadcasting a request is against arXiv's guidance and tends to fail.
+   Steps 1–2 exist to make step 3 a request someone can actually say yes to, because they will
+   have read the thing.
 - [ ] Get a second reader outside the project to try to falsify the taxonomy in §4
 - [ ] Re-pull Appendix A line numbers and re-run the §4 judgment counts from a live suite,
       never from this file (176 → 273 in one day; hardcoding a count is case 9's disease)
