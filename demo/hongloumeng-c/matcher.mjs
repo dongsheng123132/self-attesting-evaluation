@@ -122,13 +122,54 @@ export function createMatcher({ spec, aliasTable, chapters, transform = s => s, 
             && (!dbClause || !CLAUSE.test(t.slice(Math.min(a, i), Math.max(a, i)))));
           if (near && !isAdverbial(p, t, i, pat) && extraOk(p, t, i, prox)) {
             const s = Math.max(0, Math.min(near[0], i) - 24), e = Math.min(t.length, Math.max(near[0], i) + 34);
-            hits.push({ chapter: c.n, pattern: pat, anchor: near[1], evidence: t.slice(s, e) });
+            const h = { chapter: c.n, pattern: pat, anchor: near[1], evidence: t.slice(s, e) };
+            const cav = irrealisCaveat(t, i);
+            if (cav) h.caveat = cav;
+            hits.push(h);
           }
           i += pat.length;
         }
       }
     }
     return dedupeByChapter(hits);
+  }
+
+  /**
+   * 未然/转述语境的**披露**（不是拦截）。
+   *
+   * 起因是 W3-2 把假绿抽查扩到后四十回全量：17 条兑现里 5 条的引用证据不成立，
+   * 而且是同一族——文本里有那个词，但那句话说的不是这件事：
+   *   A-04-1 宝玉宝钗成婚 ← 第89回「黛玉日間聽見的話，都似寶玉娶親的話」（传闻，且此时未婚）
+   *   A-08-1 妙玉陷污浊   ← 第87回「妙玉恐有賊來」（担心）
+   *   A-10-1 惜春出家     ← 第112回「便要把自己的青絲絞去，要想出家」（动念）
+   *   B-04-1 宝玉为僧     ← 第119回「追想當年…若慪急了他，便賭誓說做和尚」（回忆旧誓）
+   * 判分器有「不认人物话语」的规则，却没有任何规则挡「未然/传闻/回忆」——
+   * 而叙述语里这类语气极多。
+   *
+   * 为什么只披露不拦截：这四条的**判决**多半仍是对的，正确证据另在别处
+   * （A-04-1 在第98回「正是寶玉娶寶釵的這個時辰」，A-08-1 在第112回「被這強盜的悶香熏住」）。
+   * 但 B-04-1 是个反例：后四十回确实写了宝玉出家，而叙述语里**找不到**更好的证据。
+   * 硬删这一族就是拿假绿换假红——把一个「证据引错」换成一个「文本没写」的错误结论。
+   * 所以这里只给证据打标，判决一个字不动，让读的人自己回原文。
+   *
+   * 标记表按短语列举，每条都能指出对应的误报现场；表可增可驳。
+   * 「聽見說」不在表内：C0 正例 A-14-3 的证据正是第十三回「從夢中聽見說秦氏死了」，
+   * 那是转述形式的真事件——转述本身不等于未然。
+   */
+  const IRREALIS = [
+    { m: '似', why: '比拟/传闻：「都似寶玉娶親的話」' },
+    { m: '象', why: '比拟：「也象寶玉娶親的光景」' },
+    { m: '恐', why: '担心未发生：「妙玉恐有賊來」' },
+    { m: '只怕', why: '担心未发生' },
+    { m: '要想', why: '动念未行：「要想出家」' },
+    { m: '便要', why: '动念未行：「便要把自己的青絲絞去」' },
+    { m: '賭誓說', why: '回忆旧誓：「便賭誓說做和尚」' },
+    { m: '追想當年', why: '回忆：「追想當年寶玉相待的情分」' },
+  ];
+  function irrealisCaveat(t, i) {
+    const win = t.slice(Math.max(0, i - 16), i);
+    const hit = IRREALIS.find(x => win.includes(transform(x.m)));
+    return hit ? { marker: hit.m, why: hit.why } : null;
   }
 
   function extraOk(p, t, i, prox) {
@@ -152,5 +193,12 @@ export function createMatcher({ spec, aliasTable, chapters, transform = s => s, 
     return namesOf(who).some(nm => t.includes(nm));
   }
 
-  return { norm, narrationOnly, namesOf, scan, paraHits, presentIn, dedupeByChapter, CLAUSE };
+  // 选哪几条命中当「证据」展示：不带未然标记的优先。
+  // **只动展示次序，不动 chapters 与判决**——order 类谓词靠 chapters[0] 定先后，
+  // 在那里排序会把「先后成立」判反。这是本仓库反复记的那条：
+  // 为了显示好看去改数据结构，改的往往正是别人拿来算的那个字段。
+  const pickEvidence = (hits, n = 4) =>
+    [...hits.filter(h => !h.caveat), ...hits.filter(h => h.caveat)].slice(0, n);
+
+  return { norm, narrationOnly, namesOf, scan, paraHits, presentIn, dedupeByChapter, pickEvidence, CLAUSE };
 }

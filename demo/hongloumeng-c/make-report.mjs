@@ -90,6 +90,17 @@ w('## 判决');
 w('');
 w(`**兑现 ${n('FULFILLED')}　违反 ${n('CONTRADICTED')}　未交代 ${n('NOT_FOUND')}　共 ${cases.length}**`);
 w('');
+{
+  const ff = cases.filter(r => r.verdict === 'FULFILLED');
+  const allCav = ff.filter(r => (r.evidence || []).length && r.evidence.every(e => e.caveat));
+  const anyCav = ff.filter(r => (r.evidence || []).some(e => e.caveat) && !allCav.includes(r));
+  w(`> **假绿体检**：${ff.length} 条兑现里，${allCav.length} 条的**全部**证据都落在未然/转述语境`
+    + `（担心、动念、传闻、回忆旧誓），另有 ${anyCav.length} 条部分证据带此标记但另有干净证据。`);
+  w('> 判分器有「不认人物话语」的规则，却没有任何规则挡「未然」——而叙述语里这类语气极多。');
+  w('> 这是 W3-2 把假绿抽查扩到全量时抓到的，不是设想。带标记的条目在下面逐条标出，判决一个字未改：');
+  w('> 硬删这一族等于拿假绿换假红（实测 B-04-1 在叙述语里找不到更好的证据，删了它会变成「后四十回没写宝玉出家」）。');
+}
+w('');
 w('> 三态的置信度不相等，但**方向与我们最初写的相反**，这一点必须先说。');
 w('> 检索谓词要对着被判文本迭代，所以「兑现」的独立性弱——它是被调出来的。');
 w('> 但「未交代」同样可以被制造：窄谓词直接产出 NOT_FOUND，且不会报错。');
@@ -114,7 +125,8 @@ for (const v of ['CONTRADICTED', 'NOT_FOUND', 'FULFILLED']) {
     }
     if (r.chapters?.length && v !== 'CONTRADICTED') {
       w(`- 证据：第 ${r.chapters.slice(0, 6).join('、')} 回`);
-      for (const e of (r.evidence || []).slice(0, 1)) w(`  - 「${e.pattern}」┊ …${e.evidence}…`);
+      for (const e of (r.evidence || []).slice(0, 1)) w(`  - 「${e.pattern}」┊ …${e.evidence}…${e.caveat ? `
+  - ⚠ **本条证据落在未然/转述语境**（${e.caveat.why}）：文本里有这个词，但那句话说的可能不是这件事。判决未改，请回原文自行判断。` : ''}`);
     }
     if (r.near_miss?.length) {
       w(`- ⛳ **近失体检**：段级锚定在第 ${r.near_miss.map(x => x.chapter).join('、')} 回找得到，字符级够不着。这是**怀疑标记不是判决**——同段里出现的可能是别人的同类事件，需人工回原文看。`);

@@ -41,7 +41,7 @@ const EXCLUDE = new Set(spec.defaults.exclude_chapters || []);
 // 匹配语义只有一份，在 matcher.mjs。本文件只负责：读谓词、定窗口、把命中拼成三态判决。
 // 此前 scan 与 runOne 各写了一遍字符级匹配（一个有 also_requires 一个没有），
 // 而外部入口又写了第三遍——同一类错误犯了三次。见 matcher.mjs 头部。
-const { norm, narrationOnly, namesOf, scan, paraHits, presentIn } =
+const { norm, narrationOnly, namesOf, scan, paraHits, presentIn, pickEvidence } =
   createMatcher({ spec, aliasTable, chapters, exclude: EXCLUDE });
 
 // ── 带量判据 ──────────────────────────────────────────────────────────────
@@ -101,7 +101,7 @@ export function runOne(p, from = FROM, to = TO) {
     const against = p.contradicts ? paraHits(p, p.contradicts, from, to, p.kind === 'status') : [];
     const verdict = uniq.length && against.length ? 'BOTH' : against.length ? 'CONTRADICTED' : uniq.length ? 'FULFILLED' : 'NOT_FOUND';
     return { id: p.id, claim: p.claim, subject: p.subject, verdict,
-      chapters: uniq.map(h => h.chapter), evidence: uniq.slice(0, 4),
+      chapters: uniq.map(h => h.chapter), evidence: pickEvidence(uniq),
       against_chapters: against.map(h => h.chapter), against_evidence: against.slice(0, 3),
       spoken_only: [], spoken_fulfill: [] };
   }
@@ -150,7 +150,7 @@ export function runOne(p, from = FROM, to = TO) {
 
   return {
     id: p.id, claim: p.claim, subject: p.subject, verdict,
-    chapters: uniq.map(h => h.chapter), evidence: uniq.slice(0, 4),
+    chapters: uniq.map(h => h.chapter), evidence: pickEvidence(uniq),
     against_chapters: against.map(h => h.chapter), against_evidence: against.slice(0, 3),
     spoken_only: spoken.slice(0, 3),
     spoken_fulfill: spokenFulfill.slice(0, 3),

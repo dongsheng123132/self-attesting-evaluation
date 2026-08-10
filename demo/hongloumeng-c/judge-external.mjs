@@ -77,7 +77,7 @@ const chapters = splitXubian(raw);
 // 匹配语义不在本文件里。本文件只负责三件事：读哪份文本、怎么分回、繁简怎么归一。
 // 判决语义只有一份（matcher.mjs），繁简归一降级成它的一个参数——
 // 而不是反过来为了归一复制一整套匹配代码。此前那样做，同一类错误犯了三次。
-const { scan } = createMatcher({ spec, aliasTable, chapters, transform: conv });
+const { scan, pickEvidence } = createMatcher({ spec, aliasTable, chapters, transform: conv });
 const hits = (p, patterns, useSpeech) => scan(p, patterns, -Infinity, Infinity, useSpeech);
 
 // 只判后四十回未兑现的那些条
@@ -90,7 +90,7 @@ const results = targets.map(p => {
   const against = p.contradicts ? hits(p, p.contradicts, p.kind === 'status') : [];
   const verdict = found.length && against.length ? 'BOTH' : against.length ? 'CONTRADICTED'
     : found.length ? 'FULFILLED' : 'NOT_FOUND';
-  return { id: p.id, claim: p.claim, verdict, chapters: found.map(h => h.chapter), evidence: found.slice(0, 2), against };
+  return { id: p.id, claim: p.claim, verdict, chapters: found.map(h => h.chapter), evidence: pickEvidence(found, 2), against };
 });
 
 if (asJson) { console.log(JSON.stringify({ source: LABEL, chars: norm(raw).length, chapters: chapters.map(c => c.n), results }, null, 2)); process.exit(0); }
