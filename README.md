@@ -7,7 +7,17 @@
 > Two of the seventeen were found on the day we published, *by the act of publishing* — one of
 > them a defect in the component we had just built to fix this paper's own stated weakness.
 
-**📄 The paper: [`papers/self-attesting-evaluation-v0.2.md`](papers/self-attesting-evaluation-v0.2.md)**
+**📄 Two papers, deliberately not merged:**
+
+- **[Self-Attesting Evaluation](papers/self-attesting-evaluation-v0.2.md)** — the negative result.
+  Seventeen ways the evaluation apparatus lied, eight failure classes, 285 machine-checked judgments.
+- **[Credentials, Not Transcripts](papers/credential-inheritance.md)** — the positive result.
+  One on-disk task document carried a task across four models from three vendors. The contribution
+  is the falsification design: the successor must **recompute a number derived from an append-only
+  log**, so agreement is arithmetic rather than a judgement about whether an artifact looks right.
+
+The second paper's headline experiment is missing its most important control, and says so in its
+own threats section rather than waiting for a reviewer to find it.
 
 ---
 
