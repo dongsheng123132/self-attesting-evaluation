@@ -14,7 +14,7 @@
 //
 // 退出码：0=done/unchanged  3=diverged（盘上被别人改过，别硬写，先合并）  4=denied  1=failed
 import fs from 'node:fs';
-import { readState, putState } from './benjing-core.mjs';
+import { readState, putState, patchState } from './benjing-core.mjs';
 
 const argv = process.argv.slice(2);
 const flag = n => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null; };
@@ -39,6 +39,27 @@ if (has('--show')) {
       : '⚠ 内容与自记指纹不符：有人绕过协议改过这份学历，或尚未 reconcile'
   }, null, 2));
   process.exit(0);
+}
+
+// ── 字段级写入（本境 v0.2 · patchState）────────────────────────────────────
+// 「共享状态文件绝不能读进内存再整体写回」这条规矩此前只存在于 CLAUDE.md，
+// 而唯一的工具正是整体写回。这两个子命令是它的可执行形态。
+//   --append <字段> --value <json>   追加：可交换，自动 CAS 重试，并发不丢
+//   --set    <字段> --value <文本>   赋值：不可交换，diverged 直接报错交给人
+if (has('--append') || has('--set')) {
+  const op = has('--append') ? 'append' : 'set';
+  const field = flag('--' + op);
+  const raw = flag('--value');
+  if (!field || raw === null) { console.error(`用法: --${op} <字段> --value <${op === 'append' ? 'json' : '文本'}>`); process.exit(1); }
+  let value = raw;
+  if (op === 'append') {
+    try { value = JSON.parse(raw); }
+    catch (e) { console.error('--value 不是合法 JSON:', e.message); process.exit(1); }
+  }
+  const r = patchState(target, { op, field, value });
+  console.log(JSON.stringify(r, null, 2));
+  process.exit(r.status === 'done' || r.status === 'unchanged' ? 0
+    : r.status === 'diverged' ? 3 : r.status === 'denied' ? 4 : 1);
 }
 
 let payload;

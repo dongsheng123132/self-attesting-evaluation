@@ -2,8 +2,8 @@
   "kind": "task.origin",
   "id": "quant-preregister",
   "spec": "2origin/0.2",
-  "version": 3,
-  "updated_at": "2026-08-10T18:29:50.244Z",
+  "version": 2,
+  "updated_at": "2026-08-10T15:27:33.337Z",
   "title": "回测挖掘对照：预注册能否挡住凭空造出来的 alpha",
   "goal": "在真实 alpha 已知为零的合成数据上量出参数挖掘的溢价，并让『我没有事后调参』这句话可被陌生人独立核验。",
   "current_state": "已跑完，结果与裁决在 RESULTS.md。四条判据 R2/R4 成立、R1/R3 不成立（R3 差 0.005145，按预注册原样判不通过）。跑手改过一次索引方式，偏离已如实记录，故 backtest.mjs 哈希与锚点中的值不再一致。",
@@ -52,11 +52,6 @@
       "claim": "backtest.mjs 修改后 sha256 = be413bbd93030802ea867d55dbbc9878ccbb4585b75bfd0265d476aba913e06a，锚点 63d46b16fc99c421 中记录的是修改前的 7dc8ac54…",
       "verified": true,
       "source": "node benxiang/observe.mjs demo/quant-preregister/backtest.mjs"
-    },
-    {
-      "claim": "字段级写入 patchState 已落成：append 走 CAS 重试循环，两个并发追加都能活",
-      "verified": true,
-      "source": "node southbridge/verify-benjing.mjs 判据 B15.1"
     }
   ],
   "decisions": [
@@ -93,12 +88,12 @@
     "demo/quant-preregister/RESULTS.json",
     "demo/quant-preregister/RESULTS-run1.json"
   ],
-  "content_hash": "823e2acd1bb1ecab376e3512b81457de1225c5180efe191f10ce8a0c6b825576",
+  "content_hash": "a985a9e2051e805a9f7853bb58a5ced46782640a35a5a696e1e4580b2c2ff1da",
   "actor": {
     "harness": "claude-code",
     "model": "claude-opus-5",
     "model_source": "transcript",
     "session_id": "dab721c6-5329-48ed-9915-6d87dc3aca62",
-    "at": "2026-08-10T18:29:50.243Z"
+    "at": "2026-08-10T15:27:33.336Z"
   }
 }

@@ -12,7 +12,7 @@ import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   contentHash, recheckSource, dereferenceSource, PATH_ALIASES, aliasCandidates,
-  findStates, putState, reconcile,
+  patchState, findStates, putState, reconcile,
   detectActor, observeModel, writeAtomic, health,
   isLocked as isLockedFS, lockState, unlockState, scanStateFiles
 } from './benjing-core.mjs';
@@ -683,6 +683,82 @@ t('B13.5', '【反向】仓库现有全部学历逐份试写均放行（存量�
     if (viol.length) blocked.push(`${f}: ${viol.length} 处`);
   }
   return blocked.length === 0 || `以下存量学历会被新闸门锁死：${blocked.join('; ')}`;
+});
+
+// ───────── B15 字段级写入：把「绝不能整体写回」从文档变成可执行 ─────────
+//
+// 病症是实测的：两个会话各自读同一份学历、各加一条已验证事实、先后整体写回，
+// 后写的把先写的静默吃掉。CLAUDE.md 早就写着「共享状态文件绝不能读进内存再整体写回」，
+// **但在此之前唯一的工具 `--from next.json` 正是整体写回** —— 一条只存在于文档里的
+// 约束等于不存在，与「没人加载的 schema」同型。
+//
+// B15.2 是这组的要害：它跑的是同一个场景的旧路径，**必须复现丢失**。
+// 如果哪天旧路径也不丢了，说明这个部件失去了存在理由——那时该删的是部件，不是判据。
+
+// 每条判据独立路径：putState 成功后会给学历上只读位（harness 无关的强制点），
+// 复用同一路径时后续 writeJ 会 EPERM —— 首版就这么红了五条。
+const P15 = n => J(`demo/patch15-${n}/task.origin.json`);
+
+t('B15.1', '两个会话并发各追加一条 fact，两条都要活下来', () => {
+  writeJ(P15('1'), mkState('patch15', { facts: [] }));
+  // A 与 B 都在此刻读盘，拿到同一份 —— 这正是事故现场
+  const snapA = readJ(P15('1')), snapB = readJ(P15('1'));
+  if (contentHash(snapA) !== contentHash(snapB)) return '前置失败：两次读盘不一致';
+  const rA = patchState(P15('1'), { op: 'append', field: 'facts', value: { claim: 'A 的事实', verified: true, source: 'demo/a.md' } });
+  const rB = patchState(P15('1'), { op: 'append', field: 'facts', value: { claim: 'B 的事实', verified: true, source: 'demo/b.md' } });
+  const claims = (readJ(P15('1')).facts || []).map(f => f.claim);
+  return (rA.status === 'done' && rB.status === 'done'
+    && claims.includes('A 的事实') && claims.includes('B 的事实'))
+    || `A=${rA.status} B=${rB.status} 盘上=${JSON.stringify(claims)}`;
+});
+
+t('B15.2', '【反向对照】同一场景走整体写回，必须复现「吃掉一条」——否则本部件没有存在理由', () => {
+  writeJ(P15('2'), mkState('patch15', { facts: [] }));
+  const snap = readJ(P15('2'));                       // A 与 B 共用的那一次读盘
+  const h = contentHash(snap);
+  const rA = putState(P15('2'), { ...snap, facts: [{ claim: 'A 的事实', verified: true, source: 'demo/a.md' }] }, { expect: h });
+  // B 拿着**过期的内存副本**整份写回。乐观锁应当拦住它——拦不住就是静默吃掉
+  const rB = putState(P15('2'), { ...snap, facts: [{ claim: 'B 的事实', verified: true, source: 'demo/b.md' }] }, { expect: h });
+  const claims = (readJ(P15('2')).facts || []).map(f => f.claim);
+  return (rA.status === 'done' && rB.status === 'diverged' && claims.length === 1 && claims[0] === 'A 的事实')
+    || `旧路径未复现该场景：A=${rA.status} B=${rB.status} 盘上=${JSON.stringify(claims)}`;
+});
+
+t('B15.3', '【反向】set 不自动重试：赋值不可交换，重试等于静默盖掉别人刚写的值', () => {
+  writeJ(P15('3'), mkState('patch15', { facts: [] }));
+  const r = patchState(P15('3'), [
+    { op: 'append', field: 'facts', value: { claim: 'x', verified: true, source: 'demo/x.md' } },
+    { op: 'set', field: 'current_state', value: '混合操作' }
+  ]);
+  return r.commutative === false
+    || `含 set 的批次被当成可交换，会进重试循环：${JSON.stringify(r)}`;
+});
+
+t('B15.4', '【反向】append 不得写白名单之外的字段（不能借追加之名改任意字段）', () => {
+  writeJ(P15('4'), mkState('patch15'));
+  const before = fs.readFileSync(P15('4'), 'utf8');
+  const r = patchState(P15('4'), { op: 'append', field: 'content_hash', value: 'x' });
+  return (r.status === 'denied' && fs.readFileSync(P15('4'), 'utf8') === before)
+    || `status=${r.status} 盘变了=${fs.readFileSync(P15('4'), 'utf8') !== before}`;
+});
+
+t('B15.5', '【反向】patchState 永不接收状态副本或 expect（收了就退化成整体写回）', () => {
+  writeJ(P15('5'), mkState('patch15'));
+  const threw = [];
+  for (const bad of [{ state: {} }, { expect: 'deadbeef' }]) {
+    try { patchState(P15('5'), { op: 'append', field: 'facts', value: {} }, bad); threw.push(false); }
+    catch { threw.push(true); }
+  }
+  return threw.every(Boolean) || `未抛错：${JSON.stringify(threw)}（与本象 observe() 永不接收预期同构）`;
+});
+
+t('B15.6', '【反向】走 patch 仍要过 schema 闸门，不许绕过前面三道检查', () => {
+  writeJ(P15('6'), mkState('patch15', { facts: [] }));
+  const before = fs.readFileSync(P15('6'), 'utf8');
+  // source_kind 取允许集之外的值 —— B13.2 拦过的那种
+  const r = patchState(P15('6'), { op: 'append', field: 'facts', value: { claim: 'x', verified: true, source: 'y', source_kind: 'path+command' } });
+  return (r.status === 'denied' && fs.readFileSync(P15('6'), 'utf8') === before)
+    || `patch 成了绕过闸门的旁路：status=${r.status}`;
 });
 
 // ───────── B14 路径别名表：改过名的部件，旧证据指针不得断链 ─────────

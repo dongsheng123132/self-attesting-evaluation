@@ -27,6 +27,20 @@ node southbridge/benjing-put.mjs demo/taskN/task.origin.json --expect <hash> --f
 
 新建用 `--create`。改之前**一定要重新读盘**，不要用会话早期读到的那份内存副本。
 
+**但首选不是上面那条，是字段级写入**（v0.2 新增，判据 B15）：
+
+```bash
+node southbridge/benjing-put.mjs demo/taskN/task.origin.json --append facts --value '{"claim":"…","verified":true,"source":"…"}'
+node southbridge/benjing-put.mjs demo/taskN/task.origin.json --set current_state --value '新状态'
+```
+
+`--append` 自己读盘自己写，**不需要 --expect**，并发追加走 CAS 重试循环，两个会话各加一条都能活。
+`--set` 不重试：**赋值不可交换，自动重试等于静默盖掉别人刚写的值**。
+
+> 上面那句「绝不能读进内存再整体写回」以前只是一句话，而唯一的工具 `--from next.json`
+> 正是整体写回——**一条只存在于文档里的约束等于不存在**（同型：没人加载的 schema）。
+> 现在它有了可执行形态。`--from` 保留给「真要重写整份」的场合，不再是默认路径。
+
 **这条是硬拦截，不是建议**：`PreToolUse` hook（`.claude/hooks/guard-benjing.mjs`）会直接阻断 `Write/Edit/MultiEdit` 对任何 `task.origin.json` 的写，退出码 2。实弹验证过。注意它只在 Claude Code 生效，codex 那侧目前只能靠体检事后发现。
 
 ### 本象：唯一的观察者（benxiang/0.1）

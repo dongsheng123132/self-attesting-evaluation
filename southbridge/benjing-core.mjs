@@ -360,6 +360,70 @@ export function putState(p, next, { expect = null, actor = null } = {}) {
 }
 
 /**
+ * 字段级写入 —— 「共享状态文件绝不能读进内存再整体写回」这条规矩的**可执行形态**。
+ *
+ * 为什么需要它：那条规矩 CLAUDE.md 早就写了，但在此之前**唯一的工具 `--from next.json`
+ * 正是整体写回**。规矩说了别做的事，而工具只提供那一种做法——这跟「没人加载的 schema」
+ * 同型：一条只存在于文档里的约束，等于不存在。
+ *
+ * 核心区分（整个部件立在这一句上）：**追加可交换，赋值不可交换。**
+ *   - `append` → CAS 重试循环。两个并发追加顺序无关，重试必然收敛，两条都活。
+ *   - `set`    → 单次 CAS，diverged 就报错交给人。**自动重试会静默盖掉别人刚写的值**，
+ *                那正是本函数要治的病本身，不能在实现里复发一次。
+ *
+ * 铁律：**patchState 永不接收调用方手里的状态副本**——传 `state`/`expect` 进来直接抛错。
+ * 与本象 `observe()` 永不接收预期同构：一旦接收内存副本，它立刻退化成整体写回。
+ */
+export const PATCH_APPEND_FIELDS = ['facts', 'learnings', 'decisions', 'actions', 'artifacts', 'next_steps'];
+export const PATCH_SET_FIELDS = ['current_state', 'title', 'goal'];
+
+export function patchState(p, ops, opts = {}) {
+  const { actor = null, maxRetry = 5 } = opts;
+  if ('state' in opts || 'expect' in opts) {
+    throw new Error('patchState 不接收状态副本或 expect：它自己读盘自己写。'
+      + '接收副本等于退回整体写回——那正是它要治的病。');
+  }
+  const list = Array.isArray(ops) ? ops : [ops];
+  if (!list.length) return { status: 'denied', reason: '没有操作' };
+  for (const o of list) {
+    if (o.op === 'append') {
+      if (!PATCH_APPEND_FIELDS.includes(o.field))
+        return { status: 'denied', reason: `append 不允许写字段 ${o.field}`, allowed: PATCH_APPEND_FIELDS, disk_unchanged: true };
+    } else if (o.op === 'set') {
+      if (!PATCH_SET_FIELDS.includes(o.field))
+        return { status: 'denied', reason: `set 不允许写字段 ${o.field}`, allowed: PATCH_SET_FIELDS, disk_unchanged: true };
+    } else {
+      return { status: 'denied', reason: `未知操作 ${JSON.stringify(o.op)}`, disk_unchanged: true };
+    }
+  }
+  // 含 set 就不重试：赋值不可交换。只有纯 append 才允许重试收敛。
+  const commutative = list.every(o => o.op === 'append');
+  const limit = commutative ? Math.max(1, maxRetry) : 1;
+
+  let last = null;
+  for (let attempt = 1; attempt <= limit; attempt++) {
+    let cur;
+    try { cur = readState(p); }
+    catch (e) { return { status: 'failed', reason: '读盘失败: ' + e.message }; }
+    const next = JSON.parse(JSON.stringify(cur.state));
+    delete next.content_hash; delete next.actor;
+    for (const o of list) {
+      if (o.op === 'append') next[o.field] = [...(next[o.field] || []), o.value];
+      else next[o.field] = o.value;
+    }
+    const r = putState(p, next, { expect: cur.computed, actor });
+    if (r.status !== 'diverged') return { ...r, attempts: attempt, commutative };
+    last = r;
+  }
+  return {
+    ...last, attempts: limit, commutative,
+    reason: commutative
+      ? `append 重试 ${limit} 次仍分歧：盘上有人在高频写`
+      : 'set 不自动重试：赋值不可交换，重试会静默盖掉别人刚写的值——先读盘看清再决定'
+  };
+}
+
+/**
  * 归档对账：内容没变就不该产生新版本号。
  * 这是缺陷②的对策 —— 旧 finalize 每次会话结束无脑 +1，实测「内容指纹一字未变，version 1→4」。
  * 返回 'unchanged' | 'bumped' | 'migrated'
