@@ -180,16 +180,21 @@ const summary = {
 };
 
 // ── 5. 判定：规则跑之前就写死，这里只执行，不叙事 ────────────────────────────
+// 按规则 id 索引，不按 test 字符串。
+// **对预注册的偏离（如实记录）**：首跑（RESULTS-run1.json）这里用的是 test 字符串做键，
+// 而 prereg.json 的 R1 写的是 "mean(F.sharpe) > 0.5 across seeds"，多出的后缀导致匹配不上，
+// R1 被报成「规则未被跑手实现」。修的是跑手的索引方式，**四条判据的阈值与方向一字未动**；
+// 重跑后除 R1 由 undefined 变为 false 外，全部数值与首跑逐位相同（两份结果都在仓库里可 diff）。
+// undefined 仍然会被报成未实现——那条警报是有用的，不能连它一起删掉。
 const env = {
-  'mean(F.sharpe) > 0.5': summary.F.mean > 0.5,
-  'abs(mean(P.sharpe) - mean(N.sharpe)) < 0.30': Math.abs(summary.P.mean - summary.N.mean) < 0.30,
-  'mean(F.sharpe) - mean(P.sharpe) > 0.5': summary.mining_premium > 0.5,
-  'mean(F.sharpe) <= mean(F.expected_max_sharpe_under_null)':
-    summary.F.mean <= summary.expected_max_sharpe_under_null.mean
+  R1: summary.F.mean > 0.5,
+  R2: Math.abs(summary.P.mean - summary.N.mean) < 0.30,
+  R3: summary.mining_premium > 0.5,
+  R4: summary.F.mean <= summary.expected_max_sharpe_under_null.mean
 };
 const verdicts = P.decision_rules.map(r => ({
-  id: r.id, test: r.test, passed: env[r.test] ?? null,
-  conclusion: env[r.test] === undefined ? '⚠ 规则未被跑手实现' : (env[r.test] ? r.then : r.else)
+  id: r.id, test: r.test, passed: env[r.id] ?? null,
+  conclusion: env[r.id] === undefined ? '⚠ 规则未被跑手实现' : (env[r.id] ? r.then : r.else)
 }));
 
 const aborts = [
