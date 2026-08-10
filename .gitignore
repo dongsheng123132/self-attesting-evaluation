@@ -53,3 +53,6 @@ demo/holmes-untold/hidden/
 
 # 会话导出属私人工作内容，按本文件第一条铁律不进版本控制（历史剥离见 governance/publish.mjs）
 ChatGPT-*.md
+
+# M0 对照的真值（校验串/窗口/正确答案）：跑之前泄露即实验作废
+demo/control-m0/.truth.json

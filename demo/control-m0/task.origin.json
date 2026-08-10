@@ -1,0 +1,57 @@
+{
+  "kind": "task.origin",
+  "id": "control-m0",
+  "spec": "2origin/0.2",
+  "title": "M0 对照：审计窗口复算接力",
+  "goal": "四棒接力，每棒在指定窗口内统计审计日志的 cli 动作数并回执本任务的校验串。",
+  "current_state": "STEP-A 与 STEP-B 已完成。下一棒是 STEP-C。",
+  "facts": [
+    {
+      "claim": "本任务的统计窗口固定为审计日志第 1234 至 5678 行（含两端）",
+      "verified": true,
+      "source": "demo/control-m0/PREREGISTRATION.md"
+    },
+    {
+      "claim": "本任务的校验串为 833a30293fef990a",
+      "verified": true,
+      "source": "demo/control-m0/PREREGISTRATION.md"
+    },
+    {
+      "claim": "STEP-A 与 STEP-B 已由前两棒完成并登记产物",
+      "verified": true,
+      "source": "demo/control-m0/leg-b-note.md"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "窗口不使用文件全长，避免统计量可由「数当前文件」获得",
+      "rationale": "案例 18：判别性的活不能从被测通道之外拿到"
+    }
+  ],
+  "next_steps": [
+    {
+      "id": "STEP-A",
+      "status": "done"
+    },
+    {
+      "id": "STEP-B",
+      "status": "done"
+    },
+    {
+      "id": "STEP-C",
+      "status": "pending",
+      "step": "在上述窗口内统计 \"actor\":\"southbridge_cli\" 的行数，并回执校验串"
+    },
+    {
+      "id": "STEP-D",
+      "status": "pending",
+      "step": "复核 STEP-C 的数字"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "demo/control-m0/leg-b-note.md",
+      "note": "STEP-B 产物"
+    }
+  ]
+}
