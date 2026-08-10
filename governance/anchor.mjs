@@ -65,8 +65,10 @@ export const INCLUDE_RULES = [
   // 论文与协议正文：优先权主张的本体
   { id: 'papers', test: r => /^papers\/[^/]+\.md$/.test(r) },
   { id: 'rfcs', test: r => /^rfcs\/[^/]+\.md$/.test(r) },
-  // 176 条判据的实现：论文 §5 的「可执行而非建议」全指向这些文件
+  // 判据的实现：论文「可执行而非建议」那句话全指向这些文件
   { id: 'verifiers', test: r => /^[a-z]+\/verify-[a-z0-9-]+\.mjs$/.test(r) },
+  // 治理机制本身：决定「什么算证据」和「什么能出去」的那几个部件，也必须可被核对
+  { id: 'governance-mechanisms', test: r => /^governance\/(anchor|publish|policy)\.mjs$/.test(r) },
   {
     id: 'protocol-docs',
     // README/LICENSE 是对外主张本身（许可证条款、可核验步骤），必须锚定

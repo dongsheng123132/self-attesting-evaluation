@@ -50,3 +50,6 @@ demo/holmes-untold/corpus/
 
 # 隐藏判据集 H：只提交 SEAL.json（哈希）与构造脚本，H 本身不进 git
 demo/holmes-untold/hidden/
+
+# 会话导出属私人工作内容，按本文件第一条铁律不进版本控制（历史剥离见 governance/publish.mjs）
+ChatGPT-*.md
