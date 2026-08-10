@@ -2,10 +2,17 @@
 /**
  * judge-external.mjs — 用同一套判据判一段外部续写文本
  *
- * 为什么单独一个入口，不改 judge.mjs：
- *   判分器与语料都是繁体，外部续编是简体。若把繁简归一塞进主判分器，
- *   会连带影响 C0 校准（「裡/裏/里」这类合并会改变前八十回的匹配），
- *   等于为了判别人而动了校准基线。所以外部文本走独立入口，主线一字不动。
+ * 这个入口现在只管三件事：读哪份文本、怎么分回、繁简怎么归一。
+ * **判决语义一个字都不在这里**，在 matcher.mjs。
+ *
+ * 原来的理由仍然成立——繁简归一不能塞进主线，否则会改变前八十回的匹配、
+ * 等于为了判别人而动校准基线。但此前为此复制了一整套匹配代码，
+ * 代价是同一类错误犯了三次（漏 also_requires、漏分句边界、主文件内部又抄了一遍）。
+ * 现在归一是 matcher 的一个参数，隔离仍在，复制没了。
+ *
+ * 代价要说清楚：共用之后，matcher 的 bug 会同时打中两份文本。
+ * 好处是两边错得一样、判决仍可比；坏处是不会再有「两边不一致」这个免费的报警器。
+ * 所以改 matcher 必跑 C0 —— 那才是现在唯一的报警器。
  *
  * 判什么：只判「后四十回未兑现的那些条」——续编是接着第一二〇回往下写的，
  * 已经在后四十回兑现的断言不需要它再兑现一次。
@@ -25,6 +32,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { stripHeading } from './corpus.mjs';
+import { createMatcher } from './matcher.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, isAbsolute } from 'node:path';
 
@@ -43,10 +51,6 @@ const raw = readFileSync(TARGET, 'utf8');
 
 const conv = s => [...String(s)].map(c => t2s[c] || c).join('');
 const norm = s => String(s).replace(/[\s　]/g, '');
-const narrationOnly = s => s
-  .replace(/“[^”]*”/g, '　').replace(/「[^」]*」/g, '　').replace(/『[^』]*』/g, '　')
-  .replace(/"[^"]*"/g, '　');
-
 // 分回：续编用「第一百二十一回」这类写法
 const CN = '零一二三四五六七八九十百';
 function splitXubian(text) {
@@ -70,74 +74,11 @@ function splitXubian(text) {
 
 const chapters = splitXubian(raw);
 
-function namesOf(canonical) {
-  const out = new Set([norm(canonical)]);
-  for (const p of Object.values(aliasTable.persons || {})) {
-    if (norm(p.canonical) === norm(canonical)) for (const v of p.variants || []) out.add(norm(v.name));
-  }
-  return [...out].map(conv);
-}
-
-// 死亡族的三条约束，主判分器有、本入口第一版没有。
-//
-// W4-1 的 S4 假绿抽查逮到两条：
-//   「後來金桂死了，香菱本以为苦日子到头了」→ 判成香菱死
-//   「贾珠…却一病死了。李纨守了這些年寡」  → 判成李纨死
-// 死的都是别人，只是死字后面紧跟着被判者的名字。主判分器不会这样判——
-// 它有 no_clause_boundary（主语与谓词之间不得跨越句读），只是本入口没实现。
-//
-// 这跟第一版漏 also_requires 是同一个病，在同一个文件里犯了第二次：
-// **两个入口各写各的匹配语义**。真正的修法是共用一份实现，
-// 但那要先把繁简归一从本入口抽出来；在那之前，这里逐条对齐并把差异写在这。
-const CLAUSE = /[。，；！？、：]/;
-function inExcludedPhrase(t, i, pat) {
-  for (const ph of (spec.defaults.death_binding?.exclude_phrases || []).map(x => conv(norm(x)))) {
-    const off = ph.indexOf(pat);
-    if (off >= 0 && t.slice(i - off, i - off + ph.length) === ph) return true;
-  }
-  return false;
-}
-
-function hits(p, patterns, useSpeech) {
-  const names = (p.subject_names ? p.subject_names.map(norm) : namesOf(p.subject)).map(conv);
-  const prox = p.proximity ?? spec.defaults.proximity;
-  const pats = patterns.map(x => conv(norm(x)));
-  const dbClause = p.death_binding && spec.defaults.death_binding?.no_clause_boundary;
-  const excludeAfter = (spec.defaults.death_binding?.exclude_after || []).map(x => conv(x));
-  const out = [];
-  for (const c of chapters) {
-    const t = conv(norm(useSpeech ? c.body : narrationOnly(c.body)));
-    const anchors = [];
-    for (const nm of names) { let i = 0; while ((i = t.indexOf(nm, i)) !== -1) { anchors.push(i); i += nm.length; } }
-    if (!anchors.length) continue;
-    for (const pat of pats) {
-      let i = 0;
-      while ((i = t.indexOf(pat, i)) !== -1) {
-        // also_requires：主判分器有这条，第一版外部入口漏实现，导致 A-04-1 在第一二三回
-        // 命中「外洋某国国王迎娶的是中原贾府三小姐」——那是探春不是宝钗。
-        // 两个入口的匹配语义必须一致，否则跨文本判决不可比。
-        let extraOk = true;
-        if (p.also_requires) {
-          const extra = p.also_requires.names.flatMap(namesOf).map(conv);
-          const ep = p.also_requires.proximity ?? prox;
-          extraOk = extra.some(nm => { let jx = 0; while ((jx = t.indexOf(nm, jx)) !== -1) { if (Math.abs(jx - i) <= ep) return true; jx += nm.length; } return false; });
-        }
-        // 「死」作状语或落在成语内部不是死亡（死保／死守／死去活來…），与主判分器同表
-        const adverbial = pat === conv('死')
-          && (excludeAfter.includes(t[i + 1]) || (p.death_binding && inExcludedPhrase(t, i, pat)));
-        const near = !adverbial && anchors.some(a => Math.abs(a - i) <= prox
-          && (!dbClause || !CLAUSE.test(t.slice(Math.min(a, i), Math.max(a, i)))));
-        if (extraOk && near) {
-          out.push({ chapter: c.n, pattern: pat, evidence: t.slice(Math.max(0, i - 30), i + 40) });
-          break;
-        }
-        i += pat.length;
-      }
-      if (out.some(h => h.chapter === c.n)) break;
-    }
-  }
-  return out;
-}
+// 匹配语义不在本文件里。本文件只负责三件事：读哪份文本、怎么分回、繁简怎么归一。
+// 判决语义只有一份（matcher.mjs），繁简归一降级成它的一个参数——
+// 而不是反过来为了归一复制一整套匹配代码。此前那样做，同一类错误犯了三次。
+const { scan } = createMatcher({ spec, aliasTable, chapters, transform: conv });
+const hits = (p, patterns, useSpeech) => scan(p, patterns, -Infinity, Infinity, useSpeech);
 
 // 只判后四十回未兑现的那些条
 const prior = JSON.parse(readFileSync(join(__dir, 'REPORT.md'), 'utf8').includes('x') ? '{}' : '{}');

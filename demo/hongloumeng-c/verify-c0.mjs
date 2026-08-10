@@ -11,6 +11,8 @@
  *   C0.3 判别力 —— 正例与负例都必须非空。只有正例的闸门是恒绿的：
  *        把谓词放到最松，召回必然满分，而闸门看不出任何问题。
  *   C0.4 覆盖 —— judge-spec 里的每条谓词都要在校准集里有预期，不许有未被校准的谓词偷偷上岗
+ *   C0.7 单一实现 —— 判分入口不许自己写匹配循环，必须向 matcher.mjs 要。
+ *        这条查结构不查行为：行为对得上只说明今天还没漂。实弹验证过会红。
  *
  * 用法：node verify-c0.mjs [--json]
  * 退出码：0=放行  1=不放行（改判分器，不改曹雪芹）
@@ -115,6 +117,32 @@ for (const p of spec.predicates) {
   const c = calById.get(ctrl);
   if (!c) problems.push(`${p.id}：声明的召回对照 ${ctrl} 不在校准集里`);
   else if (c.expect === 'NOT_FOUND') problems.push(`${p.id}：召回对照 ${ctrl} 自己也被期望为 NOT_FOUND，证明不了任何召回能力`);
+}
+
+// C0.7 匹配实现必须只有一份
+//
+// 这条不是校准，是资格。前六条全部通过、判分器在前八十回上完美，仍然可以出现这种事：
+// **判外部文本走的是另一份匹配代码**，于是「两份文本用同一套判据判」这个前提当场失效。
+// 实际发生过三次，每次都是独立的漏实现：
+//   ① judge-external 漏 also_requires → 把「外洋国王迎娶贾府三小姐」判成宝玉娶宝钗
+//   ② judge-external 漏 no_clause_boundary → 「金桂死了，香菱…」判成香菱死
+//   ③ judge.mjs 自己的 runOne 又抄了一遍 scan，同一文件里两条路径开始漂
+// 三次都不是粗心：**只要匹配语义有两份，它们就会漂**。所以这里查的是结构不是行为——
+// 行为对得上只说明今天没漂。
+//
+// 判法：任何判分入口都不许自己写字符级匹配，必须向 matcher.mjs 要。
+// 特征取 `t.indexOf(pat` 这个匹配循环的骨架；换写法能绕过，但那是有意规避，不是失手。
+const JUDGE_ENTRIES = ['judge.mjs', 'judge-external.mjs'];
+for (const f of JUDGE_ENTRIES) {
+  let src;
+  try { src = readFileSync(join(__dir, f), 'utf8'); }
+  catch { problems.push(`C0.7：判分入口 ${f} 读不到`); continue; }
+  if (!/from\s+['"]\.\/matcher\.mjs['"]/.test(src)) {
+    problems.push(`C0.7：${f} 没有从 matcher.mjs 取匹配实现 —— 它要么自己写了一份，要么根本没在判`);
+  }
+  if (/\bt\.indexOf\(pat/.test(src)) {
+    problems.push(`C0.7：${f} 里仍有自己的字符级匹配循环（t.indexOf(pat…）。匹配语义只许有一份，两份必漂`);
+  }
 }
 
 const ok = problems.length === 0;

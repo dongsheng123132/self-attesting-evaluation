@@ -18,6 +18,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { splitChapters } from './corpus.mjs';
+import { createMatcher } from './matcher.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -27,22 +28,6 @@ const TO = Number(flag('--to', 120));
 const ONLY = flag('--only', null);
 const asJson = argv.includes('--json');
 
-const norm = s => String(s).replace(/[\s　]/g, '');
-
-// 只留叙述语，剔除引号内的人物话语。
-//
-// 为什么必须这样：红楼梦的伏笔在字面上就是人物亲口说出后来会发生的事——
-//   第三十回 寶玉道：“你死了，我做和尚！”      （情话，不是出家）
-//   第七回   惜春笑道：「我明兒也剃了頭…」      （玩笑，不是出家）
-// 人物「说」某事 ≠ 叙述者「叙述」某事发生。不剥引语，判分器会把全书伏笔
-// 一律判成已兑现——那样后四十回不写一个字也能拿满分。
-// 代价：叙述里引用的对话中若含真实信息会被漏掉（宁可漏判，不可错判）。
-function narrationOnly(s) {
-  return s
-    .replace(/“[^”]*”/g, '　')
-    .replace(/「[^」]*」/g, '　')
-    .replace(/『[^』]*』/g, '　');
-}
 const spec = JSON.parse(readFileSync(join(__dir, 'judge-spec.json'), 'utf8'));
 const aliasTable = JSON.parse(readFileSync(join(__dir, 'aliases.json'), 'utf8'));
 // 语料路径与回数改为可配置：盲测环境要给一份只到第八十回的语料，
@@ -51,100 +36,13 @@ const CORPUS_PATH = spec.defaults.corpus || 'corpus/wikisource-honglou-120.txt';
 const CORPUS_CHAPTERS = spec.defaults.chapters || 120;
 const chapters = splitChapters(readFileSync(join(__dir, CORPUS_PATH), 'utf8'), CORPUS_CHAPTERS);
 
-// 主语的全部写法：规范名 + 归一表里的别名。判分器不许自己造别名。
-function namesOf(canonical) {
-  const out = new Set([norm(canonical)]);
-  for (const p of Object.values(aliasTable.persons || {})) {
-    if (norm(p.canonical) === norm(canonical)) for (const v of p.variants || []) out.add(norm(v.name));
-  }
-  return [...out];
-}
-
 const EXCLUDE = new Set(spec.defaults.exclude_chapters || []);
-// 分句边界：死亡类谓词不得跨句读绑定主语
-const SPLIT_NL = new RegExp(String.fromCharCode(92) + "r?" + String.fromCharCode(92) + "n");
-const CLAUSE = /[。，；！？、：]/;
-// 成语排除：命中位置若落在声明的成语内部，不算死亡（死去活來／該死／要死…）
-function inExcludedPhrase(t, i, pat) {
-  const list = spec.defaults.death_binding?.exclude_phrases || [];
-  for (const ph of list) {
-    const off = ph.indexOf(pat);
-    if (off < 0) continue;
-    if (t.slice(i - off, i - off + ph.length) === ph) return true;
-  }
-  return false;
-}
 
-// 段级锚定（anchor_scope: 'paragraph'）
-//
-// 为什么需要：中文叙事靠话题延续，一段之内不重复主语名。
-// 第一〇九回「可怜一位如花似月之女，結褵年餘，不料被孫家揉搓以致身亡」——
-// 整句没有迎春二字，最近一处「迎春」在 320 字之外，任何字符邻近阈值都够不着。
-// 这是外部对抗性复核抓出的漏判，根因不是词表缺口，是锚定方式。
-//
-// 但段落最长 1623 字（前八十回实测 p90=293），全段绑定必然误报。
-// 所以做成按谓词声明的可选项，由 C0 裁决：C0 绿才算这条放宽站得住。
-function paraHits(p, patterns, from, to, useSpeech) {
-  const names = p.subject_names ? p.subject_names.map(norm) : namesOf(p.subject);
-  const hits = [];
-  for (const c of chapters) {
-    if (c.n < from || c.n > to || EXCLUDE.has(c.n)) continue;
-    for (const raw of (useSpeech ? c.body : narrationOnly(c.body)).split(SPLIT_NL)) {
-      const t = norm(raw);
-      if (!t || !names.some(nm => t.includes(nm))) continue;
-      for (const pat of patterns) {
-        const i = t.indexOf(pat);
-        if (i < 0) continue;
-        if (pat === '死' && (spec.defaults.death_binding?.exclude_after || []).includes(t[i + 1])) continue;
-        hits.push({ chapter: c.n, pattern: pat, evidence: t.slice(Math.max(0, i - 40), i + 30) });
-        break;
-      }
-    }
-  }
-  const seen = new Set(), uniq = [];
-  for (const h of hits) { if (seen.has(h.chapter)) continue; seen.add(h.chapter); uniq.push(h); }
-  return uniq;
-}
-
-// 在一段文本里找「主语附近出现某组谓词」的所有命中
-function scan(p, patterns, from, to, useSpeech) {
-  if (p.anchor_scope === 'paragraph') return paraHits(p, patterns, from, to, useSpeech);
-  const names = p.subject_names ? p.subject_names.map(norm) : namesOf(p.subject);
-  const prox = p.proximity ?? spec.defaults.proximity;
-  const hits = [];
-  for (const c of chapters) {
-    if (c.n < from || c.n > to || EXCLUDE.has(c.n)) continue;
-    const t = norm(useSpeech ? c.body : narrationOnly(c.body));
-    const anchors = [];
-    for (const nm of names) { let i = 0; while ((i = t.indexOf(nm, i)) !== -1) { anchors.push([i, nm]); i += nm.length; } }
-    if (!anchors.length) continue;
-    for (const pat of patterns) {
-      let i = 0;
-      while ((i = t.indexOf(pat, i)) !== -1) {
-        const dbClause = p.death_binding && spec.defaults.death_binding?.no_clause_boundary;
-        const near = anchors.find(([a]) => Math.abs(a - i) <= prox && (!dbClause || !CLAUSE.test(t.slice(Math.min(a, i), Math.max(a, i)))));
-        // 「死」作状语的固定搭配（死保／死守／死活）不是死亡，按声明的排除表剔除
-        const adverbial = pat === '死' && ((spec.defaults.death_binding?.exclude_after || []).includes(t[i + 1]) || (p.death_binding && inExcludedPhrase(t, i, pat)));
-        if (near && !adverbial) {
-          const s = Math.max(0, Math.min(near[0], i) - 24), e = Math.min(t.length, Math.max(near[0], i) + 34);
-          hits.push({ chapter: c.n, pattern: pat, evidence: t.slice(s, e) });
-        }
-        i += pat.length;
-      }
-    }
-  }
-  const seen = new Set(), uniq = [];
-  for (const h of hits) { if (seen.has(h.chapter)) continue; seen.add(h.chapter); uniq.push(h); }
-  return uniq;
-}
-
-// 某人是否出现在指定的某一回里（用于配置类判据）
-function presentIn(chapterNo, who) {
-  const c = chapters.find(x => x.n === chapterNo);
-  if (!c) return false;
-  const t = norm(c.body);
-  return namesOf(who).some(nm => t.includes(nm));
-}
+// 匹配语义只有一份，在 matcher.mjs。本文件只负责：读谓词、定窗口、把命中拼成三态判决。
+// 此前 scan 与 runOne 各写了一遍字符级匹配（一个有 also_requires 一个没有），
+// 而外部入口又写了第三遍——同一类错误犯了三次。见 matcher.mjs 头部。
+const { norm, narrationOnly, namesOf, scan, paraHits, presentIn } =
+  createMatcher({ spec, aliasTable, chapters, exclude: EXCLUDE });
 
 // ── 带量判据 ──────────────────────────────────────────────────────────────
 // 判词里最硬的断言都是带量的。只判「有没有写」判不出「怎么兑现的」：
@@ -207,46 +105,14 @@ export function runOne(p, from = FROM, to = TO) {
       against_chapters: against.map(h => h.chapter), against_evidence: against.slice(0, 3),
       spoken_only: [], spoken_fulfill: [] };
   }
-  const names = p.subject_names ? p.subject_names.map(norm) : namesOf(p.subject);
-  const prox = p.proximity ?? spec.defaults.proximity;
-  const hits = [];
-  for (const c of chapters) {
-    if (c.n < from || c.n > to || EXCLUDE.has(c.n)) continue;
-    const t = norm(p.kind === 'status' ? c.body : narrationOnly(c.body));
-    // 主语出现的所有位置
-    const anchors = [];
-    for (const nm of names) { let i = 0; while ((i = t.indexOf(nm, i)) !== -1) { anchors.push([i, nm]); i += nm.length; } }
-    if (!anchors.length) continue;
-    for (const pat of p.any_of) {
-      let i = 0;
-      while ((i = t.indexOf(pat, i)) !== -1) {
-        const dbClause2 = p.death_binding && spec.defaults.death_binding?.no_clause_boundary;
-        const near = anchors.find(([a]) => Math.abs(a - i) <= prox && (!dbClause2 || !CLAUSE.test(t.slice(Math.min(a, i), Math.max(a, i)))));
-        if (near) {
-          // 附加条件：另一批名字也要在更大范围内出现（如「宝玉与宝钗成婚」需两人同现）
-          let okExtra = true;
-          if (p.also_requires) {
-            const extra = p.also_requires.names.flatMap(namesOf);
-            const ep = p.also_requires.proximity ?? prox;
-            okExtra = extra.some(nm => { let j = 0; while ((j = t.indexOf(nm, j)) !== -1) { if (Math.abs(j - i) <= ep) return true; j += nm.length; } return false; });
-          }
-          const adverbial2 = pat === '死' && ((spec.defaults.death_binding?.exclude_after || []).includes(t[i + 1]) || (p.death_binding && inExcludedPhrase(t, i, pat)));
-          if (okExtra && !adverbial2) {
-            const s = Math.max(0, Math.min(near[0], i) - 24), e = Math.min(t.length, Math.max(near[0], i) + 34);
-            hits.push({ chapter: c.n, pattern: pat, anchor: near[1], evidence: t.slice(s, e) });
-          }
-        }
-        i += pat.length;
-      }
-    }
-  }
-  // 每回只留第一条证据，避免同一处反复计数
-  const seen = new Set(), uniq = [];
-  for (const h of hits) { if (seen.has(h.chapter)) continue; seen.add(h.chapter); uniq.push(h); }
+  // 这里曾经把 scan 的逻辑又抄了一遍——多了 also_requires，少了别的。
+  // 同一个文件里两条匹配路径，一样会漂。现在只调用唯一实现。
+  const useSpeechMain = p.kind === 'status';
+  const uniq = scan(p, p.any_of, from, to, useSpeechMain);
 
   // 三态：兑现 / 违反 / 未交代。
   // 两态判分器会把「写了相反的」报成「没写」，而这两者对被判对象的意义完全不同。
-  const useSpeech = p.kind === 'status';
+  const useSpeech = useSpeechMain;
   const against = p.contradicts ? scan(p, p.contradicts, from, to, useSpeech) : [];
   let verdict = 'NOT_FOUND';
   if (uniq.length && against.length) verdict = 'BOTH';
