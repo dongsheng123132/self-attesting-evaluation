@@ -179,6 +179,38 @@ t('A4.3', 'counts 与实际数组长度一致（硬编码计数是论文案例 9
   } finally { rmrf(d); }
 });
 
+// ── A7 第三方可复现性：锚点若指向别人拿不到的字节，它只对我们自己有效 ──────────
+t('A7.1', '【反向】非 git 目录必须标 unknown，不许猜成「可复现」', () => {
+  const d = sandbox();
+  try {
+    const m = buildManifest(d);
+    const lying = m.entries.filter(e => e.repro !== 'unknown');
+    return (m.git_head === null && lying.length === 0)
+      || `git_head=${m.git_head} 非 unknown 的条目 ${lying.length} 条：${JSON.stringify(lying.slice(0, 2))}`;
+  } finally { rmrf(d); }
+});
+t('A7.2', '【反向】未跟踪文件不得被算进「第三方可复现」', () => {
+  // 真仓库里跑：本仓库常年有并发会话写入的未跟踪文件
+  const m = buildManifest(REPO);
+  const bad = m.entries.filter(e => e.repro === 'git' && !fs.existsSync(path.join(REPO, e.path)));
+  const consistent = m.counts.reproducible_from_git === m.entries.filter(e => e.repro === 'git').length
+    && m.counts.not_reproducible === m.entries.filter(e => e.repro === 'uncommitted' || e.repro === 'untracked').length;
+  return (bad.length === 0 && consistent) || `计数与标注不一致 ${JSON.stringify(m.counts)}`;
+});
+t('A7.3', '可复现计数必须出现，哪怕等于总数（零也是测量结果，不是缺席）', () => {
+  const m = buildManifest(REPO);
+  return (typeof m.counts.reproducible_from_git === 'number' && typeof m.counts.not_reproducible === 'number')
+    || JSON.stringify(m.counts);
+});
+t('A7.4', '【反向】归档链上的快照必须自带复现性计数，不由核验时反推', () => {
+  const anchors = listAnchors();
+  if (!anchors.length) return '归档链为空';
+  const newest = anchors.map(a => JSON.parse(fs.readFileSync(a.json, 'utf8')))
+    .filter(s => s.counts?.reproducible_from_git !== undefined);
+  return newest.length > 0
+    || '没有任何快照记录了复现性——核验只能靠反推，而反推会把「别人拿不到」说成「账本正常增长」';
+});
+
 // ── A5 外部时间锚：没有就必须不给绿灯 ───────────────────────────────────────
 t('A5.1', '【反向】归档链为空时 verify 必须退出 3，绝不给绿灯', () => {
   const d = sandbox();

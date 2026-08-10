@@ -26,6 +26,7 @@
 //   退出码 0=一致且有外部时间锚  1=用法错  3=一致但无外部时间锚  4=与磁盘分歧
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { observe, compare } from '../benxiang/observe.mjs';
 
@@ -111,16 +112,47 @@ export function enumerate(root = ROOT) {
 /**
  * 构造清单。纯函数式产物：不含时间、不含 pid、不含 cwd —— 同样磁盘状态跑两次逐字节相同。
  */
+/**
+ * 问 git：HEAD 是谁，哪些路径已跟踪且与 HEAD 一致。
+ *
+ * 为什么需要这个：锚定观察的是**工作树**，而公开出去的是**提交树**。并发会话让工作树常年是脏的，
+ * 于是一份从工作树盖的章，第三方 clone 之后一条都对不上——而 verify 会把这解释成
+ * 「只追加账本会变，正常」。仪器把自己的不可复现说成预期行为，正是论文 class B 的形状。
+ * 实测发现于首次公开前从全新 clone 跑核验：129 条里 12 条已变、5 条根本不存在。
+ *
+ * 按 class E 的规矩处理：**不拒绝，申报**。每条证据标注第三方能不能复现。
+ * 非 git 目录返回 null，此时标 unknown —— 不知道就说不知道，不许猜成 true。
+ */
+function gitState(root) {
+  const run = args => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  try {
+    const head = run(['rev-parse', 'HEAD']).trim();
+    const tracked = new Set(run(['ls-files']).split('\n').filter(Boolean));
+    // porcelain 的前两列是状态，第三列起是路径；改名的 "old -> new" 取 new。
+    const dirty = new Set();
+    for (const line of run(['status', '--porcelain', '-z']).split('\0')) {
+      if (!line) continue;
+      const p = line.slice(3).trim();
+      if (p) dirty.add(p);
+    }
+    return { head, tracked, dirty };
+  } catch { return null; }
+}
+
+/** 一条证据是否可被第三方从公开仓库取得同样字节。 */
+const reproOf = (rel, git) =>
+  !git ? 'unknown' : (!git.tracked.has(rel) ? 'untracked' : (git.dirty.has(rel) ? 'uncommitted' : 'git'));
+
 export function buildManifest(root = ROOT) {
   const { paths, excluded } = enumerate(root);
-  return manifestFrom(paths, excluded, root);
+  return manifestFrom(paths, excluded, root, gitState(root));
 }
 
 /**
  * 从候选路径构造清单。与 enumerate 分开是为了让「候选存在、观察却失败」这条路径可被判据直接触发——
  * 那不是假想场景：论文案例 8 的触发器就是一个并发会话在两次读之间删掉了被引用的日志。
  */
-export function manifestFrom(paths, excluded = {}, root = ROOT) {
+export function manifestFrom(paths, excluded = {}, root = ROOT, git = null) {
   const entries = [];
   const unreadable = [];
   for (const rel of paths) {
@@ -134,6 +166,7 @@ export function manifestFrom(paths, excluded = {}, root = ROOT) {
     entries.push({
       path: rel,
       rule: includedBy(rel),
+      repro: reproOf(rel, git),
       sha256: o.properties.sha256,
       size_bytes: o.properties.size_bytes
     });
@@ -152,8 +185,13 @@ export function manifestFrom(paths, excluded = {}, root = ROOT) {
       exclude_rules: EXCLUDE_RULES.map(r => r.id),
       exclude_wins: true
     },
+    // 第三方能取得同样字节的那批，才是这份锚点真正能证明给别人看的部分。
+    // 这个数必须出现，哪怕等于 entries——零也是测量结果，不是缺席。
+    git_head: git ? git.head : null,
     counts: {
       entries: entries.length,
+      reproducible_from_git: entries.filter(e => e.repro === 'git').length,
+      not_reproducible: entries.filter(e => e.repro === 'uncommitted' || e.repro === 'untracked').length,
       unreadable: unreadable.length,
       excluded_files: exFiles,
       // 子树未展开，所以「被排除的文件总数」本清单**不知道**，也不假装知道。
@@ -185,6 +223,7 @@ async function cmdBuild() {
   const self = observe(MANIFEST_PATH, ROOT);
   console.log(`清单已写：governance/anchor-manifest.json`);
   console.log(`  锚定条目 ${m.counts.entries}　读不到 ${m.counts.unreadable}`);
+  console.log(`  第三方可复现 ${m.counts.reproducible_from_git} / 不可复现 ${m.counts.not_reproducible}（未提交或未跟踪）`);
   console.log(`  按策略排除：文件 ${m.counts.excluded_files}　整棵子树 ${m.counts.excluded_subtrees}（子树内文件数未展开，不假装知道）`);
   for (const [rule, n] of Object.entries(m.excluded_by_rule)) console.log(`    排除 ${rule}: 文件 ${n.files} / 子树 ${n.subtrees}`);
   for (const u of m.unreadable) console.log(`    ⚠ 读不到 ${u.path} (${u.reason})`);
@@ -236,6 +275,10 @@ async function cmdStamp() {
   fs.writeFileSync(frozen, body);
 
   console.log(`冻结快照 governance/anchors/${id}.json（${m.counts.entries} 条证据）`);
+  if (m.counts.not_reproducible > 0) {
+    console.log(`⚠ 其中 ${m.counts.not_reproducible} 条未提交或未跟踪 —— 第三方 clone 后拿不到这批字节，`);
+    console.log(`  对他们而言这些条目只能证明「曾存在过某内容」，不能复核。要更强的锚点：先 commit 再 stamp。`);
+  }
   console.log('提交指纹到 OpenTimestamps 日历（只上传 32 字节哈希，不上传任何内容）…');
   const detached = OTS.DetachedTimestampFile.fromBytes(new OTS.Ops.OpSHA256(), Buffer.from(body));
   await OTS.stamp(detached);
@@ -304,7 +347,18 @@ async function cmdVerify() {
     console.log(`\n锚点 ${a.id}　${snap.entries.length} 条`);
     console.log(`  外部时间锚：${mark}`);
     // 账本是只追加的，改动属预期；消失才是证据出血。两者分开报，别混成一个「差异数」。
-    console.log(`  对今日磁盘：一致 ${snap.entries.length - drifted - gone}　已变 ${drifted}（只追加账本会变，正常）　消失 ${gone}`);
+    // 但「已变属正常」这句话本身出过血：它曾把「第三方根本拿不到这批字节」也解释成正常。
+    // 所以复现性单独出数，且拿快照自己记的 repro 说话，不由本次运行推断。
+    const repro = snap.counts?.reproducible_from_git;
+    console.log(`  对今日磁盘：一致 ${snap.entries.length - drifted - gone}　已变 ${drifted}　消失 ${gone}`);
+    if (repro !== undefined) {
+      console.log(`  第三方可复现：${repro}/${snap.entries.length}${snap.git_head ? `　@ ${snap.git_head.slice(0, 8)}` : ''}`);
+      if (repro < snap.entries.length) {
+        console.log(`  ⚠ 有 ${snap.entries.length - repro} 条在盖章时未提交/未跟踪，别人 clone 后核不了`);
+      }
+    } else {
+      console.log(`  第三方可复现：未知（该快照由记录复现性之前的版本生成）`);
+    }
     if (gone) console.log(`  ⚠ 有 ${gone} 条证据在盘上消失了——快照仍可证明它们曾存在，但原件已不可复核`);
   }
 
