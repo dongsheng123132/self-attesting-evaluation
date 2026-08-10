@@ -120,7 +120,14 @@ function checkOne(f) {
 
   // 方向：找属格结构「<某人>之<关系>」（名字取别名全形，关系取同义词，属格取 之／的）
   const rels = relForms(f.relation);
-  const genitive = (who) => formsOf(who).some(x => rels.some(r => g.includes(x + '之' + r) || g.includes(x + '的' + r)));
+  // 属格匹配只认 ≥2 字的名字形。
+  // 补召回时把别名展开进来之后，单字形立刻造出假阳性：抽查「声明不可判是否被滥用」时，
+  // 「賈寶玉-母-王夫人」被判成方向可证，因为别名链上有个单字形「玉」，而原文那句是
+  // **「黛玉之母」**——匹配到的是别人的属格。方向判错比判不出严重得多，
+  // 所以这一层宁可少认几条（少认＝落进「未证」，会被要求补，不会被放过）。
+  // 端点锚定那一层不加这条限制：那里单字形是有意的（原文用「珠」「赦」「政」代全名）。
+  const genitive = (who) => formsOf(who).filter(x => x.length >= 2)
+    .some(x => rels.some(r => g.includes(x + '之' + r) || g.includes(x + '的' + r)));
   const hitA = genitive(f.subject);   // 主语的R是宾语
   const hitB = genitive(f.object);    // 主语是宾语的R
   if (hitA && !hitB) res.convention = 'A';
