@@ -59,8 +59,38 @@ export function splitChapters(raw, total = 120) {
   }
   return starts.map((st, i) => {
     const en = i + 1 < starts.length ? starts[i + 1] : lines.length;
-    return { n: i + 1, title: lines[st].trim(), text: lines.slice(st, en).join('\n') };
+    const seg = lines.slice(st, en);
+    return { n: i + 1, title: lines[st].trim(), text: seg.join('\n'), body: stripHeading(seg).join('\n') };
   });
+}
+
+/**
+ * 剥掉回目与导航，只留叙述正文。
+ *
+ * 为什么必须有这个：回目是**对这一回的内容摘要**，它把事件名逐字写在标题里。
+ * 拿回目去证「这件事发生了」，等于拿目录证明正文——与「用第五回判词证明判词兑现」
+ * 是同一个病，本仓库已经为后者立过排除规则。
+ *
+ * 实弹撞上来的：
+ *   ① 我方 W4-1 续写有四条判「兑现」，证据全部落在回目行
+ *      （「射圃中若蘭喪邊城」「獄神廟茜雪呈正文」「情榜上寶玉證情痴」「因麒麟湘雲歸衛氏」）。
+ *      照回目写就能让判分器变绿，而正文里写没写是另一回事。
+ *   ② 更要命的是它污染了**已发布的结论**：后四十回那条唯一的「违反」A-15-1，
+ *      证据是「賈家延世澤」——全书仅此一处，就在第一一九回的回目行里，
+ *      而且那行还带着 wikisource 的导航残渣「上一回　回目录　下一回　----」。
+ *      报告里把「违反」称作三态中唯一较难人为制造的一态，而它自己就架在标题上。
+ *
+ * 剥法：取开头至多 6 行内**最后一个**回次标记行，之后才算正文。
+ * 底本里回次标记会出现两次（裸回次行 + 完整回目行），取最后一个两种底本都对。
+ */
+export function stripHeading(segLines) {
+  const MARK = /^第[〇零一二三四五六七八九十百○\d]+[回囘]/;
+  let last = -1;
+  for (let i = 0; i < Math.min(segLines.length, 6); i++) {
+    const t = segLines[i].trim();
+    if (MARK.test(t)) last = i;
+  }
+  return segLines.slice(last + 1);
 }
 
 // ── 韵文识别 ──────────────────────────────────────────────────────────────

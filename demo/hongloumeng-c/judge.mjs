@@ -89,7 +89,7 @@ function paraHits(p, patterns, from, to, useSpeech) {
   const hits = [];
   for (const c of chapters) {
     if (c.n < from || c.n > to || EXCLUDE.has(c.n)) continue;
-    for (const raw of (useSpeech ? c.text : narrationOnly(c.text)).split(SPLIT_NL)) {
+    for (const raw of (useSpeech ? c.body : narrationOnly(c.body)).split(SPLIT_NL)) {
       const t = norm(raw);
       if (!t || !names.some(nm => t.includes(nm))) continue;
       for (const pat of patterns) {
@@ -114,14 +114,13 @@ function scan(p, patterns, from, to, useSpeech) {
   const hits = [];
   for (const c of chapters) {
     if (c.n < from || c.n > to || EXCLUDE.has(c.n)) continue;
-    const t = norm(useSpeech ? c.text : narrationOnly(c.text));
+    const t = norm(useSpeech ? c.body : narrationOnly(c.body));
     const anchors = [];
     for (const nm of names) { let i = 0; while ((i = t.indexOf(nm, i)) !== -1) { anchors.push([i, nm]); i += nm.length; } }
     if (!anchors.length) continue;
     for (const pat of patterns) {
       let i = 0;
       while ((i = t.indexOf(pat, i)) !== -1) {
-        // 死亡类谓词加语序约束：主语必须在谓词之前（中文「X死了」的语序）
         const dbClause = p.death_binding && spec.defaults.death_binding?.no_clause_boundary;
         const near = anchors.find(([a]) => Math.abs(a - i) <= prox && (!dbClause || !CLAUSE.test(t.slice(Math.min(a, i), Math.max(a, i)))));
         // 「死」作状语的固定搭配（死保／死守／死活）不是死亡，按声明的排除表剔除
@@ -143,7 +142,7 @@ function scan(p, patterns, from, to, useSpeech) {
 function presentIn(chapterNo, who) {
   const c = chapters.find(x => x.n === chapterNo);
   if (!c) return false;
-  const t = norm(c.text);
+  const t = norm(c.body);
   return namesOf(who).some(nm => t.includes(nm));
 }
 
@@ -174,8 +173,15 @@ function runQuantified(p, from, to) {
     };
   }
   // order
-  const a = scan({ subject: p.first.subject, proximity: p.first.proximity }, p.first.any_of, from, to, false);
-  const b = scan({ subject: p.then.subject, proximity: p.then.proximity }, p.then.any_of, from, to, false);
+  //
+  // subject_names 必须透传。此前这里只传 subject，谓词自己声明的别名表被静默丢弃——
+  // C-ORDER 的 first 声明了 subject_names:["秦可卿","秦氏"]，而第十三回叙述里写的是
+  // 「聽見說秦氏死了」，正文永远匹配不上。它一直判绿，靠的是回目「秦可卿死封龍禁尉」
+  // 里 subject 与谓词恰好挨着。把回目排除掉的那一刻这条腿就红了，
+  // 也就是说：这个**专门用来证明「次序类的两条腿真的各跑过一次」的对照谓词**，
+  // 两条腿从来没在正文里跑过。恒绿考题的又一种形态，且它伪装成的正是「反恒绿的那个装置」。
+  const a = scan({ subject: p.first.subject, subject_names: p.first.subject_names, proximity: p.first.proximity }, p.first.any_of, from, to, false);
+  const b = scan({ subject: p.then.subject, subject_names: p.then.subject_names, proximity: p.then.proximity }, p.then.any_of, from, to, false);
   let verdict = 'NOT_FOUND', detail;
   if (!a.length) detail = '前一事件未检出，先后无从判起';
   else if (!b.length) detail = `前一事件在第 ${a[0].chapter} 回，后一事件未检出 —— 未交代，不得默认为满足`;
@@ -206,7 +212,7 @@ export function runOne(p, from = FROM, to = TO) {
   const hits = [];
   for (const c of chapters) {
     if (c.n < from || c.n > to || EXCLUDE.has(c.n)) continue;
-    const t = norm(p.kind === 'status' ? c.text : narrationOnly(c.text));
+    const t = norm(p.kind === 'status' ? c.body : narrationOnly(c.body));
     // 主语出现的所有位置
     const anchors = [];
     for (const nm of names) { let i = 0; while ((i = t.indexOf(nm, i)) !== -1) { anchors.push([i, nm]); i += nm.length; } }

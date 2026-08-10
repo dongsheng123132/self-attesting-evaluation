@@ -24,6 +24,7 @@
  * 判决当场不可比。为我方文本另写一个入口会把那个错误再犯一遍，只是这次对自己有利。
  */
 import { readFileSync } from 'node:fs';
+import { stripHeading } from './corpus.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, isAbsolute } from 'node:path';
 
@@ -59,10 +60,12 @@ function splitXubian(text) {
   const last = new Map();
   for (const m of marks) last.set(m.n, m.i);
   const starts = [...last.entries()].sort((a, b) => a[0] - b[0]);
-  return starts.map(([n, i], k) => ({
-    n,
-    text: lines.slice(i, k + 1 < starts.length ? starts[k + 1][1] : lines.length).join('\n'),
-  }));
+  return starts.map(([n, i], k) => {
+    const seg = lines.slice(i, k + 1 < starts.length ? starts[k + 1][1] : lines.length);
+    // 与主判分器共用同一个剥头实现：回目是内容摘要，拿它证明「事情发生了」等于拿目录证正文。
+    // 两个入口的匹配语义必须一致，否则跨文本判决不可比（本文件第一版已经栽过一次）。
+    return { n, text: seg.join('\n'), body: stripHeading(seg).join('\n') };
+  });
 }
 
 const chapters = splitXubian(raw);
@@ -75,13 +78,35 @@ function namesOf(canonical) {
   return [...out].map(conv);
 }
 
+// 死亡族的三条约束，主判分器有、本入口第一版没有。
+//
+// W4-1 的 S4 假绿抽查逮到两条：
+//   「後來金桂死了，香菱本以为苦日子到头了」→ 判成香菱死
+//   「贾珠…却一病死了。李纨守了這些年寡」  → 判成李纨死
+// 死的都是别人，只是死字后面紧跟着被判者的名字。主判分器不会这样判——
+// 它有 no_clause_boundary（主语与谓词之间不得跨越句读），只是本入口没实现。
+//
+// 这跟第一版漏 also_requires 是同一个病，在同一个文件里犯了第二次：
+// **两个入口各写各的匹配语义**。真正的修法是共用一份实现，
+// 但那要先把繁简归一从本入口抽出来；在那之前，这里逐条对齐并把差异写在这。
+const CLAUSE = /[。，；！？、：]/;
+function inExcludedPhrase(t, i, pat) {
+  for (const ph of (spec.defaults.death_binding?.exclude_phrases || []).map(x => conv(norm(x)))) {
+    const off = ph.indexOf(pat);
+    if (off >= 0 && t.slice(i - off, i - off + ph.length) === ph) return true;
+  }
+  return false;
+}
+
 function hits(p, patterns, useSpeech) {
   const names = (p.subject_names ? p.subject_names.map(norm) : namesOf(p.subject)).map(conv);
   const prox = p.proximity ?? spec.defaults.proximity;
   const pats = patterns.map(x => conv(norm(x)));
+  const dbClause = p.death_binding && spec.defaults.death_binding?.no_clause_boundary;
+  const excludeAfter = (spec.defaults.death_binding?.exclude_after || []).map(x => conv(x));
   const out = [];
   for (const c of chapters) {
-    const t = conv(norm(useSpeech ? c.text : narrationOnly(c.text)));
+    const t = conv(norm(useSpeech ? c.body : narrationOnly(c.body)));
     const anchors = [];
     for (const nm of names) { let i = 0; while ((i = t.indexOf(nm, i)) !== -1) { anchors.push(i); i += nm.length; } }
     if (!anchors.length) continue;
@@ -97,7 +122,12 @@ function hits(p, patterns, useSpeech) {
           const ep = p.also_requires.proximity ?? prox;
           extraOk = extra.some(nm => { let jx = 0; while ((jx = t.indexOf(nm, jx)) !== -1) { if (Math.abs(jx - i) <= ep) return true; jx += nm.length; } return false; });
         }
-        if (extraOk && anchors.some(a => Math.abs(a - i) <= prox)) {
+        // 「死」作状语或落在成语内部不是死亡（死保／死守／死去活來…），与主判分器同表
+        const adverbial = pat === conv('死')
+          && (excludeAfter.includes(t[i + 1]) || (p.death_binding && inExcludedPhrase(t, i, pat)));
+        const near = !adverbial && anchors.some(a => Math.abs(a - i) <= prox
+          && (!dbClause || !CLAUSE.test(t.slice(Math.min(a, i), Math.max(a, i)))));
+        if (extraOk && near) {
           out.push({ chapter: c.n, pattern: pat, evidence: t.slice(Math.max(0, i - 30), i + 40) });
           break;
         }
