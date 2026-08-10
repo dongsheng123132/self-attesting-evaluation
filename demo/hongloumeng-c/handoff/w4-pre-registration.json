@@ -1,0 +1,71 @@
+{
+  "spec": "hongloumeng-c/handoff/0.1",
+  "title": "W4-1 我方续写 —— 跑之前的预注册",
+  "registered_at_commit": "0e36f9e",
+  "registered_before": "一个字的正文都还没生成；Hermes 尚未收到续写任务书",
+
+  "what_this_run_actually_tests": {
+    "is": "在只给状态、不给聊天记录的条件下，由另一个模型（Hermes/deepseek）按盘上判据写出五回文本，且该文本能被我方判分器判、判决可与同事续编逐条并列",
+    "is_not": "我们写得比谁好。文笔不在判据里，判分器判的是「文本里有没有」",
+    "is_not_2": "「我方兑现数 > 同事兑现数」这件事本身没有信息量——见下面 self_serving_disclosure"
+  },
+
+  "self_serving_disclosure": {
+    "problem": "六条缺口的检索谓词是我们自己写的，而且已在 GAP-FOR-CONTINUATION.md 里逐条公开。现在我们照着自己公布的谓词写文本，再用自己的谓词去判——兑现几乎是必然。",
+    "consequence": "我方的「兑现数」证据强度**比同事那份还弱**。同事至少是照判词写的，我们是照谓词写的，中间还少一层转译。",
+    "therefore": "本轮预先声明：兑现数不作为成功判据，只作为流程跑通的信号。真正的判据是下面 S3/S4——文本有没有跟已判定的事实矛盾，以及有没有在没写的地方被判成写了。"
+  },
+
+  "generation": {
+    "who": "Hermes (deepseek)，按 decisions[5]：生成方不得定义或实现合格标准",
+    "input_allowed": [
+      "demo/hongloumeng-c/GAP-FOR-CONTINUATION.md（已公开的六条缺口与其谓词）",
+      "第五回判词与十二支曲原文",
+      "前八十回人物关系与称谓（供行文用）"
+    ],
+    "input_forbidden": [
+      "judge-spec.json（完整判据集，含未公开的召回对照与负例）",
+      "c0-calibration.json（校准集与预期值）",
+      "任何允许修改判分器、判据或校准集的权限"
+    ],
+    "output": "demo/hongloumeng-c/draft/w4-continuation.md，第一百二十一至一百二十五回，繁体，回次写法与同事那份一致以便同一个分回器处理"
+  },
+
+  "success_criteria": {
+    "S1": "生成方全程未修改 judge-spec.json / c0-calibration.json / judge.mjs / judge-external.mjs / aliases.json 任何一个字节（跑完逐份比对下面的 snapshot_before）",
+    "S2": "verify-c0.mjs 在生成之后仍然退出码 0——判分器没有为了迁就我方文本被动过",
+    "S3": "我方文本的 CONTRADICTED 数为 0。这一条是真判据：违反要求文本里确实存在反向叙述，是三态中唯一较难人为制造的",
+    "S4": "抽查 5 条判为 FULFILLED 的条目，人工回原文确认不是假绿（沿用 W3-2 的做法）；假绿数公开",
+    "S5": "两份文本用**同一个入口同一次调用形态**判出（judge-external.mjs --file），判决逐条并列公布，包括对我们不利的条目"
+  },
+
+  "failure_is_information": {
+    "F1": "若我方文本出现 CONTRADICTED → 说明「只靠盘上状态传达约束」在这个载荷上不够，要补的是状态不是文笔",
+    "F2": "若抽查发现假绿 → 谓词太松，公布假绿数并收紧，收紧后必须重跑 C0（改谓词就得重新校准）",
+    "F3": "若生成方改动了判分器或判据 → 实验作废，且这恰好是 decisions[5]『作者不能给自己发证』的一次实证",
+    "F4": "若六条缺口一条都没接上 → 说明任务书没把判据传达到；这是任务书的问题，不是模型的问题"
+  },
+
+  "explicitly_not_claimed": [
+    "不主张我方续写在文学价值上优于任何一份续书，包括后四十回",
+    "不主张兑现谓词等于兑现判词——谓词只是判词的粗糙代理，认的是字面",
+    "不主张五回可代表一部续书；同事公开 5 回而其推文称已写 20 回，我方同样只写 5 回，两边都只在这 5 回的范围内可比",
+    "亲属/称谓/年龄时序类判据本轮**不在线**（W1-3 的事实表当前可用 6/47 条），所以 S3 的『0 违反』只覆盖判词与脂批一路，不覆盖亲属时间线"
+  ],
+
+  "snapshot_before": {
+    "judge-spec.json": "0437c6ca06f108516f45656fbb25f728d4cb1042d61c67d98527855f80597a6a",
+    "c0-calibration.json": "44845add7b785dd7d32f4042ce66e79ff5da7a71003637eaaad4fef067759fa3",
+    "judge.mjs": "276e62a2125840c60ec72afa0f4a822f33e914c461fb5651e847d6f9b7e654ed",
+    "judge-external.mjs": "55b8be749531beb3a9ec9634939e529b1057c91e94b09a01d58ceb8fa82e5a11",
+    "verify-c0.mjs": "58702beeedfc0bae3615c456ea860293c65717b2f9f4c7b8ff6e3115e2625e2b",
+    "aliases.json": "31d2b9e71971465a971d6cd7af18cfa7ab6b0e3cc4eb5abdbda7d8c7820b479f",
+    "t2s-map.json": "b5de6b6bead037f5137f5660f0b4420a752efc099d4a3f6db859eaf8377859b9",
+    "GAP-FOR-CONTINUATION.md": "c1e75346aa077bc3ab8a549f85507e793fe5b49438d99c51b9803899e6adc9e4"
+  },
+
+  "baseline_for_comparison": {
+    "colleague_continuation": "judge-external.mjs 默认目标，本次预注册时现跑：兑现 3　违反 0　未见 22　共 25",
+    "note": "GAP 清单里说的『9 条中接上 1 条』是另一个口径——只数后四十回未兑现且在续编判据范围内的那 9 条。两个口径都公布，不挑对自己有利的那个报"
+  }
+}

@@ -217,7 +217,9 @@ const excluded = kin.filter(x => x.r.excluded);
 const unverifiedDir = convNone.filter(x => !x.r.excluded);
 const usable = kin.length - excluded.length - unverifiedDir.length;
 
-const ok = hard.length === 0 && !mixed && !aliasProblem && unverifiedDir.length === 0;
+// usable>0 不是拍脑袋的阈值，是退化情形：把每一条都声明成「方向不可判」能让上面每一层都变绿，
+// 而底表是空的。一张空表不叫「可进判据底表」，叫没有判据。
+const ok = hard.length === 0 && !mixed && !aliasProblem && unverifiedDir.length === 0 && usable > 0;
 const result = {
   ok, source: FACTS, total: facts.length, kinship: kin.length,
   hard_failures: hard.length,

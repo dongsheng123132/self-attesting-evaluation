@@ -16,19 +16,29 @@
  *   2. 繁简映射表手工建，遗漏的表现是漏判而非错判——偏向低估续编。
  *   3. 本判分器是关键词级检索，判「文本里有没有」，不判写得好不好。
  *
- * 用法：node judge-external.mjs [--json]
+ * 用法：node judge-external.mjs [--file <路径>] [--label <名字>] [--json]
+ *   不带 --file 时判同事公开的续编（默认值不变，此前的结论仍可原样复跑）。
+ *
+ * 为什么要收 --file：W4-1 要拿我方续写与同事续编同台比。同台的前提是**同一个入口**——
+ * 本文件头一版就栽在这上面：漏实现主判分器的 also_requires，两个入口匹配语义不一致，
+ * 判决当场不可比。为我方文本另写一个入口会把那个错误再犯一遍，只是这次对自己有利。
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, isAbsolute } from 'node:path';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
-const asJson = process.argv.includes('--json');
+const argv = process.argv.slice(2);
+const asJson = argv.includes('--json');
+const argOf = k => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : null);
+const relFile = argOf('--file') || 'external/xubian-rewrite.md';
+const TARGET = isAbsolute(relFile) ? relFile : join(__dir, relFile);
+const LABEL = argOf('--label') || relFile;
 
 const spec = JSON.parse(readFileSync(join(__dir, 'judge-spec.json'), 'utf8'));
 const aliasTable = JSON.parse(readFileSync(join(__dir, 'aliases.json'), 'utf8'));
 const t2s = JSON.parse(readFileSync(join(__dir, 't2s-map.json'), 'utf8')).pairs;
-const raw = readFileSync(join(__dir, 'external/xubian-rewrite.md'), 'utf8');
+const raw = readFileSync(TARGET, 'utf8');
 
 const conv = s => [...String(s)].map(c => t2s[c] || c).join('');
 const norm = s => String(s).replace(/[\s　]/g, '');
@@ -112,11 +122,11 @@ const results = targets.map(p => {
   return { id: p.id, claim: p.claim, verdict, chapters: found.map(h => h.chapter), evidence: found.slice(0, 2), against };
 });
 
-if (asJson) { console.log(JSON.stringify({ chapters: chapters.map(c => c.n), results }, null, 2)); process.exit(0); }
+if (asJson) { console.log(JSON.stringify({ source: LABEL, chars: norm(raw).length, chapters: chapters.map(c => c.n), results }, null, 2)); process.exit(0); }
 
 const n = v => results.filter(r => r.verdict === v).length;
 console.log('═══ 外部续编判决 · 第 121–125 回 ═══\n');
-console.log(`来源  external/xubian-rewrite.md（${norm(raw).length} 字，简体）`);
+console.log(`来源  ${LABEL}（${norm(raw).length} 字）`);
 console.log(`繁简映射 ${Object.keys(t2s).length} 对，见 t2s-map.json\n`);
 for (const r of results) {
   const mark = { FULFILLED: '● 兑现  ', CONTRADICTED: '✖ 违反  ', BOTH: '⚠ 两者皆有', NOT_FOUND: '○ 未见  ' }[r.verdict];
