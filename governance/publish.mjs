@@ -32,7 +32,9 @@ const STRIP_GLOBS = [
 ];
 
 // push 前的硬闸门。扫到任何一条就拒绝——「推上去再删」对公开仓库不成立。
-const BLOCKERS = [
+// 这份清单必须与 PUBLICATION-POLICY.md 第二节逐条对应，由判据 A8.1 双向校验：
+// 政策里写了闸门没实现 = 空头承诺；闸门拦了政策没写 = 没人知道为什么被拦。
+export const BLOCKERS = [
   { id: 'session-transcript', test: f => /chatgpt|conversation-export/i.test(f), why: '会话导出' },
   { id: 'client-workspace', test: f => /book-project/i.test(f), why: '客户真实工作区' },
   { id: 'private-dir', test: f => f.startsWith('private/'), why: '私有目录' },
@@ -41,6 +43,16 @@ const BLOCKERS = [
 
 const sh = (args, cwd, quiet = true) =>
   execFileSync(args[0], args.slice(1), { cwd, encoding: 'utf8', stdio: quiet ? ['ignore', 'pipe', 'ignore'] : 'inherit' });
+
+// 被 import 时不许跑：判据要读 BLOCKERS 做政策对齐，一 import 就 clone+push 是灾难。
+const invokedDirectly = (() => {
+  const a1 = process.argv[1];
+  if (!a1) return false;
+  try { return import.meta.url === new URL(`file://${path.resolve(a1).replace(/\\/g, '/')}`).href; }
+  catch { return false; }
+})();
+if (!invokedDirectly) { /* 只导出 BLOCKERS，什么都不做 */ }
+else {
 
 const push = process.argv.includes('--push');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'publish-'));
@@ -101,4 +113,6 @@ try {
   process.exit(0);
 } finally {
   if (push) { try { fs.rmSync(tmp, { recursive: true, force: true }); } catch { /* ignore */ } }
+}
+
 }

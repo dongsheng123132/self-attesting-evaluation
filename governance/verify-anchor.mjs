@@ -14,6 +14,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { observe, compare } from '../benxiang/observe.mjs';
 import { buildManifest, manifestFrom, serialize, listAnchors, classifyAttestationError, INCLUDE_RULES, EXCLUDE_RULES } from './anchor.mjs';
+import { BLOCKERS } from './publish.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..');
@@ -261,6 +262,27 @@ t('A5.3', '归档链上每个 .json 都有配套 .ots（盖了章才算锚点）
   if (!anchors.length) return '归档链为空';
   const naked = anchors.filter(a => !observe(a.ots, REPO).properties.exists).map(a => a.id);
   return naked.length === 0 || '有快照没盖章：' + naked.join(', ');
+});
+
+// ── A8 政策与机制必须一一对应 ───────────────────────────────────────────────
+t('A8.1', '【反向】PUBLICATION-POLICY.md 的「永不公开」与发布闸门必须双向对齐', () => {
+  // 案例 15 的修复：一条规则有机制、有主体、没有边界，于是没人问过它适不适用于这里。
+  // 双向都要查——政策写了闸门没实现是空头承诺；闸门拦了政策没写，则被拦的人不知道为什么。
+  // 契约不解析散文：第一版从表格里用正则抠 id，抠出 3 个漏了 1 个，
+  // 于是「双向」有一边只查了 3/4 而看起来是全的。改读政策里的机器可读那一行。
+  const policy = fs.readFileSync(path.join(REPO, 'PUBLICATION-POLICY.md'), 'utf8');
+  const line = policy.match(/^never-public-blockers:\s*(.+)$/m);
+  if (!line) return '政策里找不到 never-public-blockers 行——判据无法比对，这本身就是失败';
+  const inPolicy = new Set(line[1].split(',').map(s => s.trim()).filter(Boolean));
+  const inGate = new Set(BLOCKERS.map(b => b.id));
+  const missing = [...inGate].filter(id => !inPolicy.has(id));       // 闸门有、政策没写
+  const unimplemented = [...inPolicy].filter(id => !inGate.has(id)); // 政策写了、闸门没有
+  return (missing.length === 0 && unimplemented.length === 0 && inPolicy.size > 0)
+    || `闸门有政策没写：${JSON.stringify(missing)}　政策写了闸门没实现：${JSON.stringify(unimplemented)}`;
+});
+t('A8.2', '【反向】发布模块被 import 时不得执行（否则一条判据就能触发 clone+push）', () => {
+  const src = fs.readFileSync(path.join(HERE, 'publish.mjs'), 'utf8');
+  return /invokedDirectly/.test(src) || 'publish.mjs 没有直接调用守卫，import 它就会开始发布';
 });
 
 // ── A6 继承本象铁律 ─────────────────────────────────────────────────────────
