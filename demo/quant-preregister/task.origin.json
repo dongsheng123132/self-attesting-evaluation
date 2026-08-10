@@ -1,0 +1,71 @@
+{
+  "kind": "task.origin",
+  "id": "quant-preregister",
+  "spec": "2origin/0.2",
+  "version": 1,
+  "updated_at": "2026-08-10T15:22:37.333Z",
+  "title": "回测挖掘对照：预注册能否挡住凭空造出来的 alpha",
+  "goal": "在真实 alpha 已知为零的合成数据上量出参数挖掘的溢价，并让『我没有事后调参』这句话可被陌生人独立核验。",
+  "current_state": "预注册与跑手已写成，尚未跑过任何一次回测。等待 anchor stamp 后开跑。",
+  "facts": [
+    {
+      "claim": "PREREGISTRATION.md 的 sha256 = b1b3851f1dc634f6cce21a83163c5acf5f7c6726c5bea8ec79cff0839931cd9f",
+      "verified": true,
+      "source": "node benxiang/observe.mjs demo/quant-preregister/PREREGISTRATION.md"
+    },
+    {
+      "claim": "prereg.json 的 sha256 = b54fd2825858deb9a334f5867b4b8240150a49f4a5d035e935e5f69efc4222cd",
+      "verified": true,
+      "source": "node benxiang/observe.mjs demo/quant-preregister/prereg.json"
+    },
+    {
+      "claim": "backtest.mjs 的 sha256 = 7dc8ac547f05f32564c9c52dd67583a1e7dbdf82f446642669aa09c7ffcd09dd",
+      "verified": true,
+      "source": "node benxiang/observe.mjs demo/quant-preregister/backtest.mjs"
+    },
+    {
+      "claim": "数据是零漂移几何布朗运动，真 alpha 严格为 0；任何显著为正的夏普都是可数的假阳性",
+      "verified": true,
+      "source": "demo/quant-preregister/prereg.json"
+    },
+    {
+      "claim": "跑手启动时自校验 prereg.json 哈希，与预注册承诺不符则退出码 3 拒跑",
+      "verified": true,
+      "source": "demo/quant-preregister/backtest.mjs"
+    }
+  ],
+  "decisions": [
+    {
+      "what": "数据用合成随机游走，不用真实行情",
+      "why": "真 alpha 必须已知，否则挖出来的 alpha 与真的 alpha 分不开，实验退化成又一份无法裁决的业绩报告。代价（不能说明真实市场假阳性率）写进 PREREGISTRATION.md 第七节。"
+    },
+    {
+      "what": "判定规则以机器可读形式写进 prereg.json，由跑手自动裁决",
+      "why": "结论不由跑完之后的文字叙事给出——那是事后归因的入口。"
+    },
+    {
+      "what": "三份预注册文件的哈希放进本学历，而不是改 anchor 的 INCLUDE_RULES",
+      "why": "anchor 在 demo/ 下只收录 task.origin.json。改治理机制是更大的动作，先用现有范围间接固定内容；是否把预注册文件升为一等锚定对象另议。"
+    }
+  ],
+  "next_steps": [
+    "STEP-1 提交预注册与跑手（结果尚不存在）",
+    "STEP-2 node governance/anchor.mjs stamp — 把预注册指纹交给比特币区块头",
+    "STEP-3 node demo/quant-preregister/backtest.mjs — 第一次也是唯一一次跑",
+    "STEP-4 写 RESULTS.md，如实照抄跑手的裁决，不加叙事",
+    "STEP-5 1~24h 后 node governance/anchor.mjs upgrade 把日历承诺升级为区块证明"
+  ],
+  "artifacts": [
+    "demo/quant-preregister/PREREGISTRATION.md",
+    "demo/quant-preregister/prereg.json",
+    "demo/quant-preregister/backtest.mjs"
+  ],
+  "content_hash": "5767b0a682ac4fbd46ca5fad7a78af4626ac14b25df13686a0b5cd9b9824d724",
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "dab721c6-5329-48ed-9915-6d87dc3aca62",
+    "at": "2026-08-10T15:22:37.332Z"
+  }
+}
