@@ -65,21 +65,22 @@ node xuetang/exam.mjs             # 跑一轮并按结果升降级（写回走�
 
 ### 协议回归（改完协议顺手跑）
 ```bash
-node benxiang/verify-benxiang.mjs        # 本象 v0.1，14 条判据
-node northbridge/verify-northbridge.mjs  # 北桥 v0.2，19 条判据（boot 确定性 / request 相关性 / 可达性不变量）
-node southbridge/verify-benjing.mjs      # 本境 v0.2，57 条判据（装载类判据已搬到北桥，B1.0 确认它们仍在跑；B11 残缺写入、B12 source 解引用）
-node southbridge/verify-southbridge.mjs  # 影核 v0.2，43 条判据（双驱动 parity + Trust 加固 + 差分幂等）
-node oob/verify-oob.mjs                  # 带外观察 v0.1，29 条判据（24 条是反向用例）
+node benxiang/verify-benxiang.mjs        # 本象 v0.1
+node northbridge/verify-northbridge.mjs  # 北桥 v0.2（boot 确定性 / request 相关性 / 可达性不变量）
+node southbridge/verify-benjing.mjs      # 本境 v0.2（装载类判据已搬到北桥，B1.0 确认它们仍在跑；B11 残缺写入、B12 source 解引用）
+node southbridge/verify-southbridge.mjs  # 影核 v0.2（双驱动 parity + Trust 加固 + 差分幂等 + T9 批准出处）
+node oob/verify-oob.mjs                  # 带外观察 v0.1（大部分是反向用例）
 node oob/crosscheck.mjs                  # 带外对账：学历声称 ↔ 影核审计、boot 自报 ↔ 磁盘实数（退出码 1 = 有分歧待解释）
-node southbridge/verify-todo.mjs         # 待办传播 v0.1，14 条判据（11 条反向）
-node xuetang/verify-xuetang.mjs          # 学堂 v0.1，26 条判据（17 条反向：作者自封 verified / 恒绿考题 / 空当全绿）
-node governance/verify-governance.mjs    # 治理边界 v0.1，14 条判据
-node governance/verify-anchor.mjs        # 证据锚定 v0.1，19 条判据（14 条反向：隐私泄漏 / 守卫空转 / 自证时间）
+node southbridge/verify-todo.mjs         # 待办传播 v0.1（大部分是反向用例）
+node xuetang/verify-xuetang.mjs          # 学堂 v0.1（反向用例：作者自封 verified / 恒绿考题 / 空当全绿）
+node governance/verify-governance.mjs    # 治理边界 v0.1
+node governance/verify-anchor.mjs        # 证据锚定 v0.1（反向用例：隐私泄漏 / 守卫空转 / 自证时间）
 node southbridge/benjing-todo.mjs list --dupes   # 查跨学历重复待办（退出码 2 = 有重复）
 node southbridge/verify-state.mjs demo/taskN/task.origin.json   # 单份学历
 ```
-> ⚠ 上面这些注释里的判据条数是写下那天的快照，已经落后于实际（多个会话在加判据）。
-> 要真数就跑一遍看 `判决：N/N`，**别引用本文件里的数字** —— 硬编码计数正是论文案例 9 的病。
+> ⚠ **这里不写判据条数**。多个会话在并发加判据，任何写进本文件的数字第二天就是假的
+> （2026-08-10 实测：影核注释写 43，实跑 53）。**要真数就跑一遍看 `判决 N/N`。**
+> 每个套件都自报实际计数，不硬编码 —— 硬编码计数正是论文案例 9 的病。
 
 ### 证据锚定：唯一不由我们自己签发的时间（governance/anchor/0.1）
 本机 git **没有 remote，commit date 可以任意伪造**，所以仓库里的任何时间主张都不可外部核验。

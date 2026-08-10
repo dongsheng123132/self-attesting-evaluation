@@ -354,8 +354,11 @@ async function main() {
     console.log(`\n❌ 失败 ${report.fail.length} 项:`);
     report.fail.forEach(x => console.log(`   • ${x}`));
   }
+  // 条数从实际计数出来，不写死：硬编码的判据数会随加判据而过期，
+  // 于是「跑一遍看判决 N/N」这个动作就没了着落（CLAUDE.md 那条警告的由来）。
+  const total = report.pass.length + report.fail.length;
   const verdict = report.fail.length === 0 ? '✅ VERIFIED（每条判据取自磁盘真相）' : '❌ NOT VERIFIED';
-  console.log(`\n判决: ${verdict}\n`);
+  console.log(`\n判决: ${verdict} ${report.pass.length}/${total}\n`);
 
   fs.rmSync(SANDBOX, { recursive: true, force: true });
   process.exit(report.fail.length === 0 ? 0 : 1);
