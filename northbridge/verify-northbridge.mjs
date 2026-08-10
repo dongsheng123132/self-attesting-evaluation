@@ -257,6 +257,63 @@ t('N5.11', '作用域内确有坏学历时 boot 体检必须报警，不能因�
   /demo\/a-bad\/task\.origin\.json/.test(scopedBoot.text) && /指纹不符/.test(scopedBoot.text)
     || scopedBoot.text);
 
+// ───────── N6 投影清单：投影必须披露自己丢了什么（projection manifest）─────────
+//
+// 这一组锁的是 v0.2 之前的一个静默洞：request 把候选按 max / budget 砍掉，正文只写
+// 「调入 8 条（候选 40 条）」——读的人会以为其余 32 条不够相关，而第 9 条可能只低 0.01 分。
+// 「因为不相关而没选」和「因为装不下而没选」必须分开说，否则投影就是在谎报。
+const omitted = compileRequest(SB, TOPICS.join(' '),
+  { already: new Set(), minScore: 0, max: 3, budget: 100000, activeRel: ACTIVE_REL });
+
+t('N6.1', '确有达标条目因容量落选时，正文必须出声（不许静默丢弃）', () => {
+  const om = omitted.manifest.facts.dropped.filter(d => d.reason === 'max' || d.reason === 'budget');
+  if (!om.length) return '判据前提不成立：这一档没有因容量落选的条目';
+  return /⚠ 另有 \d+ 条达标事实未装载/.test(omitted.text)
+    || `丢了 ${om.length} 条，正文只字未提：${omitted.text.slice(-160)}`;
+});
+t('N6.2', '【反向】没丢东西时不许假装丢过（防「永远打印一句披露」的恒绿写法）', () => {
+  const full = compileRequest(SB, '幂等账本 在实测中暴露出来的行为',
+    { already: new Set(), max: 500, budget: 100000, activeRel: ACTIVE_REL });
+  if (full.manifest.facts.dropped.length) return '判据前提不成立：这一档仍有落选项';
+  return !/另有 \d+ 条达标/.test(full.text) || `没丢东西却在正文里宣称丢了：${full.text.slice(-160)}`;
+});
+t('N6.3', '正文披露的条数与清单一致（正文与清单必须同源，不许各说各话）', () => {
+  const m = omitted.text.match(/⚠ 另有 (\d+) 条达标事实未装载/);
+  if (!m) return '正文没有披露句，N6.1 应已先红';
+  const real = omitted.manifest.facts.dropped.filter(d => d.reason === 'max' || d.reason === 'budget').length;
+  return Number(m[1]) === real || `正文说丢 ${m[1]} 条，清单记 ${real} 条`;
+});
+t('N6.4', '每条落选都带 recoverable_from，且那个文件在磁盘上真的存在（「去哪捞」不许是编的）', () => {
+  const bad = omitted.manifest.facts.dropped.filter(d =>
+    !d.recoverable_from || !fs.existsSync(path.join(SB, d.recoverable_from)));
+  return bad.length === 0 || `${bad.length} 条的 recoverable_from 缺失或指向不存在的文件`;
+});
+t('N6.5', '【反向】分数不到线不算遗漏——无关目标既不注入也不披露', () => {
+  const r = compileRequest(SB, '帮我订一份披萨外卖谢谢', { already: new Set(), activeRel: ACTIVE_REL });
+  if (!r.manifest.skipped.below_threshold) return '判据前提不成立：这一档没有被阈值挡掉的候选';
+  return (r.text === '' && r.manifest.facts.dropped.length === 0)
+    || `把「不相关」当成「遗漏」披露了：${r.text.slice(0, 120)}`;
+});
+t('N6.6', '披露必须给出分数对比，否则读的人无法判断落选是容量还是相关性', () =>
+  (/未装载中最高分 [\d.]+/.test(omitted.text) && /已装载中最低分 [\d.]+/.test(omitted.text))
+  || `披露句缺分数对比：${omitted.text.slice(-160)}`);
+t('N6.7', '【反向】治理隔离的学历连路径都不许进清单（只出计数不出名字）', () => {
+  const r = compileRequest(ISO, CROSS, { activeRel: 'active-a', minScore: 0, max: 500 });
+  const dump = JSON.stringify(r.manifest);
+  return (!/demo\/b\/|demo\/legacy\/|client-b|legacy/.test(dump) && r.manifest.hidden_states > 0)
+    || `清单泄露了受隔离学历：${dump.slice(0, 200)}`;
+});
+t('N6.8', '守恒律：达标候选 = 装载 + 落选，一条都不许凭空消失', () => {
+  for (const max of [1, 3, 7, 500]) {
+    const r = compileRequest(SB, TOPICS.join(' '),
+      { already: new Set(), minScore: 0, max, budget: 100000, activeRel: ACTIVE_REL });
+    const { considered, included, dropped } = r.manifest.facts;
+    if (included + dropped.length !== considered)
+      return `max=${max}：候选 ${considered}，装载 ${included} + 落选 ${dropped.length} = ${included + dropped.length}`;
+  }
+  return true;
+});
+
 // ───────────────────────── 报告 ─────────────────────────
 const pass = results.filter(r => r.ok).length;
 console.log(`\n═══ 本源北桥 v0.2 一致性验证（${SPEC}）═══\n`);

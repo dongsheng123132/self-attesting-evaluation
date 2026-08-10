@@ -254,40 +254,97 @@ export function compileBoot(root, budget = 6000, options = {}) {
  * 只调入「与 goal 相关」且「本会话尚未注入过」的事实。没有相关的就什么都不注入——
  * 每轮硬塞是另一种浪费，且会把真正的信号淹掉。
  */
+/**
+ * 「落选」有六种，只有两种算**遗漏**。分不清这两类，披露就会变成噪音或谎话：
+ *
+ *   threshold  分数没到线    —— 这是**判断**，不是遗漏。披露它等于每轮把整块磁盘念一遍，
+ *                              而且会让 N2.2「无关目标一条都不注入」当场失效。
+ *   already    本会话已注入  —— 它就在上下文里，没丢。
+ *   in_boot    boot 已全量给 —— 同上。
+ *   scope      治理隔离      —— 是遗漏，但**只许出计数不许出路径**：列名字本身就是泄露。
+ *   budget     达标但装不下  —— **真遗漏，必须披露。**
+ *   max        达标但超条数  —— **真遗漏，必须披露。**
+ *
+ * 关键在最后两种：它们落选的原因是**容量，不是相关性**。正文若只写「调入 8 条（候选 40 条）」，
+ * 读的人会以为其余 32 条不够相关——而第 9 条可能只比第 8 条低 0.01 分。这就是「投影谎报」。
+ * 所以披露必须带上「未装载中最高分」与「已装载中最低分」，让读的人自己看出差距。
+ */
+const OMISSION_REASONS = new Set(['budget', 'max']);
+
+/** 披露句是固定开销，先从预算里扣——跟 boot 里「目录与指令不可降级」是同一条原则。
+ *  否则一超预算就先把披露挤掉，剩下「静默丢弃」本身。 */
+const DISCLOSURE_RESERVE = 190;
+
+/** 把一批落选项压成一句人话。没有真遗漏就返回空串（不许假装丢过东西）。 */
+function discloseOmissions(dropped, kept, what) {
+  const omitted = dropped.filter(d => OMISSION_REASONS.has(d.reason));
+  if (!omitted.length) return '';
+  const byReason = {};
+  for (const d of omitted) byReason[d.reason] = (byReason[d.reason] || 0) + 1;
+  const label = { budget: '预算装不下', max: '超条数上限' };
+  const breakdown = Object.entries(byReason).map(([r, n]) => `${label[r] || r}×${n}`).join('、');
+  const topDropped = Math.max(...omitted.map(d => d.score));
+  const lowKept = kept.length ? Math.min(...kept.map(p => p.score)) : null;
+  const where = [...new Set(omitted.map(d => d.recoverable_from))].filter(Boolean);
+  const wheres = where.length <= 3 ? where.join('、') : where.slice(0, 3).join('、') + ` 等 ${where.length} 份`;
+  return `⚠ 另有 ${omitted.length} 条达标${what}未装载（${breakdown}）：未装载中最高分 ${topDropped.toFixed(2)}`
+    + (lowKept === null ? '' : `，已装载中最低分 ${lowKept.toFixed(2)}`)
+    + `。落选原因是容量不是相关性；原文在 ${wheres}，需要时直接读该文件，或把目标说得更具体再问一次。`;
+}
+
 export function compileRequest(root, goal, {
   budget = 2200, already = new Set(), minScore = 0.35, max = 8,
   learningBudget = 900, maxLearnings = 4, activeRel = '', allowAutoSelect = false,
 } = {}) {
+  const emptyManifest = (over = {}) => ({
+    spec: SPEC, facts: { considered: 0, included: 0, dropped: [] },
+    learnings: { considered: 0, included: 0, dropped: [] },
+    skipped: { already: 0, in_boot: 0, below_threshold: 0 }, hidden_states: 0, ...over
+  });
   const disk = loadAll(root);
-  if (!disk.length) return { text: '', picked: [], considered: 0, hiddenStates: 0 };
+  if (!disk.length) return { text: '', picked: [], considered: 0, hiddenStates: 0, manifest: emptyManifest() };
   const selected = selectActive(disk, activeRel, allowAutoSelect);
   if (!selected.active) {
     return { text: '', picked: [], learnings: [], considered: 0, learningsConsidered: 0,
-      hiddenStates: disk.length, reason: selected.reason };
+      hiddenStates: disk.length, reason: selected.reason,
+      manifest: emptyManifest({ hidden_states: disk.length }) };
   }
   const all = scopedStates(disk, selected.active);
   const hiddenStates = disk.length - all.length;
 
   const activePath = selected.active.rel;
+  const skipped = { already: 0, in_boot: 0, below_threshold: 0 };
   const cand = [];
   for (const x of all) {
     for (const f of (x.s.facts || []).filter(f => f.verified)) {
       const id = factId(f.claim);
-      if (already.has(id)) continue;
+      if (already.has(id)) { skipped.already++; continue; }
       // active 任务的事实已在 boot 全量给过，这里不重复
-      if (x.rel === activePath) continue;
+      if (x.rel === activePath) { skipped.in_boot++; continue; }
       const score = relevance(goal, f.claim + ' ' + (f.source || ''));
       if (score >= minScore) cand.push({ id, score, from: x.rel, f });
+      else skipped.below_threshold++;
     }
   }
   cand.sort((a, b) => b.score - a.score);
 
+  // 有候选时先扣下披露句的位置：宁可少装一条事实，也不能把「我丢了东西」这句话挤掉。
+  const factRoom = cand.length ? Math.max(0, budget - DISCLOSURE_RESERVE) : budget;
   const picked = [];
+  const factsDropped = [];
   let used = 0;
-  for (const c of cand) {
-    if (picked.length >= max) break;
+  for (let i = 0; i < cand.length; i++) {
+    const c = cand[i];
     const line = `- [${c.from}] ${c.f.claim}${c.f.source ? `（${c.f.source}）` : ''}`;
-    if (used + line.length > budget) break;
+    const reason = picked.length >= max ? 'max'
+      : used + line.length > factRoom ? 'budget' : null;
+    if (reason) {
+      // 既有语义是 break（排序已降序，后面的分只会更低），所以余下全部按同一原因记账。
+      for (const rest of cand.slice(i)) factsDropped.push({
+        kind: 'fact', reason, id: rest.id, score: +rest.score.toFixed(3), recoverable_from: rest.from
+      });
+      break;
+    }
     used += line.length; picked.push({ ...c, line });
   }
 
@@ -309,18 +366,43 @@ export function compileRequest(root, goal, {
     }
   }
   lcand.sort((a, b) => b.score - a.score);
+  const lRoom = lcand.length ? Math.max(0, learningBudget - DISCLOSURE_RESERVE) : learningBudget;
   const lpicked = [];
+  const learningsDropped = [];
   let lused = 0;
-  for (const c of lcand) {
-    if (lpicked.length >= maxLearnings) break;
+  for (let i = 0; i < lcand.length; i++) {
+    const c = lcand[i];
     const line = `- ${c.l.lesson}（经验·已通过考试：${c.l.recheck?.run || ''}）`;
-    if (lused + line.length > learningBudget) break;
+    const reason = lpicked.length >= maxLearnings ? 'max'
+      : lused + line.length > lRoom ? 'budget' : null;
+    if (reason) {
+      for (const rest of lcand.slice(i)) learningsDropped.push({
+        kind: 'learning', reason, id: rest.id, score: +rest.score.toFixed(3), recoverable_from: rest.from
+      });
+      break;
+    }
     lused += line.length; lpicked.push({ ...c, line });
   }
 
-  if (!picked.length && !lpicked.length)
+  // 投影清单：这次投影包含了什么、丢了什么、为什么丢、去哪捞。
+  // 它是**机器可读**的那一份——正文给模型看，清单给判据看。两者必须同源，否则又是「统计者谎报」。
+  // hidden_states 只出计数：受治理隔离的学历，连路径都不许出现在清单里。
+  const manifest = {
+    spec: SPEC, active: activePath,
+    thresholds: { minScore, max, budget, maxLearnings, learningBudget },
+    facts: { considered: cand.length, included: picked.length, dropped: factsDropped },
+    learnings: { considered: lcand.length, included: lpicked.length, dropped: learningsDropped },
+    skipped, hidden_states: hiddenStates,
+  };
+
+  const factNote = discloseOmissions(factsDropped, picked, '事实');
+  const learnNote = discloseOmissions(learningsDropped, lpicked, '经验');
+
+  // 什么都没装、也确实什么都没丢 → 一个字都不注入（N2.2）。
+  // 但「没装上任何东西」和「装不下所以没装」是两回事：后者必须出声，否则就是静默丢弃。
+  if (!picked.length && !lpicked.length && !factNote && !learnNote)
     return { text: '', picked: [], learnings: [], considered: cand.length,
-      learningsConsidered: lcand.length, hiddenStates, activeRel: activePath };
+      learningsConsidered: lcand.length, hiddenStates, activeRel: activePath, manifest };
 
   const parts = [`[北桥 context.request · ${SPEC}｜已按治理作用域过滤]`];
   if (picked.length) {
@@ -328,11 +410,13 @@ export function compileRequest(root, goal, {
     parts.push(...picked.map(p => p.line));
     parts.push(`—— 这些只来自当前任务获准访问的作用域；其他租户/项目即使更相关也不会进入候选。`);
   }
+  if (factNote) parts.push(factNote);
   if (lpicked.length) {
     parts.push(`按本轮目标调入 ${lpicked.length} 条**已通过长循环考试**的经验（候选 ${lcand.length} 条）：`);
     parts.push(...lpicked.map(p => p.line));
     parts.push(`—— 经验只在 recheck 最近一次跑通时才是 verified；跑挂会当场降级（node xuetang/exam.mjs）。`);
   }
+  if (learnNote) parts.push(learnNote);
   return { text: parts.join('\n'), picked, learnings: lpicked, considered: cand.length,
-    learningsConsidered: lcand.length, hiddenStates, activeRel: activePath };
+    learningsConsidered: lcand.length, hiddenStates, activeRel: activePath, manifest };
 }
