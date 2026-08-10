@@ -20,38 +20,40 @@
       "claim": "STEP-A 与 STEP-B 已由前两棒完成并登记产物",
       "verified": true,
       "source": "demo/control-m0/leg-b-note.md"
+    },
+    {
+      "claim": "demo/control-m0/leg-b-note.md 是STEP-B 产物",
+      "verified": true,
+      "source": "demo/control-m0/leg-b-note.md"
     }
   ],
   "decisions": [
     {
-      "decision": "窗口不使用文件全长，避免统计量可由「数当前文件」获得",
-      "rationale": "案例 18：判别性的活不能从被测通道之外拿到"
+      "what": "窗口不使用文件全长，避免统计量可由「数当前文件」获得",
+      "why": "案例 18：判别性的活不能从被测通道之外拿到"
+    },
+    {
+      "what": "把 next_steps/artifacts/decisions 转成 schema 要求的形式，artifacts 的 note 转成一条 fact",
+      "why": "RFC-0010 的 schema 闸门上线后，本份是 18 份学历里唯一被锁死的一份（B13.5 报 9 处），任何会话都写不了它。18 份里 17 份本来就是 string[]，所以是本份跑偏而非 schema 定错。note 不编进 artifacts 字符串——那会被 dereferenceSource 当路径解引用。"
     }
   ],
   "next_steps": [
-    {
-      "id": "STEP-A",
-      "status": "done"
-    },
-    {
-      "id": "STEP-B",
-      "status": "done"
-    },
-    {
-      "id": "STEP-C",
-      "status": "pending",
-      "step": "在上述窗口内统计 \"actor\":\"southbridge_cli\" 的行数，并回执校验串"
-    },
-    {
-      "id": "STEP-D",
-      "status": "pending",
-      "step": "复核 STEP-C 的数字"
-    }
+    "STEP-A — done",
+    "STEP-B — done",
+    "STEP-C 在上述窗口内统计 \"actor\":\"southbridge_cli\" 的行数，并回执校验串 — pending",
+    "STEP-D 复核 STEP-C 的数字 — pending"
   ],
   "artifacts": [
-    {
-      "path": "demo/control-m0/leg-b-note.md",
-      "note": "STEP-B 产物"
-    }
-  ]
+    "demo/control-m0/leg-b-note.md"
+  ],
+  "version": 1,
+  "updated_at": "2026-08-10T18:41:12.143Z",
+  "content_hash": "3640c25b67c735e6cc19be5dc210bc3b24ca8f1636df3b548e903ea2520d426c",
+  "actor": {
+    "harness": "claude-code",
+    "model": "claude-opus-5",
+    "model_source": "transcript",
+    "session_id": "dab721c6-5329-48ed-9915-6d87dc3aca62",
+    "at": "2026-08-10T18:41:12.142Z"
+  }
 }
