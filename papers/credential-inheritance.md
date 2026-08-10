@@ -5,11 +5,12 @@ Companion to `self-attesting-evaluation-v0.2.md`, which is that paper's negative
 this is the positive one. **Do not merge them** — this paper's claim is narrow and its evidence
 is a single relay experiment; that paper's value does not depend on this one being right.
 
-> **中文导读**：A 篇是「我们的评估装置骗了我们十九次」，这篇是「我们做成了一件事」。
+> **中文导读**：A 篇是「我们的评估装置骗了我们十八次」，这篇是「我们做成了一件事」。
 > 主张只有一句：**模型是可替换的 CPU，学历在磁盘上，不在上下文里。**
-> 值钱的不是结论本身，是**怎么让这个结论可以被证伪**——
-> 让后一棒去复算前一棒的数字，而那个数字锚在只追加日志上，任何第三方能自己切片重算。
-> 本文今天重跑了那次复算：日志从 2885 行长到 9151 行，两天前的历史切片仍分毫不差。
+> 值钱的不是结论本身，是**怎么让这个结论可以被证伪**——而本文的第一版在这件事上栽了：
+> §4.1 撤回了「这个指标骗不了」的论证（切片点其实是当时的文件长度，数一下就有，那是 A 篇案例 18）。
+> §8.1 是补跑的三臂对照，判别量按「不得能从被测通道之外获得」重选：**有学历 100%，没有 0%**，
+> 而且对照抓到一处我们自己造的泄漏。它买到的东西按跑之前写死的尺寸讲——修好了仪器，没证明命题。
 
 ---
 
@@ -30,10 +31,12 @@ two days later with the log three times longer.
 **We also report, in §4.1, a claim from this paper's own first draft that we withdrew within the
 hour.** We had argued the instrument could not be satisfied without inheriting the task document;
 checking the runners' artifacts showed the slice offsets were simply the log's length at four
-moments in time, available to any process that can count lines. The experiment that would settle
-the question — running the same relay with the document removed — **is not run**, and this paper
-should be read as an existence proof of the relay plus an honest account of what its evidence
-does not reach.
+moments in time, available to any process that can count lines. The experiment that settles the
+question — a pre-registered three-arm control with quantities chosen so that nothing outside the
+channel under test can supply them — was then run and is reported in §8.1: **100% with the
+document, 0% without, across three models**. It also caught an environmental leak we had built
+ourselves. What that control buys is stated at the size we fixed *before* seeing the numbers: it
+repairs the instrument, and it does not establish that structured state beats transcripts.
 
 ---
 

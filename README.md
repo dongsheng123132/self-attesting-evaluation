@@ -19,9 +19,11 @@
   file, with no inheritance at all. That claim is struck through in place (§4.1) and is case 18 of
   the first paper.
 
-The second paper is therefore an existence proof plus an honest account of its own gap: the control
-that would settle the question — the same relay with the document removed — **is not run**, and it
-says so in its abstract rather than waiting for a reviewer to find it.
+The control that settles it was then pre-registered, sealed with a Bitcoin anchor **before any
+generation**, and run: **100% with the document, 0% without, across three models** on quantities
+chosen so nothing outside the tested channel can supply them. It also caught an environmental leak
+we had built ourselves — the first leak in this project found by a control designed in advance
+rather than discovered by accident afterwards.
 
 ---
 
