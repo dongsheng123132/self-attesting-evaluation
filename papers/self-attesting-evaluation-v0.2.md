@@ -1,10 +1,10 @@
-# Self-Attesting Evaluation: Fifteen Ways Our Own Agent-Memory System Lied to Us
+# Self-Attesting Evaluation: Seventeen Ways Our Own Agent-Memory System Lied to Us
 
 **Draft v0.2 — 2026-08-10.** Target: NeurIPS/ICLR workshop (agents & memory, or evaluation methods).
 Supersedes v0.1 (2026-08-09), which was a skeleton. This version is prose.
 Judgment counts in §4 are from a live run on 2026-08-10 and must be re-pulled at submission.
 
-> **中文导读**：卖点不是「我们做了个好系统」，是「我们的系统骗了我们十五次，每一次的证据、修法和撤回记录都在盘上」。
+> **中文导读**：卖点不是「我们做了个好系统」，是「我们的系统骗了我们十七次，每一次的证据、修法和撤回记录都在盘上」。
 > 主动撤回自己结论的论文，可信度是买不到的。v0.1 的骨架已按 workshop 长度写成散文；
 > §6 是新增的：论文 §8 自陈「证据由被记录者自己产生」这条弱点，本轮用外部时间锚做了部分修复——
 > 而那个修复本身是从论文自己的规则推出来的。
@@ -14,12 +14,12 @@ Judgment counts in §4 are from a live run on 2026-08-10 and must be re-pulled a
 ## Abstract
 
 Building an agent-memory system means building two things: the system, and the apparatus that
-says whether the system works. We built both, and the second one failed fifteen times in ways
+says whether the system works. We built both, and the second one failed seventeen times in ways
 the first one could not detect — because in every case *the component that would have to report
 the failure was the same component that failed*. We report each failure with a reproducible
 trigger, the fix that shipped, and — for three of them — a public retraction of a conclusion we
-had already published. We then collapse the fifteen anecdotes into eight failure classes, each
-of which is now a family of machine-checked conformance judgments (273 across nine
+had already published. We then collapse the seventeen anecdotes into eight failure classes, each
+of which is now a family of machine-checked conformance judgments (285 across nine
 specifications at the time of writing). Our central claim is structural rather than
 anecdotal: **an evaluation that does not publish its own discard count and its own floor is not
 a weak evaluation; it is an evaluation whose failure mode is indistinguishable from success.**
@@ -38,17 +38,19 @@ plot, and a conclusion — all of which look exactly like a working benchmark.
 This paper is a case study of the second kind, conducted on ourselves. Over roughly two weeks
 we built an agent-memory system — persistent task state that survives across sessions, harnesses
 and models — together with the benchmark and conformance apparatus that was supposed to tell us
-whether it worked. Fifteen times, the apparatus lied. Not through carelessness that a code
+whether it worked. Seventeen times, the apparatus lied. Not through carelessness that a code
 review would catch, but through a specific structural asymmetry: **the component that was in a
 position to observe a failure was the same component that had failed, and nothing required it to
 speak.**
 
 The count is itself data. It was eleven when the first draft was started and fourteen by the end
 of that same day; three of those (cases 12–14) were found *while writing the paper about the
-first eleven*, one of them inside the fix for case 8. A fifteenth was found the next day, while
-preparing the artifact for public release. We report the drift rather than quietly renumbering,
-because the rate at which a taxonomy keeps finding new instances of itself is evidence about the
-taxonomy.
+first eleven*, one of them inside the fix for case 8. Three more (15–17) were found the next day,
+in the two hours spent preparing the artifact for public release — and case 16 is a defect in the
+component built to remedy this paper's own stated threat to validity. We report the drift rather
+than quietly renumbering, because the rate at which a taxonomy keeps finding new instances of
+itself is evidence about the taxonomy. A reader should assume the true count is higher than
+seventeen and that we stopped looking, not that we ran out.
 
 We do not present this as a list of bugs. Bugs are uninteresting. We present three claims:
 
@@ -75,7 +77,7 @@ item that carried it, and left the retraction in the repository (§3.1, case 1).
 layer — with the same shape. That rules out "we were sloppy in one file" and argues for a
 structural cause.
 
-**The remedy is executable, not advisory.** It is 273 machine-checked conformance judgments
+**The remedy is executable, not advisory.** It is 285 machine-checked conformance judgments
 across nine specifications, and each one is traceable to the failure that motivated it.
 
 ---
@@ -105,7 +107,7 @@ cheapest and least noticed.
 
 ---
 
-## 3. Fifteen failures
+## 3. Seventeen failures
 
 ### 3.1 Benchmark harness
 
@@ -152,7 +154,10 @@ specification was missing, and the specification was the thing nobody was checki
 | 14 | **A policy was stated in the same commit that violated it, and its enforcement mechanism was inert.** A corpus policy declared that session transcripts must not enter the public repository; two artifacts derived from those transcripts were committed anyway. Separately, `.gitignore` was a single line containing the literal characters `\n` — so it had never ignored anything since the repository was created. The audit log stayed out by luck, not by the guard. | commit `0015ba1`; `od -c .gitignore` showing `\` and `n` as two characters | Derived artifacts untracked and ignored; `.gitignore` rewritten as real lines. History deliberately **not** rewritten — the content carries no personal data, and rewriting public history to hide a disclosed mistake is the opposite of this paper's thesis |
 | 15 | **A policy whose scope was never written down.** The repository states that outbound evidence must go through a redacting export path, and that path is real: it strips local paths, emails, IPs and tokens, and is locked by 14 judgments. But it governs *state documents*, and nothing governs *the repository itself*. Running the same redactor over every tracked file returns 2,610 absolute local paths and a personal email address. We cannot tell from the artifact whether the repository was ever intended to be in scope — **and that is the finding**: the policy has an enforcement mechanism and a stated subject, but no stated boundary, so the question of whether it applied here was never asked by anyone. | `governance/policy.mjs` `redactOperationalText` run over `git ls-files`, 2026-08-10: 2,610 `local-path`, 6 `email` (4 real, 2 test fixtures), 1 `ip`, 1 `token` — the last three all inside the redactor's own test fixtures | **Not "fixed."** The four real email occurrences are a deliberate contact address for a public bounty page, and the local paths sit in append-only ledgers and in versioned state backups that are themselves this paper's evidence. Scrubbing them would rewrite the record this paper rests on. Recorded as a scope decision, not a defect to be patched |
 
-Case 15 is the weakest of the fifteen and we include it deliberately. The other fourteen are
+| 16 | **The anchor attested to bytes nobody outside could obtain.** The evidence-anchoring component of §6 observes the *working tree*; what a reader receives is the *committed tree*. Concurrent sessions keep the working tree permanently dirty, so a manifest stamped from it cannot be reproduced by anyone who clones. Worse, the verifier printed the mismatch as `已变 12（只追加账本会变，正常）` — "12 changed (append-only ledgers grow, normal)". **The instrument explained its own unreproducibility as expected behaviour.** | First clone of the repository to a second location, immediately before first publication: of 129 anchored entries, 12 differed and 5 did not exist at all | Every entry now carries `repro` ∈ {`git`, `uncommitted`, `untracked`, `unknown`}, and each snapshot carries `git_head` plus `reproducible_from_git`. Following class E the remedy **declares rather than refuses**: the current anchor states 121/133. `unknown` is used when the root is not a git repository — not knowing is reported as not knowing, locked by a negative case (A7.1). The verifier now reads the count the snapshot recorded instead of inferring it, because inference is what produced "normal" |
+| 17 | **A session transcript sat in every commit, under a policy whose first line forbids exactly that.** The repository's `.gitignore` opens with *"chat transcripts are shadows, not state — by this repository's iron rule they do not enter version control"*. The baseline commit that placed the machine under version control also added an 84 KB exported ChatGPT conversation, including its private share URL. It was present in all 21 commits, and would have been published. **Third recurrence of the class-14 shape** — a rule with a mechanism, stated in the file that the violating artifact sits next to. | Pre-publication inspection of every tracked file over ~50 KB; `git log --follow` shows it entering at the baseline commit and never leaving | Stripped from all history before first push (legitimate here precisely because nothing had been published yet), ignore rule added. The manual removal is six steps and omitting any one of them — especially purging `refs/original` — leaves the blob reachable while *appearing* removed, so the procedure is now one command with a gate that scans **all reachable objects**, not the working tree, and refuses to push on a hit |
+
+Case 15 is the weakest of the seventeen and we include it deliberately. The other sixteen are
 defects: something was supposed to happen and did not. Case 15 is an *absence of a decision* —
 a rule with a mechanism, a subject, and no boundary. It resolves either way (the repository is
 in scope and needs a gate; or it is out of scope and that should be written down), and until
@@ -161,21 +166,21 @@ indistinguishability is the same property the other fourteen have, which is why 
 
 ---
 
-## 4. Taxonomy: from fifteen anecdotes to eight judgment families
+## 4. Taxonomy: from seventeen anecdotes to eight judgment families
 
-The fifteen collapse into eight failure classes. Each class is now a machine-checked judgment
+The seventeen collapse into eight failure classes. Each class is now a machine-checked judgment
 family, and this table is the paper's contribution.
 
 | Class | Cases | Judgment that would have caught it |
 |---|---|---|
 | **A. The check tests the form of the evidence, not the evidence** | 8, 10 | A verification must dereference what it cites, and must compare *before* against *after*, not merely validate the request |
-| **B. The measurement's own failure is scored as the subject's failure** | 1, 5 | A test whose success criterion cannot be made false by any behaviour of the subject is void. Instrument failures (truncation, transport, empty payload) must be a third outcome, never "wrong" |
+| **B. The measurement's own failure is scored as the subject's failure** | 1, 5, 16 | A test whose success criterion cannot be made false by any behaviour of the subject is void. Instrument failures (truncation, transport, empty payload, unreproducibility) must be a third outcome — never "wrong", and never "normal" |
 | **C. Nobody measured what happens when there is nothing to find** | 2, 7, 14 | Every metric ships with an empty-context arm; every guard ships with a negative case that fails if the guard does not fire. A floor above chance condemns the metric, not the arm — and a guard that has never fired is indistinguishable from a guard that is inert, which `.gitignore` had been since the repository was created |
 | **D. The control was weakened by the experimenter's own plumbing** | 3, 4 | Control-arm payloads are asserted against the treatment's budget before any score is computed |
-| **E. Loss is real but never declared** | 6, 9, 11 | Any component that drops, trims, retries or skips must emit the count. Silence is read as full coverage — which is a lie with no author |
+| **E. Loss is real but never declared** | 6, 9, 11, 16 | Any component that drops, trims, retries or skips must emit the count. Silence is read as full coverage — which is a lie with no author |
 | **F. The remedy fires on everything, so it measures nothing** | the first cut of the fix for 8; the first run of the cross-checker (11) | A new checker ships with negative cases that fail if it flags legitimate inputs, and its own first-run false-positive rate is part of its report |
 | **G. A reference outlives its referent** | 8's trigger, 13 | Renaming and contract changes are first-class propagating operations, not edits. The cheap approximation, until that exists, is that every reference is dereferenced by something that runs |
-| **H. The rule was written down and applied to a subset of its sites** | 12, 15, and the context bundle that budgeted everything except itself | When a rule is stated, the same change enumerates every site it applies to — and states the boundary of the set. A defect that recurs N times is not N instances of carelessness; it is one missing component, and the recurrence count measures how long we have been paying for it |
+| **H. The rule was written down and applied to a subset of its sites** | 12, 15, 17, and the context bundle that budgeted everything except itself | When a rule is stated, the same change enumerates every site it applies to — and states the boundary of the set. A defect that recurs N times is not N instances of carelessness; it is one missing component, and the recurrence count measures how long we have been paying for it |
 
 **Class F deserves emphasis because we produced it twice, and the second time was while
 preparing this version.** The dereference check added for case 8 flagged 32 of 149 verified facts
@@ -193,11 +198,11 @@ drawn from the declared rule set and the values must be integers. **We had writt
 in a file we had open, and produced it again three paragraphs later.** We consider this the
 single most useful datum in the paper, and we discuss it in §8.
 
-At the time of writing we run **273 such judgments across nine specifications**: state 67, action
-53, context 30, out-of-band 29, lesson-promotion 33, evidence-anchoring 19, world-observation 14,
+At the time of writing we run **285 such judgments across nine specifications**: state 67, action
+53, context 38, lesson-promotion 33, out-of-band 29, evidence-anchoring 23, world-observation 14,
 todo-propagation 14, governance 14. Where a suite reports its own breakdown, negative cases are
-the majority (out-of-band 24/29, todo-propagation 11/14, lesson-promotion 23/33,
-evidence-anchoring 14/19). **Each was written after a failure, not before.** We consider that
+the majority (out-of-band 24/29, lesson-promotion 23/33, evidence-anchoring 17/23,
+todo-propagation 11/14). **Each was written after a failure, not before.** We consider that
 provenance the interesting data rather than an embarrassment: it records which invariants are
 discoverable only by being violated.
 
@@ -205,7 +210,7 @@ discoverable only by being violated.
 
 ## 5. The generalizable claim
 
-Every one of the fifteen has the same shape: **a component was asked to report on a failure that
+Every one of the seventeen has the same shape: **a component was asked to report on a failure that
 only it could see, and it was not required to.** Stated as a design rule:
 
 > Anything that can discard must publish its discard count.
@@ -292,7 +297,7 @@ which is a weaker claim than a confirmed anchor and we state it as such rather t
 
 The context- and memory-engineering literature — write policy, storage tiering, retrieval
 strategy, placement, budget — is prescriptive about *reader-side* failure: retrieval without a
-token budget, lost-in-the-middle placement, and stale retrieval. Our fifteen are almost entirely
+token budget, lost-in-the-middle placement, and stale retrieval. Our seventeen are almost entirely
 *writer-side* and *world-side*: facts that decayed, renames that did not propagate, concurrent
 writes that passed the lock, discards that were never declared, checks that verified the form of
 evidence rather than the evidence.
@@ -307,7 +312,7 @@ system; Mem0 [2] extracts and consolidates salient conversational information an
 LOCOMO across four question types. Both evaluate the *reader*. Liu et al. [5] give the canonical
 reader-side result — accuracy degrades when the relevant span sits in the middle of a long
 context — and it is a reader-side result precisely because it is visible in the answer. None of
-our fifteen would appear in an end-to-end answer-quality score, because in each case the state
+our seventeen would appear in an end-to-end answer-quality score, because in each case the state
 that reached the reader was internally consistent; it was merely wrong about the world, or
 smaller than what had been written, and nothing said so.
 
@@ -343,7 +348,7 @@ team can enumerate them and publish the enumeration.
 
 ## 8. Threats to validity
 
-- **Single project, single team.** The fifteen were found in one codebase over roughly two
+- **Single project, single team.** The seventeen were found in one codebase over roughly two
   weeks. We claim the taxonomy generalizes; we have not tested that. The most valuable
   falsification would be an independent team applying §4 to their own evaluation apparatus and
   finding either that the classes do not fit, or that they fit everything — which would make
@@ -360,29 +365,34 @@ team can enumerate them and publish the enumeration.
   breath, from the same desk. Case 7's open-book ceiling remains unsolved and is reported as
   such. Case 15 is reported unfixed.
 - **The reproduction rate is either evidence or indictment, and we cannot tell which from
-  inside.** Five things reproduced while this paper was being written: a concurrent session
+  inside.** Seven things reproduced while this paper was being written: a concurrent session
   deleted two log files that six sources cited (case 8's trigger); the first fix for case 8 was
   itself class F; the conformance sandbox broke on a rule its own comment states (case 12); a
   judgment was found asserting a contract that had already changed (case 13); and a judgment
   written for §6 fired on its own rule names, reproducing class F **in the same session in which
-  class F was being written up**. We report this as evidence for §5. A reader is entitled to
-  read it instead as evidence that the team writing the taxonomy is unusually prone to the
-  failures it describes. We cannot distinguish those two readings from inside, and we do not
-  claim to.
+  class F was being written up**; the anchoring component of §6 — built specifically to remedy
+  the third bullet of this list — shipped attesting to bytes no reader could obtain, and
+  explained the discrepancy as normal (case 16); and a session transcript was found sitting in
+  every commit of the repository under a policy whose first line forbids it (case 17). We report
+  this as evidence for §5. A reader is entitled to read it instead as evidence that the team
+  writing the taxonomy is unusually prone to the failures it describes. We cannot distinguish
+  those two readings from inside, and we do not claim to. We note only that the last two were
+  found by the act of preparing the artifact for someone else to check, which is the cheapest
+  instrument in this paper and the one we had not applied until the day we published.
 
 ---
 
 ## 9. Conclusion
 
 We set out to build an agent-memory system and an apparatus to evaluate it. The apparatus failed
-fifteen times, and in every case the failure was invisible to the only component positioned to
+seventeen times, and in every case the failure was invisible to the only component positioned to
 see it. The fix that generalizes is not vigilance. It is to require that every component which
 can lose, drop, trim, retry, skip or fail emits a count — so that zero becomes a measurement
 rather than an absence — and to require that every guard be demonstrated firing, so that an
 inert guard is distinguishable from a working one.
 
 We offer the eight classes of §4 as a checklist for anyone building an evaluation apparatus for
-an agent system, and the 273 judgments as evidence that the checklist is executable rather than
+an agent system, and the 285 judgments as evidence that the checklist is executable rather than
 advisory. We offer the reproduction rate of §8 as the most honest thing in the paper: we wrote
 the taxonomy down and then produced two more instances of it while writing.
 
@@ -439,6 +449,8 @@ file *contents* as of that date independently of this table.
 | 13 | `southbridge/benjing-core.mjs:267`; judgments B11.3 (repaired) and B11.3b (added) |
 | 14 | commit `0015ba1`; the offending artifact remains retrievable in history, deliberately not rewritten |
 | 15 | `governance/policy.mjs` `redactOperationalText` applied to `git ls-files`; counts in §3.3 |
+| 16 | `governance/anchor.mjs` `gitState` / `reproOf`; judgments A7.1–A7.4; the first snapshot carrying `reproducible_from_git` is `governance/anchors/cacb67f3e4f99631.json` (116/130), and every earlier snapshot in the chain lacks the field — A7.4 failed on them, which is how the gap is visible rather than asserted |
+| 17 | `git log --follow` on the stripped path in the pre-publication history; `governance/publish.mjs` (the gate that now scans all reachable objects); the artifact is retained locally and is deliberately absent from the public history |
 | §6 | `governance/anchor.mjs`, `governance/verify-anchor.mjs` (19 judgments, 14 negative), `governance/anchors/*.json{,.ots}`; commit `aedfa19` |
 
 ## Appendix B — what this paper is not
@@ -476,6 +488,6 @@ Publish the artifact publicly and let the work earn its own endorsement, in this
    have read the thing.
 - [ ] Get a second reader outside the project to try to falsify the taxonomy in §4
 - [ ] Re-pull Appendix A line numbers and re-run the §4 judgment counts from a live suite,
-      never from this file (176 → 273 in one day; hardcoding a count is case 9's disease)
+      never from this file (176 → 273 → 285 within two days; hardcoding a count is case 9's disease)
 - [ ] Confirm the §6 anchors reached Bitcoin block confirmation and replace "pending" with the
       block time, or report that they did not

@@ -1,8 +1,11 @@
 # Self-Attesting Evaluation
 
 > We built an agent-memory system, and the apparatus that was supposed to tell us whether it
-> worked. The apparatus lied to us fifteen times. Every case, its trigger, its fix, and three
+> worked. The apparatus lied to us seventeen times. Every case, its trigger, its fix, and three
 > retractions of our own published conclusions are in this repository.
+>
+> Two of the seventeen were found on the day we published, *by the act of publishing* — one of
+> them a defect in the component we had just built to fix this paper's own stated weakness.
 
 **📄 The paper: [`papers/self-attesting-evaluation-v0.2.md`](papers/self-attesting-evaluation-v0.2.md)**
 
@@ -17,11 +20,11 @@ finding is structural, not anecdotal:
 > An evaluation that does not publish its own discard count and its own floor is not a weak
 > evaluation. It is an evaluation whose failure mode is indistinguishable from success.
 
-Fifteen failures collapse into eight classes. Each class is now a family of machine-checked
-conformance judgments — **273 of them across nine specifications**, the majority negative cases
+Seventeen failures collapse into eight classes. Each class is now a family of machine-checked
+conformance judgments — **285 of them across nine specifications**, the majority negative cases
 that fail if the guard does *not* fire.
 
-Three of the fifteen are retractions of conclusions we had already published. The most
+Three of the seventeen are retractions of conclusions we had already published. The most
 uncomfortable one: our first benchmark "proved" that a traditional harness cannot resume a task
 without asking. The success criterion was `!tradCanResume`, and `tradCanResume` was identically
 false by construction. **The test could not fail.** We found it ourselves and left the retraction
@@ -34,10 +37,10 @@ Nothing here asks to be taken on trust. Node.js ≥ 20, no dependencies for the 
 ```bash
 node southbridge/verify-benjing.mjs      # persistent state          67 judgments
 node southbridge/verify-southbridge.mjs  # action kernel             53
-node northbridge/verify-northbridge.mjs  # context compilation       30
+node northbridge/verify-northbridge.mjs  # context compilation       38
 node xuetang/verify-xuetang.mjs          # lesson promotion          33  (23 negative)
 node oob/verify-oob.mjs                  # out-of-band probing       29  (24 negative)
-node governance/verify-anchor.mjs        # evidence anchoring        19  (14 negative)
+node governance/verify-anchor.mjs        # evidence anchoring        23  (17 negative)
 node benxiang/verify-benxiang.mjs        # world observation         14
 node southbridge/verify-todo.mjs         # todo propagation          14  (11 negative)
 node governance/verify-governance.mjs    # export boundary           14
@@ -45,7 +48,7 @@ node governance/verify-governance.mjs    # export boundary           14
 
 Counts above were current on 2026-08-10. **Do not trust them — run the suites and read the
 verdict line.** Hardcoding a count that drifts is case 9 in the paper, and these numbers went
-176 → 273 in a single day.
+176 → 273 → 285 inside two days.
 
 ## Why you can believe the timestamps
 
@@ -67,6 +70,11 @@ would be the identical disease this project is about. Time comes only from the e
 What this buys: the listed file contents existed no *later* than a given block. What it does not
 buy: that they existed no earlier, that they are true, or any coverage of the period before
 2026-08-09. The paper says so in §6 and §8.
+
+Each snapshot also states how many of its entries **you** can reproduce — an entry that was
+uncommitted when it was stamped is one you can never check, and saying so is the whole point.
+The first version of this component did not say so, and reported the gap as normal. That is
+case 16.
 
 ## What this is not
 
@@ -108,10 +116,10 @@ repository and commit hash until a canonical version exists.
 
 ## 中文
 
-这是一台把 AI 学历跨会话、跨 harness、跨模型继承的机器，以及**它的评估装置骗了我们十五次的完整记录**。
+这是一台把 AI 学历跨会话、跨 harness、跨模型继承的机器，以及**它的评估装置骗了我们十七次的完整记录**。
 
 论文卖点不是「我们做了个好系统」，是「每一次自欺的证据、修法和撤回都在盘上」——包括我们主动撤回自己
-已经发布过的结论。九套判据共 273 条，多数是反向用例（守卫不响就红）。
+已经发布过的结论。九套判据共 285 条，多数是反向用例（守卫不响就红）。
 
 证据不靠我们自己声称时间：`governance/anchors/` 里每个快照的哈希都锚在比特币区块头上，
 清单本身**不含任何时间字段**——自己给自己写时间戳正是本文批判的那个病。
