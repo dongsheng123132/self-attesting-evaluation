@@ -1,0 +1,207 @@
+{
+  "kind": "quant.preregistration",
+  "spec": "2origin/0.1",
+  "id": "quant-preregister-v2",
+  "question": "把可搜索的参数从 36 组扩到 608 组之后，纯噪声上能挖出多大的回测夏普？Deflated Sharpe 是否仍能判掉它？",
+  "not_answering": [
+    "双均线策略是否有效（它没有，这是设计前提不是结论）",
+    "任何真实市场上的任何真实策略是否过拟合",
+    "本工具在真实数据上的假阳性率"
+  ],
+  "data": {
+    "generator": "zero-drift-gbm",
+    "rationale": "真 alpha 必须已知才能把假阳性数出来。合成数据在这里不是弱点，是必要条件；代价写在 limits 里。",
+    "n_days": 2000,
+    "start_price": 100,
+    "daily_vol": 0.012,
+    "drift": 0,
+    "prng": "mulberry32",
+    "normal": "box-muller",
+    "seeds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ]
+  },
+  "split": {
+    "in_sample": [
+      0,
+      999
+    ],
+    "out_of_sample": [
+      1000,
+      1999
+    ],
+    "note": "移动平均在全序列上计算，样本外段可以用到样本内末尾的历史——实盘也是这样。切分只切收益归属。"
+  },
+  "grid": {
+    "fast": [
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      20,
+      22,
+      24,
+      26,
+      28,
+      30,
+      32,
+      34,
+      36,
+      38,
+      40
+    ],
+    "slow": [
+      45,
+      50,
+      55,
+      60,
+      65,
+      70,
+      75,
+      80,
+      85,
+      90,
+      95,
+      100,
+      105,
+      110,
+      115,
+      120,
+      125,
+      130,
+      135,
+      140,
+      145,
+      150,
+      155,
+      160,
+      165,
+      170,
+      175,
+      180,
+      185,
+      190,
+      195,
+      200
+    ],
+    "constraint": "fast < slow",
+    "n_trials": 608
+  },
+  "strategy": {
+    "name": "dual-moving-average-long-flat",
+    "signal": "fast_ma > slow_ma -> position 1, else 0",
+    "execution": "position decided on close of day t, applied to return of day t+1",
+    "cost_bps_per_turn": 5
+  },
+  "metric": {
+    "name": "annualized_sharpe",
+    "formula": "mean(daily_pnl) / std(daily_pnl, ddof=1) * sqrt(252)",
+    "zero_std_policy": "记 instrument_failure，不记为 0，不计入统计"
+  },
+  "arms": {
+    "P": {
+      "label": "预注册",
+      "select_on": "in_sample",
+      "report": "out_of_sample",
+      "note": "样本外只跑一次。这是本实验唯一一条可被外部核验的臂。"
+    },
+    "F": {
+      "label": "自由挖掘",
+      "select_on": "full_sample",
+      "report": "full_sample",
+      "note": "行业里大量『回测夏普』就是这么产生的：看着全部数据挑最好的那组参数，然后把它的成绩当业绩。"
+    },
+    "N": {
+      "label": "地板",
+      "select_on": "prng_pick_from_grid",
+      "report": "out_of_sample",
+      "note": "不看数据选参。P 若与 N 同分布，说明预注册正确地拒绝了假发现。"
+    }
+  },
+  "deflated_sharpe": {
+    "method": "bailey-lopez-de-prado expected-maximum-sharpe under the null",
+    "formula": "E[max SR] = sqrt(V) * ((1-gamma) * Z_inv(1 - 1/N) + gamma * Z_inv(1 - 1/(N*e)))",
+    "V": "样本方差 of the N trial Sharpes (ddof=1)",
+    "gamma": 0.5772156649015329,
+    "N": 608,
+    "use": "把 F 臂的夏普跟『纯噪声下 36 次试验预期能挖到的最大夏普』比。超不过它，那个数字就不是证据。"
+  },
+  "decision_rules": [
+    {
+      "id": "R1",
+      "test": "mean(F.sharpe) > 0.5 across seeds",
+      "then": "挖掘能凭空造出 alpha —— 单独一个『回测夏普』不构成任何证据",
+      "else": "网格或样本不足以产生可观的挖掘溢价；须加大网格重跑，且在报告里如实写明设计被改过"
+    },
+    {
+      "id": "R2",
+      "test": "abs(mean(P.sharpe) - mean(N.sharpe)) < 0.30",
+      "then": "预注册正确地拒绝了假发现：先封存参数后，样本外成绩与瞎选无异",
+      "else": "P 与地板不同分布，需解释来源"
+    },
+    {
+      "id": "R3",
+      "test": "mean(F.sharpe) - mean(P.sharpe) > 0.5",
+      "then": "挖掘溢价的大小 = 不做预注册时业绩数字被夸大的幅度",
+      "else": "未观察到显著挖掘溢价"
+    },
+    {
+      "id": "R4",
+      "test": "mean(F.sharpe) <= mean(F.expected_max_sharpe_under_null)",
+      "then": "Deflated Sharpe 当场判定 F 臂的成绩落在噪声预期之内",
+      "else": "F 超出噪声预期，须解释（数据生成器可能漏了漂移）"
+    }
+  ],
+  "abort_conditions": [
+    {
+      "id": "A1",
+      "test": "abs(mean(P.sharpe)) > 0.5",
+      "then": "本实验作废：数据生成器漏了漂移，不是策略厉害"
+    },
+    {
+      "id": "A2",
+      "test": "instrument_failures > 0.05 * total_runs",
+      "then": "仪器失效率过高，结果不可读"
+    }
+  ],
+  "expectations": {
+    "predicted": "F 显著上升（试得越多，噪声下的最大值越大）；P 与 N 仍贴着 0；DSR 的期望最大夏普同步上升，R4 仍成立",
+    "why_written_down": "如果 F 上升而 DSR 也跟着上升并仍judge得住，那才是本轮真正想展示的：**一个漂亮的回测夏普，会随着你试的次数一起长大，而 DSR 知道你试了多少次。** 若 R4 这次失守（F 超出期望最大值），必须优先怀疑数据生成器或实现，而不是宣布发现了 alpha。",
+    "value_is_not_the_number": "本 demo 的产物不是任何一个夏普值，而是『PREREGISTRATION.md 的哈希在结果存在之前就进了比特币区块头』这一条可被陌生人独立核验的事实。"
+  },
+  "reporting": {
+    "must_report_even_if_zero": [
+      "instrument_failures",
+      "zero_std_runs",
+      "seeds_dropped"
+    ],
+    "no_timestamps_in_results": "结果文件不含任何时间字段。时间只在 .ots 里 —— 自己给自己写时间戳就是被批的那个病。"
+  },
+  "round": 2,
+  "supersedes": "demo/quant-preregister/prereg.json (sha256 b54fd282…)",
+  "design_changed": "仅网格一项：36 → 608 组。数据/种子/切分/成本/策略/判定阈值全部一字未动——单变量才能归因。",
+  "why_changed": "第一轮 R1 不成立（mean(F)=0.303 < 0.5）。v1 预注册对此写好了处置：「网格或样本不足以产生可观的挖掘溢价；须加大网格重跑，且在报告里如实写明设计被改过」。本轮即执行该条，不是看到结果才想出来的补救。"
+}
