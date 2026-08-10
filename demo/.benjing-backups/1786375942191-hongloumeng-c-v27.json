@@ -4,7 +4,7 @@
   "id": "hongloumeng-c",
   "title": "C 轨：《红楼梦》——判词兑现度判分器（案子与续写是同一个实验）",
   "goal": "造一台只判「叙事一致性」的判分器：给定第五回判词与十二支曲（曹雪芹本人写下的结局规格）、脂批记载的佚稿情节、以及前八十回内部的亲属/称谓/年龄/时间线/官职事实，逐条判定一段文本是否与之矛盾。先用它重审后四十回（这就是「案子」），再用它判我们自己的续写（这就是「续写」）。真正要证明的不是文笔，是「跨会话/跨 harness/跨模型、只靠状态不靠聊天记录」能扛住中文里连续性要求最高的任务，且判据不是我们自己发明的考题。",
-  "version": 28,
+  "version": 27,
   "created_at": "2026-08-09T00:00:00Z",
   "governance": {
     "tenant_id": "uking",
@@ -15,7 +15,7 @@
     "export_policy": "allow",
     "retention_days": 0
   },
-  "current_state": "W1 完成。W2 判分器 36 条谓词过 C0 六条判据（现跑 verify-c0 退出码 0）。三次交接实测完成，外部复核七条已全部处置。三份产物已出（REPORT / FINDINGS-ARCH / GAP-FOR-CONTINUATION）。C 轨全部凭证已进版本库（commit fd06851），落盘过程本身又压出两处结构性缺口（语料重建路径缺失、*.txt 未钉行尾）并已修+落文。FINDINGS-ARCH 七条中第一条（RFC-0010 写入闸门 schema 校验）与第二条（数据不合规伪装成程序缺陷 + 坏学历致观察器全局失明）已修，本象判据 14→17，本境新增 B13.1–13.5。第三条（南桥审计覆盖）与第七条（学堂 recheck 判别力）仍待办。当前回归：本象 17/17、北桥 38/38、本境 71/72（唯一红的 B13.5 成因是并发另一会话的 demo/control-m0，按 decisions[6] 不代改）。我方正文仍一个字未写（W4-1）。",
+  "current_state": "W1 完成。W2 判分器 36 条谓词过 C0 六条判据。三次交接实测完成，外部复核七条已全部处置。三份产物已出（REPORT / FINDINGS-ARCH / GAP-FOR-CONTINUATION）。FINDINGS-ARCH 七条中第一条（写入闸门不校验 schema，RFC-0010）与第二条（下游把数据不合规伪装成程序缺陷 + 坏学历致观察器全局失明）已修，本象判据 14→17。第三条（南桥审计覆盖）与第七条（学堂 recheck 判别力）仍待办。我方正文仍一个字未写。",
   "facts": [
     {
       "claim": "Gutenberg #24264《紅樓夢》120 回全本已落盘，sha256=ff1526996bf4b81807651921a85e5c1c0f1d1d123c9fa4553057ba6a3ec72011，正文 865,303 字（去空白，不含 Gutenberg 头尾声明）",
@@ -940,46 +940,6 @@
       "actor": "claude-code",
       "when": "2026-08-10",
       "source": "命令：node benxiang/verify-benxiang.mjs（17/17 VERIFIED）"
-    },
-    {
-      "claim": "C 轨此前 46 个文件一个都没进版本控制——REPORT / FINDINGS-ARCH / GAP-FOR-CONTINUATION / judge-spec / c0-calibration / 全部判分器与验证器只活在工作区里，即全部「可复现」主张的载体本身不受版本控制，且没有任何机制会提醒。已提交 commit fd06851（79 个文件，含 23 份本境备份）",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-10",
-      "source": "命令：git show --stat fd06851；git log --oneline -1"
-    },
-    {
-      "claim": "落盘时压出缺口一：按目录一刀切忽略语料会让 C 轨全部结论不可复跑。其余三轨的语料能忽略是因为 demo/fetch-corpus.mjs 真能按指纹取回；C 轨不能——judge.mjs 运行时读的 corpus/wikisource-honglou-120.txt 与 verify-zhipi-spec.mjs 读的 corpus/zhipi-raw.json 是本机会话内加工出来的派生物，加工代码当时未落成脚本，今天无人（含我们换机器）能重造同一串字节。已按能否重建逐份处置：4 份 Gutenberg 原样文件进 fetch-corpus.mjs 清单后忽略，3 份不可重建的直接进 git（5.3M）",
-      "verified": true,
-      "source_kind": "file",
-      "actor": "claude-code",
-      "when": "2026-08-10",
-      "source": "demo/hongloumeng-c/CORPUS-SOURCES.md（逐份列出 sha256 与重建路径，不可重建的标 ❌）；命令：node demo/fetch-corpus.mjs --verify hongloumeng-c（退出码 0）"
-    },
-    {
-      "claim": "落盘时压出缺口二：.gitattributes 未钉 *.txt，语料落进 * text=auto。别人在 Windows clone 后 LF 被换成 CRLF，仓库里记满的 sha256（学历 facts / fetch-corpus 清单 / CORPUS-SOURCES）全部对不上，且没有任何东西会报错——与 .ots 那条同病：此前没出事只因 git 的二进制启发式恰好没动它，是运气不是守卫。已显式钉 demo/*/corpus/** binary，并实测入库字节与盘上字节逐份相等（120 回本 1e9bee4d…95bd、脂批 40d97fc2…0ead、第五回 936895a0…6abf 三份全等）",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-10",
-      "source": "命令：git show \":demo/hongloumeng-c/corpus/wikisource-honglou-120.txt\" | sha256sum 与 sha256sum 同一文件，逐份比对相等"
-    },
-    {
-      "claim": "同事的续编正文 external/xubian-rewrite.md 不进版本库，理由同 PUBLICATION-POLICY.md §2「是别人的东西不是我们的」；仓库只留我方判决、指纹（0ebe1943…e565）与统计。第三方自行取得同一份文本、核对指纹一致后可重跑 judge-external.mjs，指纹不一致即说明版本不同、判决不可比",
-      "verified": true,
-      "source_kind": "file",
-      "actor": "claude-code",
-      "when": "2026-08-10",
-      "source": "demo/hongloumeng-c/CORPUS-SOURCES.md「别人的作品」一节；.gitignore 中 demo/hongloumeng-c/external/ 一条及其理由注释"
-    },
-    {
-      "claim": "盲测语料 handoff/blind/corpus/wikisource-honglou-080.txt 实测为 120 回本的逐字节前缀（前 1,776,208 字节），故忽略而非存两份；盲测的效力来自 blind-pre-registration.json 的封存时点，不来自语料多存一份",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-10",
-      "source": "命令：node -e 比对 120 回本前 1776208 字节与 080 文件，Buffer.equals 为 true"
     }
   ],
   "decisions": [
@@ -1073,8 +1033,7 @@
     "W3-2 假绿排查：抽查判分器判过的条目，公布假绿数（沿用十四次说谎那篇的做法）",
     "W4-1 在同一判据下起草续写（Hermes 起草，长提示词写 task.md，命令行只传短路径），与后四十回同台比违规率",
     "W5-1 并入 A/B 轨的三臂实验与同一份白皮书、同一个 Constraint Bounty 页",
-    "待核：把 Hu/Wang/Wu 2014 等既有计量红学工作落盘为可复核物，确认「未见叙事一致性判据」这条空白声明成立；若已有人做过，据实改写定位",
-    "把 wikisource 抓取与清洗写成 demo/hongloumeng-c/build-corpus.mjs，使 wikisource-honglou-120.txt / -c005.txt / zhipi-raw.json 三份也变成「按指纹可重建」；在那之前 CORPUS-SOURCES.md 第四列的 ❌ 就是它们的真实状态"
+    "待核：把 Hu/Wang/Wu 2014 等既有计量红学工作落盘为可复核物，确认「未见叙事一致性判据」这条空白声明成立；若已有人做过，据实改写定位"
   ],
   "learnings": [
     {
@@ -1919,13 +1878,13 @@
     }
   ],
   "actions": [],
-  "content_hash": "bd377f8f15c391b90812a0206a4dc5bd224a60ec37f79901b0864a414ebb2d04",
+  "content_hash": "20939c128ab131bf3d3377e58a1cb37fa6d32eabe7704ad1968ccde08521c15c",
   "actor": {
     "harness": "claude-code",
     "model": "claude-opus-5",
     "model_source": "transcript",
-    "session_id": "a0e051a5-728b-4256-b818-1670aad14c25",
-    "at": "2026-08-10T15:32:22.190Z"
+    "session_id": "29ca9383-b51b-46af-94ae-64bbf6abe5d6",
+    "at": "2026-08-10T14:37:43.031Z"
   },
-  "updated_at": "2026-08-10T15:32:22.190Z"
+  "updated_at": "2026-08-10T14:37:43.032Z"
 }
