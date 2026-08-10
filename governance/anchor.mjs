@@ -245,6 +245,22 @@ export function listAnchors() {
   }));
 }
 
+/**
+ * 把异常分成「够不着」和「对不上」。
+ *
+ * 第一版把所有异常一律记成 invalid（证明无效），于是两条 ESOCKETTIMEDOUT 让两个
+ * **完好的比特币证明**显示为「.ots 与快照不匹配」。传输故障和证据造假被记成同一件事——
+ * 论文 class B 逐字命中：「仪器自身的失效（截断、传输、空载）必须是第三种结果，
+ * 永远不能算『错』」。这条规则写在本仓库的判据里，而这个组件在写它的同一天违反了它。
+ *
+ * 判错方向也不对称：把有效证明报成无效，比根本不检查更坏——它会让人去"修"一个没坏的东西。
+ */
+export function classifyAttestationError(err) {
+  const s = `${err?.code ?? ''} ${err?.message ?? err ?? ''}`;
+  return /ESOCKETTIMEDOUT|ETIMEDOUT|ENOTFOUND|ECONNRESET|ECONNREFUSED|EAI_AGAIN|socket hang up|network|timeout/i.test(s)
+    ? 'unreachable' : 'invalid';
+}
+
 /** 判定单个锚点的外部时间状态。不写盘，只回答「外面怎么说」。 */
 async function attestationOf(OTS, a) {
   if (!observe(a.ots, ROOT).properties.exists) return { state: 'unstamped' };
@@ -255,7 +271,7 @@ async function attestationOf(OTS, a) {
     const btc = res?.bitcoin?.timestamp ?? (typeof res === 'number' ? res : null);
     return btc ? { state: 'bitcoin', at: new Date(btc * 1000).toISOString() } : { state: 'pending' };
   } catch (e) {
-    return { state: 'invalid', why: e.message.slice(0, 70) };
+    return { state: classifyAttestationError(e), why: (e.message ?? String(e)).slice(0, 70) };
   }
 }
 
@@ -299,21 +315,37 @@ async function cmdUpgrade() {
   if (!OTS) return 4;
   const anchors = listAnchors();
   if (!anchors.length) { console.error('归档链为空。先跑 stamp。'); return 4; }
-  let up = 0, still = 0;
+  // OTS.upgrade() 返回 false 有两个完全不同的原因：**还没进块**，和**早就进块了没得升**。
+  // 第一版把 false 一律报成「仍待定」，于是已确认的锚点每轮都被报成待定——
+  // 而我给定时任务写的终止条件正是「仍待定 0 个」，那个条件永远不会满足，cron 会空转到过期。
+  // 论文 class B 的形状：仪器把自己的「无事可做」记成了被测对象的「未完成」。
+  // 修法：升不升是一回事，**当前是什么状态由 attestationOf 单独回答**，不由返回值推断。
+  let upgraded = 0, confirmed = 0, pending = 0, broken = 0, unreachable = 0;
   for (const a of anchors) {
     if (!observe(a.ots, ROOT).properties.exists) continue;
-    const detached = OTS.DetachedTimestampFile.deserialize(fs.readFileSync(a.ots));
     let changed = false;
-    try { changed = await OTS.upgrade(detached); } catch (e) { console.log(`  ⚠ ${a.id} 升级出错：${e.message.slice(0, 50)}`); continue; }
-    if (changed) {
-      const ctx = new OTS.Context.StreamSerialization();
-      detached.serialize(ctx);
-      fs.writeFileSync(a.ots, Buffer.from(ctx.getOutput()));
-      up++; console.log(`  ✅ ${a.id} 已拿到比特币区块证明`);
-    } else { still++; console.log(`  … ${a.id} 仍待定（正常，过几小时再来）`); }
+    try {
+      const detached = OTS.DetachedTimestampFile.deserialize(fs.readFileSync(a.ots));
+      changed = await OTS.upgrade(detached);
+      if (changed) {
+        const ctx = new OTS.Context.StreamSerialization();
+        detached.serialize(ctx);
+        fs.writeFileSync(a.ots, Buffer.from(ctx.getOutput()));
+        upgraded++;
+      }
+    } catch (e) { console.log(`  ⚠ ${a.id} 升级出错：${e.message.slice(0, 50)}`); }
+
+    const att = await attestationOf(OTS, a);
+    if (att.state === 'bitcoin') { confirmed++; console.log(`  ✅ ${a.id} 已进块 ${att.at}${changed ? '（本轮升级）' : ''}`); }
+    else if (att.state === 'pending') { pending++; console.log(`  ⏳ ${a.id} 仍待定（交易已广播，等 6 个确认）`); }
+    else if (att.state === 'unreachable') { unreachable++; console.log(`  ? ${a.id} 这次没核成（网络）：${att.why} —— 不代表证明有问题`); }
+    else { broken++; console.log(`  ❌ ${a.id} 证明与快照不匹配：${att.why}`); }
   }
-  console.log(`\n升级 ${up} 个，仍待定 ${still} 个。`);
-  return 0;
+  console.log(`\n共 ${anchors.length} 个：已进块 ${confirmed}　仍待定 ${pending}　没核成 ${unreachable}　证明失效 ${broken}　本轮新升级 ${upgraded}`);
+  // 退出码让调度器不必解析中文。「没核成」不算完成——但它也不是失败，所以跟待定同码，
+  // 语义是「还不能收工」，而不是「出事了」。真出事（证明失效）单独用 4。
+  if (broken) return 4;
+  return pending || unreachable ? 3 : 0;
 }
 
 async function cmdVerify() {

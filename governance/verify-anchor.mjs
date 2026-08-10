@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 // verify-anchor.mjs — 证据锚定判据（governance/anchor/0.1）
 //
-// 17 条判据，其中 12 条是反向用例。理由写在论文 §5 class C：
+// 多数判据是反向用例。理由写在论文 §5 class C：
 // 「一个从没响过的守卫，和一个坏掉的守卫，从外面看没有区别」——.gitignore 那条整整
 // 空转了一个仓库的寿命就是这么来的。所以每个守卫都必须有一条「它不响就红」的判据。
+//
+// 条数**不写在这里**：这行注释原本写着「17 条，其中 12 条反向」，跑起来是 25/19。
+// 把计数硬编码进文档正是论文案例 9 的病，而这个文件是治那个病的。要真数就跑一遍看判决行。
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { observe, compare } from '../benxiang/observe.mjs';
-import { buildManifest, manifestFrom, serialize, listAnchors, INCLUDE_RULES, EXCLUDE_RULES } from './anchor.mjs';
+import { buildManifest, manifestFrom, serialize, listAnchors, classifyAttestationError, INCLUDE_RULES, EXCLUDE_RULES } from './anchor.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..');
@@ -231,6 +234,27 @@ t('A5.2', '【反向】锚点文件名必须等于快照内容哈希，否则锚
   const a = anchors[0];
   const real = observe(a.json, REPO).properties.sha256;
   return real.startsWith(a.id) || `文件名 ${a.id} 与内容哈希 ${real.slice(0, 16)} 对不上——锚点可被改名滑动`;
+});
+t('A5.4', '【反向】upgrade 不得拿 OTS.upgrade() 的返回值当状态——false 同时意味着「没进块」和「早进块了」', () => {
+  // 源码级判据，比行为判据弱，但这个 bug 只在联网 + 特定时序下复现，没法在判据里造。
+  // 它值得一条判据是因为后果不是「报错」而是「定时任务永远不终止」——
+  // 一个永不满足的终止条件，和一个正在工作的循环，从外面看没有区别。
+  const src = fs.readFileSync(path.join(HERE, 'anchor.mjs'), 'utf8');
+  const body = src.split('\n').filter(l => !l.trimStart().startsWith('//')).join('\n');
+  const upgradeFn = body.slice(body.indexOf('async function cmdUpgrade'), body.indexOf('async function cmdVerify'));
+  if (!upgradeFn) return '找不到 cmdUpgrade';
+  const asksState = /attestationOf\s*\(/.test(upgradeFn);
+  const inferring = /else\s*\{[^}]*仍待定/.test(upgradeFn);
+  return (asksState && !inferring) || `问状态=${asksState} 从返回值推断=${inferring}`;
+});
+t('A5.5', '【反向】传输故障不得被报成「证明无效」——把有效证明报成无效比不检查更坏', () => {
+  const transport = ['ESOCKETTIMEDOUT', 'ETIMEDOUT', 'ENOTFOUND', 'ECONNRESET', 'ECONNREFUSED', 'EAI_AGAIN', 'socket hang up']
+    .map(c => ({ message: `bitcoin verification failed: Error: ${c}` }));
+  const misread = transport.filter(e => classifyAttestationError(e) !== 'unreachable').map(e => e.message);
+  // 反向的反向：真的对不上时必须仍判 invalid，不能因为怕误报就一律说「够不着」
+  const realMismatch = classifyAttestationError(new Error('bad magic bytes in detached timestamp'));
+  return (misread.length === 0 && realMismatch === 'invalid')
+    || `被误判成证明无效的传输故障 ${JSON.stringify(misread)}；真不匹配时判为 ${realMismatch}`;
 });
 t('A5.3', '归档链上每个 .json 都有配套 .ots（盖了章才算锚点）', () => {
   const anchors = listAnchors();
