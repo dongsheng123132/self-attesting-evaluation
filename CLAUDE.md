@@ -137,6 +137,11 @@ MCP 通道（`southbridge_write` 工具）在 codex 上会被它自己的工具�
 - **facts 必须带 verified**：没验证的话不配叫 fact，叫"假设"。
 - **learning 先 candidate，验证后才 verified**：一次成功不是永久真理。
 - **命名冻结**：本源 AI 计算机（整机）/ 本象 / **取象** / **学籍** / 本境 / 影核 / 北桥 / 南桥 / 学堂 —— 一个季度内不改。
+  - **英文技术名**：Origin IR / Sensor / State Layer / Machine Profile / **Action Kernel** / Northbridge。
+    商标（ActionParity、OriginBus）是品牌名，**不在技术文档里当部件名用**——parity 是「双通道判决一致」
+    这个**验证属性**，拿它当部件名等于用「我们测过它」当名字。
+  - **学堂 ≠ 学堂循环**：前者是部件（`xuetang/`），后者是整体（任务→经验→已验证状态→下次接着干）。
+    这条一名两物**就藏在那张专门消除一名两物的术语表里**，当天改过两次都没被发现。
   - **取象 Quxiang · Sensor** 是本仓库那个观察器（`benxiang/observe.mjs`）的正名。「本象 / Benxiang」
     从此只指**表示层**（Origin IR，在 `本象协议/`，不在本仓库）。
   - **学籍 Xueji · State Layer** 是学历层的正名（`southbridge/benjing-*.mjs`）。**层是学籍，实例是学历**——

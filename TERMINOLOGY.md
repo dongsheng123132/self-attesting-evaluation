@@ -28,9 +28,9 @@
 | 经验 | **learning** | 「下次别再这样」。与 fact（「这个任务发生过什么」）分属两类：fact 要 `source` 引可复核物，learning 要 `recheck` 是可重跑命令 | `demo/*/task.origin.json` 的 `learnings[]` | `xuetang/0.1` |
 | 长循环考试 | **the exam** | 把每条 verified 经验的 `recheck` 再跑一遍，跑挂当场降级。「一次成功不是永久真理」的机械化 | `xuetang/exam.mjs` | `xuetang/0.1` |
 | 南桥 | **action channel** | 把动作请求送到影核的**通道**。目前两条：CLI（给无头 harness）与 MCP。两条通道判决一致是**验证出来的**，不是假设 | `southbridge/southbridge-cli.mjs`、`southbridge-mcp.mjs` | `shadowcore/0.2` §双驱动 parity |
-| 影核 | **action kernel** | 动作的**核**：风险判级、批准模型、审计落盘、幂等、写后回读观察 | `southbridge/shadowcore-core.mjs` | `shadowcore/0.2` |
+| 影核 | **Action Kernel** | 动作的**核**：风险判级、批准模型、审计落盘、幂等、写后回读观察。**英文不用 `ActionParity`**——parity 指「CLI/MCP 双通道判决一致」，那是我们测过它的一个性质，不是它是什么；用验证属性当名字等于用「我们测过它」当名字。ActionParity 仅作为商标保留 | `southbridge/shadowcore-core.mjs` | `shadowcore/0.2` |
 | 带外观察 | **out-of-band check** | 不通过被观察者自己的自述去核对它。学历声称 ↔ 影核审计 ↔ 磁盘实数 | `oob/` | `oob/0.1` |
-| 学堂 | **the loop** | 任务 → 经验 → 已验证状态 → 下次接着干。跨会话、跨 harness、跨模型 | 整体 | — |
+| 学堂循环 | **the loop** | 任务 → 经验 → 已验证状态 → 下次接着干。跨会话、跨 harness、跨模型。**这是整体，不是部件**——部件是上面那个「学堂」 | 整体 | — |
 | 已验证事实 | **verified fact** | 带 `verified` 与可复核 `source` 的断言。没验证的不配叫 fact，叫假设 | — | — |
 | 判据 | **conformance judgment** | 会跑的一条判据。反向判据（故意造假必须被抓住）比正向的值钱 | `verify-*.mjs` | — |
 
@@ -61,6 +61,30 @@
 
 （我在 README 的 benchmark 段落里已经写的是 "9 real task states"，与本裁决一致，不用改。
 需要改的是 README 开头那句 "persists credentials"——见下方待办。）
+
+### 3. 「影」这个字在体系里承担了两个相反的价值判断
+
+`CLAUDE.md` 铁律第一条：**「聊天记录是『影』，本象是『对象本身』」**——这里「影」＝派生的、
+次等的、不可信的那一面。而**影核**是全体系最可信的部件之一（动作的判决者：风险判级、审计、
+写后回读）。同一个字，两个相反的价值。
+
+「影核」的本意是「动作的成败由回头观察决定，**影**是自述、**核**是判决」——解释得通，
+但需要解释。而需要解释的名字，在一个以「让下一个人少困惑三秒」为标准的体系里就是成本。
+
+**标价后决定不改**（实测计数）：
+
+| 位置 | 处数 |
+|---|---|
+| 代码 import / 路径 | 19 |
+| 文档 / RFC | 161 |
+| 学历 `facts[].source` | 20 |
+| **spec id `shadowcore/0.2`** | **30** |
+
+最后一行足以否掉它：**spec id 是协议标识符，改它等于协议版本变更**，会波及所有声称
+「符合 shadowcore/0.2」的实现与记录。曾考虑过 `行核`（与「北桥知、南桥行」咬合，且摆脱
+「影＝不可信」的冲突），代价不值。
+
+**记在这里，是为了让读者知道这个冲突存在，而不是假装名字都是自洽的。**
 
 ## 已知的名实不符（记录，暂不改）
 
