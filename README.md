@@ -1,23 +1,27 @@
 # Self-Attesting Evaluation
 
 > We built an agent-memory system, and the apparatus that was supposed to tell us whether it
-> worked. The apparatus lied to us seventeen times. Every case, its trigger, its fix, and three
+> worked. The apparatus lied to us eighteen times. Every case, its trigger, its fix, and three
 > retractions of our own published conclusions are in this repository.
 >
-> Two of the seventeen were found on the day we published, *by the act of publishing* — one of
+> Three of the eighteen were found on the day we published, *by the act of publishing* — one of
 > them a defect in the component we had just built to fix this paper's own stated weakness.
 
 **📄 Two papers, deliberately not merged:**
 
 - **[Self-Attesting Evaluation](papers/self-attesting-evaluation-v0.2.md)** — the negative result.
-  Seventeen ways the evaluation apparatus lied, eight failure classes, 285 machine-checked judgments.
-- **[Credentials, Not Transcripts](papers/credential-inheritance.md)** — the positive result.
-  One on-disk task document carried a task across four models from three vendors. The contribution
-  is the falsification design: the successor must **recompute a number derived from an append-only
-  log**, so agreement is arithmetic rather than a judgement about whether an artifact looks right.
+  Eighteen ways the evaluation apparatus lied, eight failure classes, 285 machine-checked judgments.
+- **[Credentials, Not Transcripts](papers/credential-inheritance.md)** — the positive result,
+  **carrying a retraction we wrote an hour after publishing it.** One on-disk task document carried
+  a task across four models from three vendors; the numbers each model reported are honest and
+  anyone can re-derive them. We had also argued the instrument *couldn't be fooled* — then checked
+  the runners' own artifacts and found the discriminating quantity was obtainable by counting a
+  file, with no inheritance at all. That claim is struck through in place (§4.1) and is case 18 of
+  the first paper.
 
-The second paper's headline experiment is missing its most important control, and says so in its
-own threats section rather than waiting for a reviewer to find it.
+The second paper is therefore an existence proof plus an honest account of its own gap: the control
+that would settle the question — the same relay with the document removed — **is not run**, and it
+says so in its abstract rather than waiting for a reviewer to find it.
 
 ---
 
@@ -30,15 +34,19 @@ finding is structural, not anecdotal:
 > An evaluation that does not publish its own discard count and its own floor is not a weak
 > evaluation. It is an evaluation whose failure mode is indistinguishable from success.
 
-Seventeen failures collapse into eight classes. Each class is now a family of machine-checked
+Eighteen failures collapse into eight classes. Each class is now a family of machine-checked
 conformance judgments — **285 of them across nine specifications**, the majority negative cases
 that fail if the guard does *not* fire.
 
-Three of the seventeen are retractions of conclusions we had already published. The most
-uncomfortable one: our first benchmark "proved" that a traditional harness cannot resume a task
-without asking. The success criterion was `!tradCanResume`, and `tradCanResume` was identically
-false by construction. **The test could not fail.** We found it ourselves and left the retraction
-in the repository.
+Four of the eighteen are retractions of conclusions we had already published. The most
+uncomfortable one used to be our first benchmark, which "proved" that a traditional harness cannot
+resume a task without asking — the success criterion was `!tradCanResume`, and `tradCanResume` was
+identically false by construction, so **the test could not fail**.
+
+Case 18 is worse, and it is an hour old. It is *class C wearing the costume of rigour*: an
+instrument that was checkable in every way we had learned to demand, measuring something other
+than what we said it measured. Nothing was broken; the question we forgot to ask was **could this
+number have been produced without the thing I am testing?**
 
 ## Verify it yourself
 
@@ -126,7 +134,7 @@ repository and commit hash until a canonical version exists.
 
 ## 中文
 
-这是一台把 AI 学历跨会话、跨 harness、跨模型继承的机器，以及**它的评估装置骗了我们十七次的完整记录**。
+这是一台把 AI 学历跨会话、跨 harness、跨模型继承的机器，以及**它的评估装置骗了我们十八次的完整记录**。
 
 论文卖点不是「我们做了个好系统」，是「每一次自欺的证据、修法和撤回都在盘上」——包括我们主动撤回自己
 已经发布过的结论。九套判据共 285 条，多数是反向用例（守卫不响就红）。

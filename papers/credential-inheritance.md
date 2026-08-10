@@ -21,12 +21,19 @@ because a transcript is a record of one conversation rather than a description o
 report a relay experiment in which a single on-disk task document — not a transcript — was
 handed between four models across three vendors inside one harness, and separately between two
 harnesses, with each runner receiving a prompt containing **no description of the task**. The
-methodological contribution is not the relay but its falsification design: the task was
-constructed so that **each runner had to recompute a number produced by the previous runner from
-an append-only log that any third party can re-slice**. Agreement is therefore not a judgement
-about whether an artifact "looks right"; it is an arithmetic identity that an outsider can check
-without trusting any agent's self-report. All four recomputations matched exactly, and still
-match two days later with the log three times longer.
+methodological interest is not the relay but the attempt to make it falsifiable: each runner
+reported counts over an **append-only** audit log and cited its predecessors' counts by file
+path, so the claims are arithmetic identities an outsider can re-derive rather than judgements
+about whether an artifact "looks right." All four sets of numbers re-derive exactly, and still do
+two days later with the log three times longer.
+
+**We also report, in §4.1, a claim from this paper's own first draft that we withdrew within the
+hour.** We had argued the instrument could not be satisfied without inheriting the task document;
+checking the runners' artifacts showed the slice offsets were simply the log's length at four
+moments in time, available to any process that can count lines. The experiment that would settle
+the question — running the same relay with the document removed — **is not run**, and this paper
+should be read as an existence proof of the relay plus an honest account of what its evidence
+does not reach.
 
 ---
 
@@ -128,18 +135,58 @@ for (const [who,n] of [["A",1517],["B",1662],["D",2665],["E",2885]])
   console.log(who, JSON.stringify(count(all.slice(0,n))));'
 ```
 
-Three properties make this stronger than artifact inspection:
+### 4.1 Retraction — what this instrument does and does not show
+
+**Draft v0.1 of this section claimed three properties. The second was false, and we withdraw it.**
+It read:
+
+> ~~It cannot be satisfied by fluency. A model that had not read the document could not know which
+> line offset to slice at, and a model that guessed would produce a number that does not
+> reproduce.~~
+
+We checked the legs' own artifacts before designing the control experiment and found that **no leg
+ever sliced the log to a predecessor's offset.** Each leg ran `grep -c` and `wc -l` over the log
+*as it stood at its own moment* — the offsets 1517 / 1662 / 2665 / 2885 are simply the file's
+length at four points in time, not knowledge recovered from the task document. The line-offset
+re-slicing in §5 is something *we* did afterwards, and it is what a third party can do; it is not
+what the models did.
+
+The withdrawn claim therefore has leakage of exactly the kind our companion paper's class C
+describes: **the discriminating work was available through a channel other than the one under
+test.** A model with no task document at all, told only to count a log, would produce the same
+correct numbers.
+
+What the four legs actually did, and what it does support:
+
+- Each leg counted the **current** log — no inheritance required.
+- Each leg **read its predecessors' artifacts and cited them by path** (verbatim from
+  `vendor-check-D.md`: `A reported … （来源: demo/task5/channel-stats.md)`). This is a real,
+  documented dependency on what the previous leg left on disk.
+- Each leg computed the **differences** against its predecessors and checked their internal
+  arithmetic — that the per-actor deltas sum to the total line delta. D's check:
+  `684 + 464 = 1148`; E's: `133 + 87 = 220`.
+
+So the honest scope of this instrument is narrower than v0.1 claimed:
+
+| Claim | Status |
+|---|---|
+| Each leg's reported numbers are correct and third-party re-derivable | **Established** (§5, re-run today) |
+| No leg fabricated a number, and a fabricating leg would have been caught by the delta arithmetic | **Established** |
+| Each leg read the previous leg's artifact | **Established** (cited by path in the artifacts) |
+| The *task document* was necessary for any of this | **Not established** — this is what §8's missing control would test |
+
+The remaining properties stand:
 
 1. **The claim is arithmetic.** There is no scoring rubric and no judge. The count either matches
    or it does not.
-2. **It cannot be satisfied by fluency.** A model that had not read the document could not know
-   which line offset to slice at, and a model that guessed would produce a number that does not
-   reproduce.
-3. **It survives the passage of time.** Because the log is append-only, a historical slice stays
-   valid no matter how much is appended later. A snapshot-based scheme would not have this
-   property.
+2. **It survives the passage of time.** Because the log is append-only, a historical slice stays
+   valid no matter how much is appended later; a snapshot-based scheme would not have this
+   property. This one we demonstrate rather than assert, in §5.
 
-Property 3 is the one we can demonstrate rather than assert, so we did.
+We leave the withdrawn text visible rather than deleting it. The error was ours, it survived into
+a published draft, and it was found by the routine act of checking our own artifacts before
+spending money on the next experiment — which is the cheapest instrument in either paper and the
+one we keep rediscovering.
 
 ---
 
@@ -157,15 +204,21 @@ in the right-hand column was run on the day this paper was written, by a differe
 different session from any of the four legs, against a log that has been appended to by dozens of
 unrelated sessions in between.
 
-We separate what this establishes from what it does not:
+We separate what this establishes from what it does not (see §4.1 for the claim we withdrew):
 
-- **Established, and re-derivable by anyone**: each leg reported a number that is an exact
-  function of a log prefix, and those numbers are correct. A model that had not obtained the
-  task's specifics from the document could not have produced them.
+- **Established, and re-derivable by anyone**: each leg reported numbers that are an exact
+  function of a log prefix, and those numbers are correct. No leg fabricated, and the delta
+  arithmetic between legs is internally consistent.
+- **Established from the artifacts**: each leg read its predecessor's file and cited it by path.
 - **Recorded, attested only by us**: that each leg received the quoted prompt, asked no
   clarifying questions, and identified its own step unaided.
+- **Not established**: that the task document was necessary. Counting the current log requires no
+  inheritance, and the predecessors' numbers were available from artifacts sitting in the same
+  directory. §8's control is the experiment that would separate these.
 
-The first bullet is the paper. The second is context.
+A reader who stops here should conclude: *the relay happened, the numbers are honest, and the legs
+demonstrably read each other's output.* Nothing above licenses the stronger reading that the
+structured task document is what made it work.
 
 ---
 
@@ -262,16 +315,22 @@ cannot distinguish inheritance from fluency, which is why §4 does not use it.
 
 ## 10. Conclusion
 
-A task document, not a transcript, was sufficient for four models from three vendors to run a
-relay inside one harness, and for two harnesses to hand work to each other. The result we would
-like carried forward is not that number but the design that makes it checkable:
+Four models from three vendors ran a relay inside one harness, and two harnesses handed work to
+each other, with an on-disk task document and no transcript. The numbers each leg reported are
+honest and re-derivable by anyone, two days and six thousand log lines later.
+
+The design principle we would carry forward, stated at the scope §4.1 leaves it:
 
 > When testing whether one agent inherited another's work, do not ask whether the artifact looks
-> right. Require the successor to recompute a quantity that is a function of an append-only
-> record, and let a third party re-derive it.
+> right. Require claims that are functions of an append-only record, so a third party can
+> re-derive them. **Then check separately that the quantity you chose is not obtainable without
+> the inheritance you are testing** — because ours was, and we did not notice until we went to
+> design the control.
 
-That instrument cost nothing, survived the destruction of the primary evidence during the
-experiment, and still returns the same four numbers two days and six thousand log lines later.
+The second sentence is the one we had to learn. An instrument can be perfectly checkable and
+still measure the wrong thing, and "checkable" is seductive enough that we published before
+asking what it was checking. The control in §8 is not a refinement of this paper; it is the
+experiment this paper turned out to be missing.
 
 ---
 
