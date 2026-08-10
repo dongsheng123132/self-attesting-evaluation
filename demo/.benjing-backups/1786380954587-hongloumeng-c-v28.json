@@ -4,7 +4,7 @@
   "id": "hongloumeng-c",
   "title": "C 轨：《红楼梦》——判词兑现度判分器（案子与续写是同一个实验）",
   "goal": "造一台只判「叙事一致性」的判分器：给定第五回判词与十二支曲（曹雪芹本人写下的结局规格）、脂批记载的佚稿情节、以及前八十回内部的亲属/称谓/年龄/时间线/官职事实，逐条判定一段文本是否与之矛盾。先用它重审后四十回（这就是「案子」），再用它判我们自己的续写（这就是「续写」）。真正要证明的不是文笔，是「跨会话/跨 harness/跨模型、只靠状态不靠聊天记录」能扛住中文里连续性要求最高的任务，且判据不是我们自己发明的考题。",
-  "version": 29,
+  "version": 28,
   "created_at": "2026-08-09T00:00:00Z",
   "governance": {
     "tenant_id": "uking",
@@ -15,7 +15,7 @@
     "export_policy": "allow",
     "retention_days": 0
   },
-  "current_state": "W1 完成。W2 判分器过 C0（现跑退出码 0）。W1-3 第三轮通过：可用 9/47 条亲属记录。W3-1 后四十回判决：兑现 15 / 违反 0 / 未交代 12（回目排除后重跑，原为 16/1/10）。W4-1 完成：Hermes 写出五回 24,866 字，预注册 S1/S2/S3 全过，判决兑现 12 / 违反 0 / 未见 13，对照组同事续编 3/0/22。S4 假绿抽查掀出三类问题并全部修掉，终态 0 条证据不成立——其中回目行那一类污染了已发布结论，A-15-1 由「违反」降为「未交代」。C 轨全部凭证已进版本库。FINDINGS-ARCH 第三条（南桥审计覆盖）与第七条（学堂 recheck 判别力）仍待办。",
+  "current_state": "W1 完成。W2 判分器 36 条谓词过 C0 六条判据（现跑 verify-c0 退出码 0）。三次交接实测完成，外部复核七条已全部处置。三份产物已出（REPORT / FINDINGS-ARCH / GAP-FOR-CONTINUATION）。C 轨全部凭证已进版本库（commit fd06851），落盘过程本身又压出两处结构性缺口（语料重建路径缺失、*.txt 未钉行尾）并已修+落文。FINDINGS-ARCH 七条中第一条（RFC-0010 写入闸门 schema 校验）与第二条（数据不合规伪装成程序缺陷 + 坏学历致观察器全局失明）已修，本象判据 14→17，本境新增 B13.1–13.5。第三条（南桥审计覆盖）与第七条（学堂 recheck 判别力）仍待办。当前回归：本象 17/17、北桥 38/38、本境 71/72（唯一红的 B13.5 成因是并发另一会话的 demo/control-m0，按 decisions[6] 不代改）。我方正文仍一个字未写（W4-1）。",
   "facts": [
     {
       "claim": "Gutenberg #24264《紅樓夢》120 回全本已落盘，sha256=ff1526996bf4b81807651921a85e5c1c0f1d1d123c9fa4553057ba6a3ec72011，正文 865,303 字（去空白，不含 Gutenberg 头尾声明）",
@@ -980,70 +980,6 @@
       "actor": "claude-code",
       "when": "2026-08-10",
       "source": "命令：node -e 比对 120 回本前 1776208 字节与 080 文件，Buffer.equals 为 true"
-    },
-    {
-      "claim": "W4-1 完成：Hermes/deepseek 按盘上判据写出第一二一至一二五回共 24,866 字，经南桥 CLI 落盘并写后回读验证（sha256=0f3dbdd204c93aca2e9d9462d3b6af0187b8749ad479b4065544f36ac5da41a6）。预注册三道闸门全过：S1 判分器/判据/校准集八份逐字节未变、S2 生成后 verify-c0 仍退出码 0、S3 我方 CONTRADICTED 为 0",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "命令：node -e 逐份比对 handoff/w4-pre-registration.json 的 snapshot_before；node demo/hongloumeng-c/verify-c0.mjs；node demo/hongloumeng-c/judge-external.mjs --file draft/w4-continuation.md"
-    },
-    {
-      "claim": "同一入口同一形态判两份文本：我方 W4-1 兑现 12 / 违反 0 / 未见 13，同事已公开续编 兑现 3 / 违反 0 / 未见 22，共 25 条。按预注册的自利披露，兑现数不作为成功判据——谓词是我方所写且已公开，照谓词写则兑现几乎必然",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "命令：node demo/hongloumeng-c/judge-external.mjs --json 与 --file draft/w4-continuation.md --json 对照"
-    },
-    {
-      "claim": "S4 假绿抽查掀出四条兑现的证据落在回目行上（射圃/狱神庙/情榜/金麒麟）。回目是该回内容摘要，拿它证明事件发生等于拿目录证正文，与「用第五回判词证明判词兑现」同病。已在唯一的分回实现 corpus.mjs 加 stripHeading，两个入口共用",
-      "verified": true,
-      "source_kind": "file",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "demo/hongloumeng-c/corpus.mjs 的 stripHeading 及其注释；命令：node demo/hongloumeng-c/judge-external.mjs --file draft/w4-continuation.md --json 前后对照"
-    },
-    {
-      "claim": "掀开回目导致已发布结论倒了一条：后四十回唯一那条「违反」A-15-1 的证据「賈家延世澤」全书仅一处，就在第一一九回回目行里，且该行带 wikisource 导航残渣「上一回　回目录　下一回　----」。而报告正把「违反」称作三态中唯一较难人为制造的一态。重跑后后四十回判决由「兑现 16 违反 1 未交代 10」变为「兑现 15 违反 0 未交代 12」，REPORT.md 与 GAP-FOR-CONTINUATION.md 已重生成（缺口 6→7 条）",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "命令：node -e 统计全书「延世澤」出现次数为 1 且位于回目行；node demo/hongloumeng-c/make-report.mjs"
-    },
-    {
-      "claim": "同一次掀开露出 C-ORDER 的两条腿从来没在正文里跑过——这条对照谓词存在的唯一目的就是证明「次序类两条腿真的各跑过一次」，而它一直靠回目「秦可卿死封龍禁尉」「賈元春才選鳳藻宮」命中。根因是 judge.mjs 的 order 分支静默丢弃谓词声明的 subject_names（first 声明「秦氏」，第十三回叙述作「聽見說秦氏死了」）。已修并给 then 补「晉封」；校准集期望值一字未动",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "命令：node demo/hongloumeng-c/verify-c0.mjs（修前 legs_executed={first:false,then:false}，修后放行）"
-    },
-    {
-      "claim": "另两条假绿的成因是外部入口未实现主判分器的分句边界：「後來金桂死了，香菱本以为…」判成香菱死、「贾珠…却一病死了。李纨守了…」判成李纨死。与第一版漏 also_requires 是同一个病，在同一个文件里犯了第二次——两个入口各写各的匹配语义。已对齐 no_clause_boundary/exclude_after/exclude_phrases，修后改引「李纨病故」「香菱殁了」，判决不变而证据成立。S4 终态：12 条兑现的引用证据逐条回读，0 条不成立",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "命令：node demo/hongloumeng-c/judge-external.mjs --file draft/w4-continuation.md --json，逐条读 evidence"
-    },
-    {
-      "claim": "走过一段弯路并被闸门拦下：本会话一度加「主语必须在死字之前」的语序约束，C0 当场红在 A-01-1——第七十八回写的是「死了晴雯」。而 judge-spec.json 的 death_binding.clause_why 里早已记载这条被同一句原文推翻过。规则写在盘上、被重新发明、由闸门拦回，这是判分器这套设计第一次对作者本人生效",
-      "verified": true,
-      "source_kind": "file",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "demo/hongloumeng-c/judge-spec.json 的 defaults.death_binding.clause_why；命令：node demo/hongloumeng-c/verify-c0.mjs"
-    },
-    {
-      "claim": "W1-3 第三轮通过：可用 9 / 47 条亲属记录，锚定落空 0 条，另 38 条显式声明方向不可判并逐条写依据。抽查该出口有无滥用：0 条滥用。抽查脚本自身报的一条假阳性暴露出验证器同款精度洞——别名链上的单字形「玉」把「黛玉之母」认成賈寶玉的属格，已限制属格匹配只认 ≥2 字名字形",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "命令：node demo/hongloumeng-c/verify-facts.mjs --facts demo/hongloumeng-c/work/hermes-facts-v3.json（退出码 0）"
     }
   ],
   "decisions": [
@@ -1138,9 +1074,7 @@
     "W4-1 在同一判据下起草续写（Hermes 起草，长提示词写 task.md，命令行只传短路径），与后四十回同台比违规率",
     "W5-1 并入 A/B 轨的三臂实验与同一份白皮书、同一个 Constraint Bounty 页",
     "待核：把 Hu/Wang/Wu 2014 等既有计量红学工作落盘为可复核物，确认「未见叙事一致性判据」这条空白声明成立；若已有人做过，据实改写定位",
-    "把 wikisource 抓取与清洗写成 demo/hongloumeng-c/build-corpus.mjs，使 wikisource-honglou-120.txt / -c005.txt / zhipi-raw.json 三份也变成「按指纹可重建」；在那之前 CORPUS-SOURCES.md 第四列的 ❌ 就是它们的真实状态",
-    "把 judge-external.mjs 与 judge.mjs 的匹配实现合一：繁简归一抽成可选变换，匹配逻辑只留一份。两个入口各写各的语义已在同一文件里犯错两次（also_requires、分句边界），第三次只是时间问题",
-    "W3-2 假绿排查扩到后四十回与前八十回全量：本轮只对我方五回的 12 条兑现做了逐条回读，回目行这个洞是在续写载荷上撞见的，主判分器那侧尚未全量复查"
+    "把 wikisource 抓取与清洗写成 demo/hongloumeng-c/build-corpus.mjs，使 wikisource-honglou-120.txt / -c005.txt / zhipi-raw.json 三份也变成「按指纹可重建」；在那之前 CORPUS-SOURCES.md 第四列的 ❌ 就是它们的真实状态"
   ],
   "learnings": [
     {
@@ -1985,13 +1919,13 @@
     }
   ],
   "actions": [],
-  "content_hash": "66b75035f4a3c3a299b1e7633552f9590376c9856a3e549da12856b04eae1c15",
+  "content_hash": "bd377f8f15c391b90812a0206a4dc5bd224a60ec37f79901b0864a414ebb2d04",
   "actor": {
     "harness": "claude-code",
     "model": "claude-opus-5",
     "model_source": "transcript",
     "session_id": "a0e051a5-728b-4256-b818-1670aad14c25",
-    "at": "2026-08-10T16:55:54.586Z"
+    "at": "2026-08-10T15:32:22.190Z"
   },
-  "updated_at": "2026-08-10T16:55:54.586Z"
+  "updated_at": "2026-08-10T15:32:22.190Z"
 }
