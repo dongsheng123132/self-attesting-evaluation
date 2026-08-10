@@ -6,6 +6,11 @@
 
 规矩：**按代码里实际存在的东西定名，不按架构文档定名。** 文档会自相矛盾（下面有例），代码不会。
 
+> ⚠ **跨仓库命名以 [`2origin-computer/NAMING-DECISION.md`](../2origin-computer/NAMING-DECISION.md) 为准。**
+> 本表曾把「本象」定义成 the observer，而 `本象协议` 与 `2origin-computer` 的架构表把同一个词
+> 定义成表示层（Origin IR）——**一名两物，两边的术语表互相矛盾**。裁决：本象归表示层，
+> 本仓库的观察器改称**取象 / Sensor**。代码目录 `benxiang/` 暂不改名，前置条件见裁决 §3。
+
 ---
 
 ## 主表
@@ -15,7 +20,8 @@
 | 2Origin | 2Origin | 整套架构的名字。模型是 CPU，这套东西是主板 | — | — |
 | 本境 | **state layer** | 持久化的任务状态。乐观锁、可复核 source、actor 溯源、残缺写入拦截 | `southbridge/benjing-*.mjs` | `benjing/0.2` |
 | 学历 | **task state**（文件）/ *academic record*（比喻） | 一个任务的 `task.origin.json`：状态 + 已验证事实 + 决策 + 下一步。**不是聊天记录** | `demo/*/task.origin.json` | `2origin/0.2` |
-| 本象 | **the observer** | 「看世界」的唯一实现。铁律：`observe()` 永不接收预期——观察器一旦收预期就退化成确认偏误机 | `benxiang/observe.mjs` | `benxiang/0.1` |
+| 取象 | **Sensor** | 「看世界」的唯一实现。铁律：`observe()` 永不接收预期——观察器一旦收预期就退化成确认偏误机。**代码目录仍叫 `benxiang/`**：改名的前置条件（路径别名表）未就位，见裁决 §3 | `benxiang/observe.mjs` | `benxiang/0.1` |
+| 本象 | **Origin IR** | 世界的持久表示层：对象/关系/载荷/状态/约束/来源/边界。**不在本仓库**——实现在 `本象协议/compiler/` | — | `benxiang/origin-ir` |
 | 北桥 | **context compiler** | 把状态编译进上下文窗口。两个时刻：boot（无 goal，确定性）与 request（goal 出现后才做相关性） | `northbridge/compile.mjs` | `northbridge/0.2` |
 | 学堂 | **the school** / *learning loop* | 经验的产生、升降级与装载。核心规则：learning 的 `recheck` 必须是可重跑的动作——没有它，这条经验永远无法被推翻，也就永远不该叫 verified | `xuetang/learning-core.mjs`、`exam.mjs` | `xuetang/0.1` |
 | 经验 | **learning** | 「下次别再这样」。与 fact（「这个任务发生过什么」）分属两类：fact 要 `source` 引可复核物，learning 要 `recheck` 是可重跑命令 | `demo/*/task.origin.json` 的 `learnings[]` | `xuetang/0.1` |
@@ -74,7 +80,11 @@
 ## 给译者/写论文的人的几条
 
 - **不要**把「学历」译成 diploma / degree。它不是学位，是一份可继承的任务状态。
-- **不要**把「本象」译成 world model。它不建模，它只观察——`observe()` 收到预期参数会直接抛错。
+- **不要**把「取象」译成 world model，也不要译成 `Observer`（撞 GoF 观察者模式＝事件订阅）或
+  `Watcher`（暗示持续监听，它是一次性调用）。它不建模，它只观察——`observe()` 收到预期参数会直接抛错。
+  英文一律用 **Sensor**：传感器不会因为你希望是 25 度就读出 25 度，那正是这条铁律本身。
+- **「本象 / Benxiang」在论文里一律指 Origin IR（表示层）**，不指本仓库的观察器。二者曾长期共用
+  一个名字，裁决见 [`2origin-computer/NAMING-DECISION.md`](../2origin-computer/NAMING-DECISION.md)。
 - **不要**把「trace」和「学历」混为一谈。trace 是聊天记录（影），学历是对象本身。本仓库的主张恰恰是二者不可互换，
   而且这条已经测过：结构化状态 97.5%，同预算最强对话流对照 60.0%，Wilson 区间不重叠。
 - 「判据」译 conformance judgment，不译 test。test 暗示「跑通即可」，判据要求「能抓住故意造的假」。
