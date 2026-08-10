@@ -1,0 +1,61 @@
+{
+  "spec": "hongloumeng-c/handoff/0.1-result",
+  "evaluated_by": "claude-opus-5（交接方），逐条独立复跑，未采信 codex 自报",
+  "successor_ran": "codex-cli 0.147.0，-s workspace-write，单条提示词，177,027 tokens",
+  "files_changed": [
+    "task.origin.json",
+    "judge-spec.json",
+    "c0-calibration.json"
+  ],
+  "verdict": {
+    "S1": {
+      "pass": true,
+      "how": "未告知任何路径，它自行定位 judge-spec.json / c0-calibration.json / verify-c0.mjs 并全部改对"
+    },
+    "S2": {
+      "pass": true,
+      "how": "judge-spec.predicates 由 20 增至 21，新增 A-04-2「林黛玉死亡，且与宝玉终未成婚」"
+    },
+    "S3": {
+      "pass": true,
+      "how": "c0-calibration.expectations 由 20 增至 21，为 A-04-2 声明 expect=NOT_FOUND 并写明理由；revision_log 记到 rev11"
+    },
+    "S4": {
+      "pass": true,
+      "how": "我方独立运行 node verify-c0.mjs 退出码 0"
+    },
+    "S5": {
+      "pass": true,
+      "how": "逐条比对 20 条原有预期的 expect 值：一条未改、一条未丢"
+    }
+  },
+  "failure_modes_triggered": {
+    "F1": false,
+    "F2": false,
+    "F3": false
+  },
+  "reconstructed_without_hints": [
+    "C0 校准闸门的存在，以及「新谓词必须先进校准集」这条规矩（C0.4）",
+    "兑现只认叙述语、剥离引号内人物话语",
+    "死亡贴身绑定 proximity=6 —— 它沿用了该参数而非放宽",
+    "本境写学历走乐观锁 benjing-put（备份目录留下 v11，未用 Write 覆盖）",
+    "「改判分器不改曹雪芹」——它没动任何一条已有预期"
+  ],
+  "gate_caught_the_successor_too": "C0 首轮抓到它的谓词在第五十七回「兔死狐悲」误报；它据此把「狐」加入死亡状语排除表，与我方此前加「保守活命心」同一类修法。闸门对另一个模型同样有效。",
+  "honest_limitations": [
+    "非盲：codex 自报「本条检查过目标窗口」，即定稿前看过后四十回。它主动把这一条写进了学历，但这仍使该谓词不构成盲测。",
+    "单例：只交接了一次、一条谓词。不能据此宣称任意任务都能交接。",
+    "同机同盘：跨的是 harness 与模型，不是机器。学历与产物都在同一磁盘上，网络/权限差异未被测试。",
+    "摩擦仍在：codex 的 Windows 沙箱在执行 PowerShell 时报 CreateProcessAsUserW error 5，它绕开后才继续——与本仓既有记录的 harness 审批闸门摩擦同类。"
+  ],
+  "snapshot_after": {
+    "task.origin.json": "ac860708b4495c77c4fb46c9335e39f3b07cb013265cf5e8d80768cfd626833c",
+    "judge-spec.json": "fe405871bfc528b13ae06c823131572b62c63505ddc95d5751d972090afa12c3",
+    "c0-calibration.json": "1a0d4f5734d077ebb6ae634001a592d5fc02fb5634024f873ec5bce408c97f49",
+    "judge.mjs": "984f408033d55b5c80fede5075e1009ef96ecf5a5473579e0932a8dce35bbae4",
+    "verify-c0.mjs": "891ed01e9191a7e6bd59ce19c2399fb61bd28fccd055d7acec8d9da440fd29d0",
+    "panci-spec.json": "819533e87f7faee1c63a5057c429e78935c352ea59c16abf872fed927e4d5e82",
+    "zhipi-spec.json": "3f375375e57e4f30c968c94cfdeca6c7fabffb826c7c93caac9791d3d8ff9201",
+    "aliases.json": "f21221807700e8f190aa84e897c17c7e530be63a12463c98f65e51f71c1a6307"
+  }
+}

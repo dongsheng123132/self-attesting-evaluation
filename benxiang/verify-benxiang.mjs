@@ -126,6 +126,48 @@ t('X7.1', '本境 health 的 artifact 观察走本象，不再自己实现一遍
     || 'benjing-core 仍未引用本象——「看世界」还散落在各部件里各写一遍';
 });
 
+// ─── X8：数据不合规不得伪装成程序缺陷，且不得让观察器对其余失明 ───
+//
+// 实弹两次：学历 artifacts 被写成 [{path,what}]（schema 要 string[]）、
+// 以及并发会话直接写入的 demo/control-m0。两次都让 observe 抛
+// ERR_INVALID_ARG_TYPE —— 日志上像程序崩了，实际是数据不合规。
+// 更糟的是 reobserve 整个进程死掉：其余学历一条都没被观察到，账本当轮为空且无人知道。
+
+t('X8.1', 'observe 收到非字符串 target 抛协议级错误（带 code），不让 Node 的 TypeError 冒上来', () => {
+  try { observe({ path: "a.txt", what: "对象形式" }, REPO); return '没抛错'; }
+  catch (e) {
+    return (e.code === 'BENXIANG_BAD_TARGET' && /数据不合规/.test(e.message))
+      || `code=${e.code} msg=${e.message.slice(0, 60)}`;
+  }
+});
+
+t('X8.2', '【反向】错误信息必须指出「这是数据不合规不是程序缺陷」——只抛错不说明等于没修', () => {
+  try { observe(["a"], REPO); return '没抛错'; }
+  catch (e) { return /不是程序缺陷/.test(e.message) || `msg=${e.message.slice(0, 80)}`; }
+});
+
+t('X8.3', '【反向】一份坏学历不得让观察器对其余全部失明：reobserve 须跑完并如实计数', () => {
+  const sb = fs.mkdtempSync(path.join(os.tmpdir(), 'benxiang-blind-'));
+  try {
+    // 两份学历：一份 artifacts 不合规，一份正常。观察器必须两份都处理完。
+    const mk = (id, arts) => ({ spec: '2origin/0.2', kind: 'task.origin', id, title: id, goal: 'g',
+      current_state: 's', facts: [], decisions: [], artifacts: arts, next_steps: [], learnings: [], actions: [] });
+    fs.mkdirSync(path.join(sb, 'bad'), { recursive: true });
+    fs.mkdirSync(path.join(sb, 'good'), { recursive: true });
+    fs.writeFileSync(path.join(sb, 'bad/task.origin.json'), JSON.stringify(mk('bad', [{ path: 'x.md' }])));
+    fs.writeFileSync(path.join(sb, 'good/task.origin.json'), JSON.stringify(mk('good', ['good/task.origin.json'])));
+    let okCount = 0, badCount = 0;
+    for (const d of ['bad', 'good']) {
+      const st = JSON.parse(fs.readFileSync(path.join(sb, d, 'task.origin.json'), 'utf8'));
+      for (const a of st.artifacts) {
+        try { observe(a, sb); okCount++; } catch { badCount++; }
+      }
+    }
+    return (okCount === 1 && badCount === 1)
+      || `正常观察 ${okCount} 条、不合规 ${badCount} 条 —— 应各 1 条`;
+  } finally { try { fs.rmSync(sb, { recursive: true, force: true }); } catch {} }
+});
+
 // ───────────────────────── 报告 ─────────────────────────
 const pass = results.filter(r => r.ok).length;
 console.log(`\n═══ 本象 v0.1 一致性验证（${SPEC}）═══\n`);

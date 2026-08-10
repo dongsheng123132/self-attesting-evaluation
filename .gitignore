@@ -41,12 +41,32 @@ __pycache__/
 # governance/anchors/          冻结的证据快照 + OpenTimestamps 证明。这是本仓库唯一
 #                              **不由我们自己签发**的时间凭证：本机 commit date 可以任意伪造，
 #                              比特币区块头不行。删掉它们等于把优先权主张退回自证状态。
+# demo/hongloumeng-c/corpus/wikisource-honglou-120.txt
+# demo/hongloumeng-c/corpus/zhipi-raw.json
+#                              C 轨判分器**运行时读的就是这两份**（judge.mjs / verify-zhipi-spec.mjs），
+#                              而它们是本机加工出来的派生物，没有「一个 URL 取回原样」的重建路径
+#                              （第一版建表时把 120 条回目全删了，现在这份是修过的第二版）。
+#                              其余三轨的语料能忽略，是因为 fetch-corpus.mjs 真能把它们取回来；
+#                              这两份不能，忽略它们等于把 C 轨全部结论变成不可复跑。5.3M，认了。
 *.tmp
 
 # 文学基准三轨的语料：公有领域原文，体积大且可由 demo/fetch-corpus.mjs 按指纹重建
 demo/ulysses-19/corpus/
 demo/spenser-7-1/corpus/
 demo/holmes-untold/corpus/
+
+# C 轨语料按「能不能重建」分开处置，不按目录一刀切 —— 详见 demo/hongloumeng-c/CORPUS-SOURCES.md。
+# 这四份是 Gutenberg 原样文件，已进 fetch-corpus.mjs 的清单，按指纹可重建：
+demo/hongloumeng-c/corpus/pg23863.txt
+demo/hongloumeng-c/corpus/pg23962.txt
+demo/hongloumeng-c/corpus/pg24032.txt
+demo/hongloumeng-c/corpus/pg24264-honglou.txt
+# 盲测副本是 wikisource-honglou-120.txt 的**逐字节前缀**（前 1,776,208 字节 = 前八十回），
+# 由 `head -c 1776208` 可确定性重建，不必存两份：
+demo/hongloumeng-c/handoff/blind/corpus/
+# 同事的续编正文：是别人的作品，不是我们的。判决、指纹与统计留在仓库里，正文不进。
+# 这与 PUBLICATION-POLICY.md §2「客户真实工作区」同一条理由。
+demo/hongloumeng-c/external/
 
 # 隐藏判据集 H：只提交 SEAL.json（哈希）与构造脚本，H 本身不进 git
 demo/holmes-untold/hidden/

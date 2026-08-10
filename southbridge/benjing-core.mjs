@@ -12,7 +12,7 @@ import crypto from 'node:crypto';
 // 复盘结论：sha256/existsSync 曾在三个文件里各写一遍，每个部件自己当自己的观察者——
 // 这正是「自证」在本仓库复发五次的结构性原因。
 import { observe } from '../benxiang/observe.mjs';
-import { checkState } from './schema-check.mjs';
+import { checkState } from './schema-check.mjs';  // RFC-0010：写入闸门强制 schema 校验
 
 export const SPEC = '2origin/0.2';
 export const SPEC_ACCEPTED = ['2origin/0.1', '2origin/0.2']; // 向后兼容：v0.1 状态仍可读
@@ -278,6 +278,33 @@ export function putState(p, next, { expect = null, actor = null } = {}) {
         shrunk, disk_unchanged: true
       };
     }
+  }
+
+  // ── schema 闸门（RFC-0010）──────────────────────────────────────────────
+  //
+  // 前面三道检查都是被真事故逼出来的，但它们之间有条缝：
+  //   乐观锁 —— 证明「你读过盘上那份」，不证明「你写的还是一份学历」
+  //   必填字段 —— 只查字段在不在，不查字段的**类型**
+  //   缩水检查 —— 只查数组条数，不查数组元素的**形状**
+  //
+  // 两次实弹都是从这条缝里穿过去的：字段齐全、条数没少、expect 正确，只是类型错了。
+  //   ① artifacts 写成 [{path,what}]（schema 要 string[]）→ 下游 reobserve / verify-state
+  //      双双 ERR_INVALID_ARG_TYPE，数据不合规伪装成程序 bug
+  //   ② codex 写入 source_kind="path+command"（不在允许集内）→ 无人报错
+  //
+  // 第②次来自另一个 harness。PreToolUse 那道硬拦截只在 Claude Code 生效，
+  // codex 走的是合法通道，闸门放行。**缺陷的严重性不能只按本 harness 的暴露面估。**
+  //
+  // 校验器（schema-check.mjs）一直存在也一直好用，只是写入路径上没人调用它。
+  // 不提供旁路开关：有开关的硬拦截等于没有硬拦截。
+  const viol = checkState(next);
+  if (viol.length) {
+    return {
+      status: 'denied',
+      reason: `拒写：不合 schema（${viol.length} 处）。校验器一直存在，只是此前写入路径上没人调用它。`,
+      schema_violations: viol,
+      disk_unchanged: true
+    };
   }
 
   const body = { ...next };

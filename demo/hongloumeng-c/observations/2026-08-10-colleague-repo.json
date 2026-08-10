@@ -1,0 +1,30 @@
+{
+  "spec": "hongloumeng-c/observation/0.1",
+  "what": "对同事公开仓库的一次时点观察",
+  "observed_at": "2026-08-10",
+  "observed_by": "claude-opus-5，经网页抓取",
+  "url": "https://github.com/qiuyitong05-del/honglou-continuation-article",
+  "observed": {
+    "files": [
+      "05-红楼梦续写推文-续集优化地位市场.md",
+      "README.md"
+    ],
+    "file_count": 2,
+    "commits": 1,
+    "issues": 0,
+    "pull_requests": 0,
+    "releases": 0,
+    "has_continuation_text": false,
+    "has_constraint_definitions": false,
+    "has_verification_scripts": false
+  },
+  "article_claims": [
+    "续写 20 回 / 7.4 万字（两卷）",
+    "80 个对象、26 条关系、17 条机器约束",
+    "55 条问题全部自动定位重写",
+    "ShadowBench 本象协议 6/6 通过，裸模型 1/6"
+  ],
+  "what_this_observation_supports": "仅支持一条：作为已发布物，上述数字读者无从复核（仓库内无正文、无约束定义、无验证脚本）。",
+  "what_it_does_not_support": "不支持任何关于这些数字真伪的推断。续集与约束很可能确实存在，只是不在该仓库。",
+  "caveat": "时点观察，非可重跑事实。仓库随时可能新增文件；复核者应自行访问 URL 比对，并注意观察日期。"
+}

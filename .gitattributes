@@ -20,6 +20,13 @@ LICENSE text eol=lf
 # 一个不含 NUL 的 .ots 会被当文本改写，证明当场作废，且没有任何东西会报错。所以显式钉死。
 *.ots  binary
 
+# 文学语料是「逐字节即证据」的东西：仓库里到处在记它们的 sha256（学历 facts、
+# fetch-corpus.mjs 清单、CORPUS-SOURCES.md）。而 `* text=auto` 会在 Windows 上把 LF 换成 CRLF，
+# 于是别人 clone 下来一算指纹全对不上，**且没有任何东西会报错**——跟上面 .ots 那条是同一个病：
+# 此前没出事只是因为 git 的启发式恰好没动它，那是运气不是守卫。
+demo/*/corpus/** binary
+demo/hongloumeng-c/handoff/blind/corpus/** binary
+
 # Windows 原生命令脚本保留 CRLF；压缩包、Office、CAD 与图片按二进制处理。
 *.bat  text eol=crlf
 *.cmd  text eol=crlf

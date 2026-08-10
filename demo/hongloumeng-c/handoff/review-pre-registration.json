@@ -1,0 +1,36 @@
+{
+  "spec": "hongloumeng-c/handoff/0.3-adversarial-review",
+  "title": "对抗性复核 —— 预注册（第三次交接：不是帮我干活，是来推翻我）",
+  "why": "33 条谓词、六道 C0 判据、REPORT、RFC-0010 全由同一个作者（claude-opus-5 本会话）写成。闸门是我设的，照不到我自己的盲区。本仓铁律「作者不能给自己发证」在此处尚未被满足。",
+  "reviewer": "codex-cli 0.147.0（模型由其自报，本方不代为宣称）",
+  "task_given": "对抗性复核：找出判分器判错的条目、恒绿的判据、或我们对着答案调参的痕迹。只读复核，写结论文件，不改判据。",
+  "what_counts_as_reviewer_win": {
+    "W1": "指出任一条 case 谓词的判决（兑现/违反/未交代）与文本实际不符，并给出可复核的原文位置",
+    "W2": "指出 C0 六条判据中任一条实际恒绿（即：存在一种坏判分器能通过它）",
+    "W3": "指出任一处「先看结果再定判据」的痕迹，即 revision_log 里未如实归类为个案缺陷而实为凑答案的修改",
+    "W4": "指出 REPORT.md 中任一条结论的强度超过其证据所能支撑的范围"
+  },
+  "what_does_not_count": [
+    "「覆盖率只有 41%」—— 这一条我们已在 REPORT 诚实边界里写明，重复指出不算发现",
+    "「关键词检索不等于理解」—— 同上，已写明",
+    "风格、命名、代码整洁度 —— 不在本次复核范围",
+    "提出改进建议但不指出具体错误 —— 建议不是发现"
+  ],
+  "rules_for_reviewer": [
+    "只读复核，不得修改任何判据文件",
+    "结论写入 handoff/review-by-codex.md",
+    "每条发现必须给出可复跑命令或原文位置，否则不计"
+  ],
+  "evaluated_how": "本方逐条独立复跑其发现；采信与否以复跑结果为准，不采信其自述。快照用于证明它确实没改判据。",
+  "snapshot_before": {
+    "judge-spec.json": "4929a8b858a8d029dfa2c46299e0193db2897b2fc72312dea872d9abf733e97d",
+    "c0-calibration.json": "480c38331e15d7a484806fd3b4005f3f3ff9cfcedebdb09928879ab7075fb10f",
+    "judge.mjs": "027a5a5b95ed51430afe5d4193ccd801636cc2684d5d60718362d68ea535be71",
+    "verify-c0.mjs": "370f4a0f96182b802e5b3dfb69a222ac06b1addc1620b2701358895d93a34a02",
+    "panci-spec.json": "819533e87f7faee1c63a5057c429e78935c352ea59c16abf872fed927e4d5e82",
+    "zhipi-spec.json": "3f375375e57e4f30c968c94cfdeca6c7fabffb826c7c93caac9791d3d8ff9201",
+    "aliases.json": "1e29696046bdf14cf482916a393ffde7ecb1e31a2907b1944e20044d268ab609",
+    "REPORT.md": "a9f2c2d306890fe9f38424c3a868085c94a067f930e8e1f3710dbe35c923059c",
+    "task.origin.json": "9ebb6ae8a6e38a6b35edc8a9bec3c0421f83118a8d4019c9c0969bd6f9dc0a61"
+  }
+}

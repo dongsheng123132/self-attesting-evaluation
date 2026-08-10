@@ -75,18 +75,31 @@ for (const sp of findStateFiles(ROOT)) {
 
 // ── 2. 活的声明：学历声称的产物 ────────────────────────
 log('\n② 活的声明（学历 artifacts[] 声称存在的产物）');
-let liveOk = 0, liveGone = 0;
+let liveOk = 0, liveGone = 0, malformed = 0;
 for (const sp of findStateFiles(ROOT)) {
   const s = readJson(sp); if (!s) continue;
   const rel = path.relative(ROOT, sp).replace(/\\/g, '/');
   for (const a of (s.artifacts || [])) {
-    const o = observe(a, ROOT);
+    // 一份坏学历不该让观察器对其余全部失明。
+    //
+    // 此前这里直接 observe(a)，遇到不合规的 artifacts（对象形式、或并发会话
+    // 直接写入的残缺学历）就整个进程崩掉——后果不是「报了一个错」，
+    // 而是**其余所有学历一条都没被观察到**，账本当轮为空且无人知道。
+    // 观察器的职责是把世界看完并如实报告，不是遇到脏数据就罢工。
+    let o;
+    try { o = observe(a, ROOT); }
+    catch (e) {
+      malformed++; alerts++;
+      report.live_claims.push({ from: rel, artifact: null, malformed: true, reason: e.code || e.message.slice(0, 80) });
+      log(`   ⚠ ${rel} 的 artifacts 里有不合规条目（${e.code || 'BAD'}）：${JSON.stringify(a).slice(0, 60)}`);
+      continue;
+    }
     const ok = o.properties.exists;
     report.live_claims.push({ from: rel, artifact: a, exists: ok, sha256: o.properties.sha256 || null });
     if (ok) liveOk++; else { liveGone++; alerts++; log(`   ✗ ${rel} 声称的 ${a} 已不存在`); }
   }
 }
-log(`   ${liveGone ? '' : '✓ '}${liveOk} 条仍成立，${liveGone} 条已失效`);
+log(`   ${liveGone || malformed ? '' : '✓ '}${liveOk} 条仍成立，${liveGone} 条已失效${malformed ? '，' + malformed + ' 条不合规（已跳过但未隐瞒）' : ''}`);
 
 // ── 2b. 与上一轮比：这才是「回头看」，只看一眼不算 ──────
 // 学历没有记录 artifact 的指纹（只记路径），所以「产物内容变没变」以前是无人可答的。

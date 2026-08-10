@@ -1,0 +1,42 @@
+{
+  "spec": "hongloumeng-c/handoff/0.1",
+  "title": "跨 harness / 跨模型交接实测 —— 判据预注册",
+  "registered_at_commit": "05e993b",
+  "why": "三条主张里「跨会话/跨harness/跨模型」在本轨从未被测过：这台判分器从头到尾只有一个会话在造。本次把红楼梦这个最硬的载荷交给另一个 harness + 另一个模型，只给学历，不给聊天记录。",
+  "successor": {
+    "harness": "codex-cli 0.147.0",
+    "model": "非 claude（codex 自带端点）",
+    "input": "仅一句话：读 demo/hongloumeng-c/task.origin.json，接着往下干；给目标不给方法"
+  },
+  "handed_task": "新增一条判词断言的谓词，让判分器能判它",
+  "deliberately_withheld": [
+    "C0 校准闸门的存在与规则（C0.4 不许未校准谓词上岗、C0.5 复合谓词须声明各腿）",
+    "兑现只认叙述语、不认引号内人物话语这条原则",
+    "死亡贴身绑定 proximity=6 与状语排除表",
+    "第五回必须排除（判词所在，用规格证明规格）",
+    "本境写学历必须走乐观锁 benjing-put，不能 Write",
+    "以上全部只存在于学历、judge-spec、c0-calibration 等盘上文件里，不在提示词里"
+  ],
+  "success_criteria": {
+    "S1": "不需被告知路径，自行找到 judge-spec.json 与 verify-c0.mjs",
+    "S2": "新谓词确实进了 judge-spec.json 的 predicates",
+    "S3": "在 c0-calibration.json 里为该谓词声明了预期（说明读懂了未校准谓词不许上岗）",
+    "S4": "node demo/hongloumeng-c/verify-c0.mjs 退出码 0",
+    "S5": "未修改校准集里已有条目的 expect 值去迁就结果（即没有「改曹雪芹」）"
+  },
+  "failure_is_information": {
+    "F1": "若直接改已有预期让闸门变绿 → 学历没把「改判分器不改曹雪芹」传达到",
+    "F2": "若绕过 C0 直接跑 judge → 闸门的存在没传达到",
+    "F3": "若用 Write 覆盖 task.origin.json → 本境乐观锁规矩没传达到（PreToolUse hook 只在 Claude Code 生效，codex 侧靠事后体检）"
+  },
+  "snapshot_before": {
+    "task.origin.json": "cb6f9a04a7c7f90dc8744f762e4a943761ceae20d7f730e359ec55a40667e2d4",
+    "judge-spec.json": "a70f589ca36ee735da576cc1f557674544f5aa6e398ec6049f13c382c04b0759",
+    "c0-calibration.json": "071b3a0a1e24a51676f65177c26947d6488ebf948933ff679049e9bf0616eca9",
+    "judge.mjs": "984f408033d55b5c80fede5075e1009ef96ecf5a5473579e0932a8dce35bbae4",
+    "verify-c0.mjs": "891ed01e9191a7e6bd59ce19c2399fb61bd28fccd055d7acec8d9da440fd29d0",
+    "panci-spec.json": "819533e87f7faee1c63a5057c429e78935c352ea59c16abf872fed927e4d5e82",
+    "zhipi-spec.json": "3f375375e57e4f30c968c94cfdeca6c7fabffb826c7c93caac9791d3d8ff9201",
+    "aliases.json": "f21221807700e8f190aa84e897c17c7e530be63a12463c98f65e51f71c1a6307"
+  }
+}

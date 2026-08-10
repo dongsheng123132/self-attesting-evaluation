@@ -1,0 +1,388 @@
+{
+  "spec": "hongloumeng-c/aliases/0.1",
+  "title": "实体归一表 —— 三张判据表共用的唯一一份",
+  "doctrine": [
+    "一份，不是三份。判词表、脂批表、事实表各带一份别名表，三份必然漂移——",
+    "那正是本仓反复记录的『各部件各写各的』（RFC-0006 §0）。",
+    "每条别名要么由写死的机械规则导出（rule），要么有原文佐证（quote），",
+    "要么由两条以上原文推得并显式标记（inference）。没有一条可以靠『我觉得是同一个人』。",
+    "歧义形（同一个称呼指向不同的人）单列并禁止用作实体名——把它归到任何一边都是错的。"
+  ],
+  "corpus": {
+    "path": "demo/hongloumeng-c/corpus/wikisource-honglou-120.txt",
+    "sha256": "1e9bee4d044e14be689152b0400d88dde2a55ae83570adffa928a865ab7995bd",
+    "note": "2026-08-10 重建：第一版用 {{...}} 通配删模板，把 {{center|回目}} 连内容一起删掉了，120 条回目全部丢失，导致脂批表 B-05-2（佚回回目）无法验证。已修为先展开 center 再删其余模板。"
+  },
+  "rules": {
+    "surname_prefix": {
+      "how": "变体是规范名去掉姓氏前缀后的剩余部分，且被去掉的前缀属于声明的姓氏集",
+      "surnames": [
+        "賈",
+        "林",
+        "薛",
+        "史",
+        "王",
+        "花",
+        "秦",
+        "衛",
+        "李",
+        "甄"
+      ],
+      "why": "红楼梦行文大量用「寶玉」「黛玉」「探春」指称，与全名同指，这是排印惯例不是别名问题，可机械判定，不需引文"
+    }
+  },
+  "evidence_kinds": {
+    "rule": "由 rules 里写死的机械规则导出，程序可复核，不需引文",
+    "quote": "原文里有一句把两个名字直接等同起来，引文逐字可核",
+    "inference": "原文没有直接等式，但两条以上引文合起来指向同一人。必须显式标记，且证据强度低于 quote"
+  },
+  "traps_recorded": [
+    {
+      "trap": "同字不同人",
+      "case": "第五回警幻之妹『乳名兼美字可卿者』与秦可卿同字，是作者有意为之的重影，绝非同一人。若按『可卿』二字归一，会把一个仙姬并进秦可卿。",
+      "why_it_matters": "与 zhipi-spec 里记的『懸崖撒手在第一回是评甄士隐』同类：字面相同、语境完全不同。"
+    },
+    {
+      "trap": "歧义形",
+      "case": "『王氏』在第二回指賈政之妻（王夫人），在第四回指薛蟠寡母（薛姨媽）——同一个称呼，两个人。",
+      "why_it_matters": "归到任何一边都会造出错误的亲属边，且不会报错。故列入 ambiguous_forms 禁用。"
+    }
+  ],
+  "ambiguous_forms": [
+    {
+      "form": "王氏",
+      "refers_to": [
+        "王夫人",
+        "薛姨媽"
+      ],
+      "evidence": [
+        {
+          "chapter": "第二回",
+          "grounding": "這政老爹的夫人王氏，頭胎生的公子，名喚賈珠"
+        },
+        {
+          "chapter": "第四回",
+          "grounding": "寡母王氏乃現任京營節度使王子騰之妹"
+        }
+      ],
+      "ruling": "禁止用作实体名。事实表必须写明是 王夫人 还是 薛姨媽。"
+    }
+  ],
+  "persons": {
+    "P-JIAMU": {
+      "canonical": "賈母",
+      "variants": [
+        {
+          "name": "史氏太君",
+          "kind": "quote",
+          "chapter": "第三回",
+          "grounding": "此即冷子興所云之史氏太君，賈赦賈政之母也。當下賈母一一指與黛玉"
+        }
+      ]
+    },
+    "P-LIWAN": {
+      "canonical": "李紈",
+      "variants": [
+        {
+          "name": "宮裁",
+          "kind": "quote",
+          "chapter": "第四回",
+          "grounding": "因取名為李紈，字宮裁"
+        }
+      ]
+    },
+    "P-XIREN": {
+      "canonical": "花襲人",
+      "variants": [
+        {
+          "name": "襲人",
+          "kind": "rule",
+          "rule": "surname_prefix"
+        },
+        {
+          "name": "珍珠",
+          "kind": "quote",
+          "chapter": "第三回",
+          "grounding": "原來這襲人亦是賈母之婢，本名珍珠"
+        }
+      ]
+    },
+    "P-HONGYU": {
+      "canonical": "紅玉",
+      "variants": [
+        {
+          "name": "紅兒",
+          "kind": "quote",
+          "chapter": "第二十七回",
+          "grounding": "原叫紅玉的，因為重了寶二爺，如今只叫紅兒了"
+        }
+      ]
+    },
+    "P-XIANGLING": {
+      "canonical": "香菱",
+      "variants": [
+        {
+          "name": "秋菱",
+          "kind": "quote",
+          "chapter": "第八十回",
+          "grounding": "你去告訴秋菱，到我屋里將手帕取來"
+        }
+      ],
+      "pending": [
+        {
+          "name": "英蓮",
+          "why": "前八十回内找不到把『英蓮』与『香菱』直接等同的句子：『英蓮』只出现于第一、四、一二〇回。第一二〇回属后四十回，用它给底表做证等于拿被判对象当证据，方法论上不成立。",
+          "status": "未归一"
+        }
+      ]
+    },
+    "P-ZHENSHIYIN": {
+      "canonical": "甄士隱",
+      "variants": [
+        {
+          "name": "甄費",
+          "kind": "quote",
+          "chapter": "第一回",
+          "grounding": "廟旁住着一家鄉宦，姓甄，名費，字士隱"
+        }
+      ]
+    },
+    "P-JIAMIN": {
+      "canonical": "賈敏",
+      "variants": [
+        {
+          "name": "賈氏",
+          "kind": "inference",
+          "chapter": "第二回",
+          "groundings": [
+            "今只有嫡妻賈氏，生得一女，乳名黛玉，年方五歲",
+            "目今你貴東家林公之夫人，即榮府中赦，政二公之胞妹，在家時名喚賈敏"
+          ],
+          "reasoning": "两处都指林如海之妻：前者称『嫡妻賈氏』，后者称『林公之夫人…名喚賈敏』。原文无直接等式，故记为 inference。"
+        }
+      ]
+    },
+    "P-BAOYU": {
+      "canonical": "賈寶玉",
+      "variants": [
+        {
+          "name": "寶玉",
+          "kind": "rule",
+          "rule": "surname_prefix"
+        }
+      ]
+    },
+    "P-DAIYU": {
+      "canonical": "林黛玉",
+      "variants": [
+        {
+          "name": "黛玉",
+          "kind": "rule",
+          "rule": "surname_prefix"
+        }
+      ]
+    },
+    "P-BAOCHAI": {
+      "canonical": "薛寶釵",
+      "variants": [
+        {
+          "name": "寶釵",
+          "kind": "rule",
+          "rule": "surname_prefix"
+        }
+      ]
+    },
+    "P-XIANGYUN": {
+      "canonical": "史湘雲",
+      "variants": [
+        {
+          "name": "湘雲",
+          "kind": "rule",
+          "rule": "surname_prefix"
+        }
+      ]
+    },
+    "P-YUANCHUN": {
+      "canonical": "賈元春",
+      "variants": [
+        {
+          "name": "元春",
+          "kind": "rule",
+          "rule": "surname_prefix"
+        }
+      ]
+    },
+    "P-YINGCHUN": {
+      "canonical": "賈迎春",
+      "variants": [
+        {
+          "name": "迎春",
+          "kind": "rule",
+          "rule": "surname_prefix"
+        }
+      ]
+    },
+    "P-TANCHUN": {
+      "canonical": "賈探春",
+      "variants": [
+        {
+          "name": "探春",
+          "kind": "rule",
+          "rule": "surname_prefix"
+        }
+      ]
+    },
+    "P-XICHUN": {
+      "canonical": "賈惜春",
+      "variants": [
+        {
+          "name": "惜春",
+          "kind": "rule",
+          "rule": "surname_prefix"
+        }
+      ]
+    },
+    "P-JIALAN": {
+      "canonical": "賈蘭",
+      "variants": []
+    },
+    "P-JIAZHENG": {
+      "canonical": "賈政",
+      "variants": []
+    },
+    "P-JIASHE": {
+      "canonical": "賈赦",
+      "variants": []
+    },
+    "P-JIALIAN": {
+      "canonical": "賈璉",
+      "variants": []
+    },
+    "P-XIFENG": {
+      "canonical": "王熙鳳",
+      "variants": []
+    },
+    "P-WANGFUREN": {
+      "canonical": "王夫人",
+      "variants": []
+    },
+    "P-XINGFUREN": {
+      "canonical": "邢夫人",
+      "variants": []
+    },
+    "P-JIAZHU": {
+      "canonical": "賈珠",
+      "variants": []
+    },
+    "P-JIAZHEN": {
+      "canonical": "賈珍",
+      "variants": []
+    },
+    "P-JIARONG": {
+      "canonical": "賈蓉",
+      "variants": []
+    },
+    "P-JIAJING": {
+      "canonical": "賈敬",
+      "variants": []
+    },
+    "P-JIAFU": {
+      "canonical": "賈敷",
+      "variants": []
+    },
+    "P-JIADAIHUA": {
+      "canonical": "賈代化",
+      "variants": []
+    },
+    "P-JIADAISHAN": {
+      "canonical": "賈代善",
+      "variants": []
+    },
+    "P-NINGGUOGONG": {
+      "canonical": "宁國公",
+      "variants": []
+    },
+    "P-RONGGUOGONG": {
+      "canonical": "榮國公",
+      "variants": []
+    },
+    "P-LINRUHAI": {
+      "canonical": "林如海",
+      "variants": []
+    },
+    "P-JIAYUCUN": {
+      "canonical": "賈雨村",
+      "variants": []
+    },
+    "P-JIAOXING": {
+      "canonical": "嬌杏",
+      "variants": []
+    },
+    "P-LISHOUZHONG": {
+      "canonical": "李守中",
+      "variants": []
+    },
+    "P-XUEPAN": {
+      "canonical": "薛蟠",
+      "variants": []
+    },
+    "P-XUEYIMA": {
+      "canonical": "薛姨媽",
+      "variants": []
+    },
+    "P-WANGZITENG": {
+      "canonical": "王子騰",
+      "variants": []
+    },
+    "P-YINGLIAN": {
+      "canonical": "英蓮",
+      "variants": []
+    },
+    "P-QINKEQING": {
+      "canonical": "秦可卿",
+      "variants": []
+    },
+    "P-QINGWEN": {
+      "canonical": "晴雯",
+      "variants": []
+    },
+    "P-MIAOYU": {
+      "canonical": "妙玉",
+      "variants": []
+    },
+    "P-QIAOJIE": {
+      "canonical": "巧姐",
+      "variants": []
+    },
+    "P-SHEYUE": {
+      "canonical": "麝月",
+      "variants": []
+    },
+    "P-QIANXUE": {
+      "canonical": "茜雪",
+      "variants": []
+    },
+    "P-WEIRUOLAN": {
+      "canonical": "衛若蘭",
+      "variants": []
+    }
+  },
+  "non_persons": [
+    "賈府",
+    "寧國府",
+    "榮國府",
+    "賈宅",
+    "賈家",
+    "榮府",
+    "寧府"
+  ],
+  "not_entities": {
+    "note": "以下字符串出现在判据的 check 字段里，但它们不是实体名，是我在设计 check schema 时把非人对象塞进了 subject 字段造成的。已记为待修，不进归一表。",
+    "items": [
+      "第十三回",
+      "賈府敗亡",
+      "夫",
+      "賈迎春夫"
+    ]
+  }
+}

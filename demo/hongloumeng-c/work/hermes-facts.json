@@ -1,0 +1,724 @@
+{
+  "facts": [
+    {
+      "id": "K-001",
+      "kind": "kinship",
+      "subject": "林黛玉",
+      "relation": "父",
+      "object": "林如海",
+      "chapter": "第二回",
+      "grounding": "今只有嫡妻賈氏，生得一女，乳名黛玉，年方五歲"
+    },
+    {
+      "id": "K-002",
+      "kind": "kinship",
+      "subject": "林黛玉",
+      "relation": "母",
+      "object": "賈氏",
+      "chapter": "第二回",
+      "grounding": "今只有嫡妻賈氏，生得一女，乳名黛玉，年方五歲"
+    },
+    {
+      "id": "K-003",
+      "kind": "age",
+      "subject": "林黛玉",
+      "relation": "年方五歲",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "今只有嫡妻賈氏，生得一女，乳名黛玉，年方五歲"
+    },
+    {
+      "id": "K-004",
+      "kind": "age",
+      "subject": "林如海",
+      "relation": "年已四十",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "今如海年已四十，只有一個三歲之子"
+    },
+    {
+      "id": "K-005",
+      "kind": "office",
+      "subject": "林如海",
+      "relation": "前科探花",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "乃是前科的探花，今已升至蘭臺寺大夫"
+    },
+    {
+      "id": "K-006",
+      "kind": "office",
+      "subject": "林如海",
+      "relation": "升至蘭臺寺大夫",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "今已升至蘭臺寺大夫"
+    },
+    {
+      "id": "K-007",
+      "kind": "office",
+      "subject": "林如海",
+      "relation": "欽點巡鹽御史",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "今欽點出為巡鹽御史，到任方一月有餘"
+    },
+    {
+      "id": "K-008",
+      "kind": "office",
+      "subject": "賈雨村",
+      "relation": "升本府知府",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "今已升了本府知府"
+    },
+    {
+      "id": "K-009",
+      "kind": "office",
+      "subject": "賈雨村",
+      "relation": "會進士",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "不料他十分得意，已會了進士，選入外班"
+    },
+    {
+      "id": "K-010",
+      "kind": "office",
+      "subject": "賈雨村",
+      "relation": "被批革職",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "龍顏大怒，即批革職"
+    },
+    {
+      "id": "K-011",
+      "kind": "appellation",
+      "subject": "賈雨村",
+      "relation": "名賈化",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "原來本府新升的太爺姓賈名化"
+    },
+    {
+      "id": "K-012",
+      "kind": "kinship",
+      "subject": "嬌杏",
+      "relation": "妻",
+      "object": "賈雨村",
+      "chapter": "第二回",
+      "grounding": "雨村便將他扶側作正室夫人了"
+    },
+    {
+      "id": "K-013",
+      "kind": "kinship",
+      "subject": "寧國公",
+      "relation": "兄",
+      "object": "榮國公",
+      "chapter": "第二回",
+      "grounding": "當日宁國公與榮國公是一母同胞弟兄兩個。宁公居長"
+    },
+    {
+      "id": "K-014",
+      "kind": "office",
+      "subject": "賈代化",
+      "relation": "襲官",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "宁公死後，賈代化襲了官"
+    },
+    {
+      "id": "K-015",
+      "kind": "kinship",
+      "subject": "賈敬",
+      "relation": "子",
+      "object": "賈代化",
+      "chapter": "第二回",
+      "grounding": "也養了兩個兒子：長名賈敷，至八九歲上便死了，只剩了次子賈敬襲了官"
+    },
+    {
+      "id": "K-016",
+      "kind": "kinship",
+      "subject": "賈敷",
+      "relation": "子",
+      "object": "賈代化",
+      "chapter": "第二回",
+      "grounding": "也養了兩個兒子：長名賈敷"
+    },
+    {
+      "id": "K-017",
+      "kind": "age",
+      "subject": "賈敷",
+      "relation": "至八九歲上便死",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "長名賈敷，至八九歲上便死了"
+    },
+    {
+      "id": "K-018",
+      "kind": "office",
+      "subject": "賈敬",
+      "relation": "襲官",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "只剩了次子賈敬襲了官"
+    },
+    {
+      "id": "K-019",
+      "kind": "kinship",
+      "subject": "賈珍",
+      "relation": "子",
+      "object": "賈敬",
+      "chapter": "第二回",
+      "grounding": "幸而早年留下一子，名喚賈珍"
+    },
+    {
+      "id": "K-020",
+      "kind": "office",
+      "subject": "賈珍",
+      "relation": "襲官",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "因他父親一心想作神仙，把官倒讓他襲了"
+    },
+    {
+      "id": "K-021",
+      "kind": "kinship",
+      "subject": "賈蓉",
+      "relation": "子",
+      "object": "賈珍",
+      "chapter": "第二回",
+      "grounding": "這位珍爺倒生了一個兒子，今年纔十六歲，名叫賈蓉"
+    },
+    {
+      "id": "K-022",
+      "kind": "age",
+      "subject": "賈蓉",
+      "relation": "十六歲",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "今年纔十六歲，名叫賈蓉"
+    },
+    {
+      "id": "K-023",
+      "kind": "kinship",
+      "subject": "賈代善",
+      "relation": "子",
+      "object": "榮國公",
+      "chapter": "第二回",
+      "grounding": "自榮公死後，長子賈代善襲了官"
+    },
+    {
+      "id": "K-024",
+      "kind": "office",
+      "subject": "賈代善",
+      "relation": "襲官",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "自榮公死後，長子賈代善襲了官"
+    },
+    {
+      "id": "K-025",
+      "kind": "kinship",
+      "subject": "賈赦",
+      "relation": "子",
+      "object": "賈代善",
+      "chapter": "第二回",
+      "grounding": "娶的也是金陵世勳史侯家的小姐為妻，生了兩個兒子：長子賈赦，次子賈政"
+    },
+    {
+      "id": "K-026",
+      "kind": "kinship",
+      "subject": "賈政",
+      "relation": "子",
+      "object": "賈代善",
+      "chapter": "第二回",
+      "grounding": "生了兩個兒子：長子賈赦，次子賈政"
+    },
+    {
+      "id": "K-027",
+      "kind": "kinship",
+      "subject": "賈赦",
+      "relation": "兄",
+      "object": "賈政",
+      "chapter": "第二回",
+      "grounding": "長子賈赦，次子賈政"
+    },
+    {
+      "id": "K-028",
+      "kind": "office",
+      "subject": "賈赦",
+      "relation": "襲著官",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "如今代善早已去世，太夫人尚在，長子賈赦襲著官"
+    },
+    {
+      "id": "K-029",
+      "kind": "office",
+      "subject": "賈政",
+      "relation": "賜主事之銜",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "遂額外賜了這政老爹一個主事之銜，令其入部習學"
+    },
+    {
+      "id": "K-030",
+      "kind": "office",
+      "subject": "賈政",
+      "relation": "升員外郎",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "如今現已升了員外郎了"
+    },
+    {
+      "id": "K-031",
+      "kind": "kinship",
+      "subject": "王夫人",
+      "relation": "妻",
+      "object": "賈政",
+      "chapter": "第二回",
+      "grounding": "這政老爹的夫人王氏"
+    },
+    {
+      "id": "K-032",
+      "kind": "kinship",
+      "subject": "賈珠",
+      "relation": "子",
+      "object": "賈政",
+      "chapter": "第二回",
+      "grounding": "頭胎生的公子，名喚賈珠"
+    },
+    {
+      "id": "K-033",
+      "kind": "age",
+      "subject": "賈珠",
+      "relation": "十四歲進學",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "名喚賈珠，十四歲進學"
+    },
+    {
+      "id": "K-034",
+      "kind": "kinship",
+      "subject": "賈元春",
+      "relation": "女",
+      "object": "賈政",
+      "chapter": "第二回",
+      "grounding": "政老爹的長女，名元春"
+    },
+    {
+      "id": "K-035",
+      "kind": "office",
+      "subject": "賈元春",
+      "relation": "選入宮作女史",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "現因賢孝才德，選入宮作女史去了"
+    },
+    {
+      "id": "K-036",
+      "kind": "age",
+      "subject": "賈元春",
+      "relation": "正月初一日所生",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "只因現今大小姐是正月初一日所生，故名元春"
+    },
+    {
+      "id": "K-037",
+      "kind": "kinship",
+      "subject": "賈迎春",
+      "relation": "女",
+      "object": "賈赦",
+      "chapter": "第二回",
+      "grounding": "二小姐乃赦老爹前妻所出，名迎春"
+    },
+    {
+      "id": "K-038",
+      "kind": "kinship",
+      "subject": "賈探春",
+      "relation": "女",
+      "object": "賈政",
+      "chapter": "第二回",
+      "grounding": "三小姐乃政老爹之庶出，名探春"
+    },
+    {
+      "id": "K-039",
+      "kind": "kinship",
+      "subject": "賈惜春",
+      "relation": "妹",
+      "object": "賈珍",
+      "chapter": "第二回",
+      "grounding": "四小姐乃宁府珍爺之胞妹，名喚惜春"
+    },
+    {
+      "id": "K-040",
+      "kind": "kinship",
+      "subject": "賈敏",
+      "relation": "妻",
+      "object": "林如海",
+      "chapter": "第二回",
+      "grounding": "目今你貴東家林公之夫人，即榮府中赦，政二公之胞妹，在家時名喚賈敏"
+    },
+    {
+      "id": "K-041",
+      "kind": "kinship",
+      "subject": "賈敏",
+      "relation": "妹",
+      "object": "賈赦",
+      "chapter": "第二回",
+      "grounding": "即榮府中赦，政二公之胞妹，在家時名喚賈敏"
+    },
+    {
+      "id": "K-042",
+      "kind": "kinship",
+      "subject": "賈敏",
+      "relation": "妹",
+      "object": "賈政",
+      "chapter": "第二回",
+      "grounding": "即榮府中赦，政二公之胞妹，在家時名喚賈敏"
+    },
+    {
+      "id": "K-043",
+      "kind": "kinship",
+      "subject": "賈寶玉",
+      "relation": "子",
+      "object": "賈政",
+      "chapter": "第二回",
+      "grounding": "不想後來又生一位公子，說來更奇，一落胎胞，嘴裏便銜下一塊五彩晶瑩的玉來"
+    },
+    {
+      "id": "K-044",
+      "kind": "age",
+      "subject": "賈寶玉",
+      "relation": "七八歲",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "說來又奇，如今長了七八歲"
+    },
+    {
+      "id": "K-045",
+      "kind": "kinship",
+      "subject": "賈璉",
+      "relation": "子",
+      "object": "賈赦",
+      "chapter": "第二回",
+      "grounding": "若問那赦公，也有二子，長名賈璉"
+    },
+    {
+      "id": "K-046",
+      "kind": "age",
+      "subject": "賈璉",
+      "relation": "二十來往",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "長名賈璉，今已二十來往了"
+    },
+    {
+      "id": "K-047",
+      "kind": "office",
+      "subject": "賈璉",
+      "relation": "現捐同知",
+      "object": "",
+      "chapter": "第二回",
+      "grounding": "這位璉爺身上現捐的是個同知"
+    },
+    {
+      "id": "K-048",
+      "kind": "office",
+      "subject": "賈赦",
+      "relation": "襲一等將軍",
+      "object": "",
+      "chapter": "第三回",
+      "grounding": "大內兄現襲一等將軍，名赦，字恩侯"
+    },
+    {
+      "id": "K-049",
+      "kind": "appellation",
+      "subject": "賈赦",
+      "relation": "字恩侯",
+      "object": "",
+      "chapter": "第三回",
+      "grounding": "大內兄現襲一等將軍，名赦，字恩侯"
+    },
+    {
+      "id": "K-050",
+      "kind": "office",
+      "subject": "賈政",
+      "relation": "現任工部員外郎",
+      "object": "",
+      "chapter": "第三回",
+      "grounding": "二內兄名政，字存周，現任工部員外郎"
+    },
+    {
+      "id": "K-051",
+      "kind": "appellation",
+      "subject": "賈政",
+      "relation": "字存周",
+      "object": "",
+      "chapter": "第三回",
+      "grounding": "二內兄名政，字存周，現任工部員外郎"
+    },
+    {
+      "id": "K-052",
+      "kind": "kinship",
+      "subject": "賈赦",
+      "relation": "孫",
+      "object": "榮國公",
+      "chapter": "第三回",
+      "grounding": "乃榮公之孫：大內兄現襲一等將軍，名赦，字恩侯"
+    },
+    {
+      "id": "K-053",
+      "kind": "kinship",
+      "subject": "賈政",
+      "relation": "孫",
+      "object": "榮國公",
+      "chapter": "第三回",
+      "grounding": "乃榮公之孫：大內兄現襲一等將軍，名赦，字恩侯，二內兄名政，字存周，現任工部員外郎"
+    },
+    {
+      "id": "K-054",
+      "kind": "kinship",
+      "subject": "賈赦",
+      "relation": "母",
+      "object": "史氏太君",
+      "chapter": "第三回",
+      "grounding": "此即冷子興所云之史氏太君，賈赦賈政之母也"
+    },
+    {
+      "id": "K-055",
+      "kind": "kinship",
+      "subject": "賈政",
+      "relation": "母",
+      "object": "史氏太君",
+      "chapter": "第三回",
+      "grounding": "此即冷子興所云之史氏太君，賈赦賈政之母也"
+    },
+    {
+      "id": "K-056",
+      "kind": "kinship",
+      "subject": "邢夫人",
+      "relation": "妻",
+      "object": "賈赦",
+      "chapter": "第三回",
+      "grounding": "時賈赦之妻邢氏忙亦起身"
+    },
+    {
+      "id": "K-057",
+      "kind": "kinship",
+      "subject": "王熙鳳",
+      "relation": "妻",
+      "object": "賈璉",
+      "chapter": "第三回",
+      "grounding": "大舅賈赦之子賈璉，娶的就是二舅母王氏之內侄女，自幼假充男兒教養的，學名王熙鳳"
+    },
+    {
+      "id": "K-058",
+      "kind": "appellation",
+      "subject": "王熙鳳",
+      "relation": "稱鳳辣子",
+      "object": "",
+      "chapter": "第三回",
+      "grounding": "你只叫他『鳳辣子』就是了"
+    },
+    {
+      "id": "K-059",
+      "kind": "appellation",
+      "subject": "賈寶玉",
+      "relation": "稱混世魔王",
+      "object": "",
+      "chapter": "第三回",
+      "grounding": "我有一個孽根禍胎，是家裏的『混世魔王"
+    },
+    {
+      "id": "K-060",
+      "kind": "age",
+      "subject": "賈寶玉",
+      "relation": "比黛玉大一歲",
+      "object": "林黛玉",
+      "chapter": "第三回",
+      "grounding": "在家時亦曾聽見母親常說，這位哥哥比我大一歲"
+    },
+    {
+      "id": "K-061",
+      "kind": "age",
+      "subject": "林黛玉",
+      "relation": "三歲時來癩頭和尚",
+      "object": "",
+      "chapter": "第三回",
+      "grounding": "那一年我三歲時，聽得說來了一個癩頭和尚"
+    },
+    {
+      "id": "K-062",
+      "kind": "office",
+      "subject": "賈源",
+      "relation": "封榮國公",
+      "object": "",
+      "chapter": "第三回",
+      "grounding": "某年月日，書賜榮國公賈源"
+    },
+    {
+      "id": "K-063",
+      "kind": "office",
+      "subject": "穆蒔",
+      "relation": "勳襲東安郡王",
+      "object": "",
+      "chapter": "第三回",
+      "grounding": "同鄉世教弟勳襲東安郡王穆蒔拜手書"
+    },
+    {
+      "id": "K-064",
+      "kind": "kinship",
+      "subject": "李紈",
+      "relation": "妻",
+      "object": "賈珠",
+      "chapter": "第四回",
+      "grounding": "原來這李氏即賈珠之妻"
+    },
+    {
+      "id": "K-065",
+      "kind": "kinship",
+      "subject": "賈蘭",
+      "relation": "子",
+      "object": "賈珠",
+      "chapter": "第四回",
+      "grounding": "珠雖夭亡，幸存一子，取名賈蘭"
+    },
+    {
+      "id": "K-066",
+      "kind": "age",
+      "subject": "賈蘭",
+      "relation": "五歲",
+      "object": "",
+      "chapter": "第四回",
+      "grounding": "取名賈蘭，今方五歲，已入學攻書"
+    },
+    {
+      "id": "K-067",
+      "kind": "kinship",
+      "subject": "李紈",
+      "relation": "父",
+      "object": "李守中",
+      "chapter": "第四回",
+      "grounding": "這李氏亦系金陵名宦之女，父名李守中"
+    },
+    {
+      "id": "K-068",
+      "kind": "office",
+      "subject": "李守中",
+      "relation": "曾為國子監祭酒",
+      "object": "",
+      "chapter": "第四回",
+      "grounding": "父名李守中，曾為國子監祭酒"
+    },
+    {
+      "id": "K-069",
+      "kind": "appellation",
+      "subject": "李紈",
+      "relation": "字宮裁",
+      "object": "",
+      "chapter": "第四回",
+      "grounding": "因取名為李紈，字宮裁"
+    },
+    {
+      "id": "K-070",
+      "kind": "office",
+      "subject": "賈雨村",
+      "relation": "補授應天府",
+      "object": "",
+      "chapter": "第四回",
+      "grounding": "如今且說雨村，因補授了應天府"
+    },
+    {
+      "id": "K-071",
+      "kind": "age",
+      "subject": "馮淵",
+      "relation": "十八九歲",
+      "object": "",
+      "chapter": "第四回",
+      "grounding": "長到十八九歲上，酷愛男風"
+    },
+    {
+      "id": "K-072",
+      "kind": "kinship",
+      "subject": "甄英蓮",
+      "relation": "女",
+      "object": "甄老爺",
+      "chapter": "第四回",
+      "grounding": "他就是葫蘆廟旁住的甄老爺的小姐，名喚英蓮的"
+    },
+    {
+      "id": "K-073",
+      "kind": "appellation",
+      "subject": "薛蟠",
+      "relation": "混名獃霸王",
+      "object": "",
+      "chapter": "第四回",
+      "grounding": "這薛公子的混名人稱『獃霸王"
+    },
+    {
+      "id": "K-074",
+      "kind": "appellation",
+      "subject": "薛蟠",
+      "relation": "表字文起",
+      "object": "",
+      "chapter": "第四回",
+      "grounding": "這薛公子學名薛蟠，表字文起"
+    },
+    {
+      "id": "K-075",
+      "kind": "kinship",
+      "subject": "薛姨媽",
+      "relation": "妹",
+      "object": "王子騰",
+      "chapter": "第四回",
+      "grounding": "寡母王氏乃現任京營節度使王子騰之妹"
+    },
+    {
+      "id": "K-076",
+      "kind": "office",
+      "subject": "王子騰",
+      "relation": "現任京營節度使",
+      "object": "",
+      "chapter": "第四回",
+      "grounding": "寡母王氏乃現任京營節度使王子騰之妹"
+    },
+    {
+      "id": "K-077",
+      "kind": "office",
+      "subject": "王子騰",
+      "relation": "升九省統制",
+      "object": "",
+      "chapter": "第四回",
+      "grounding": "卻又聞得母舅王子騰升了九省統制，奉旨出都查邊"
+    },
+    {
+      "id": "K-078",
+      "kind": "kinship",
+      "subject": "薛蟠",
+      "relation": "舅",
+      "object": "王子騰",
+      "chapter": "第四回",
+      "grounding": "卻又聞得母舅王子騰升了九省統制"
+    },
+    {
+      "id": "K-079",
+      "kind": "age",
+      "subject": "薛寶釵",
+      "relation": "比薛蟠小兩歲",
+      "object": "薛蟠",
+      "chapter": "第四回",
+      "grounding": "只有薛蟠一子。還有一女，比薛蟠小兩歲，乳名寶釵"
+    },
+    {
+      "id": "K-080",
+      "kind": "office",
+      "subject": "賈珍",
+      "relation": "現任族長",
+      "object": "",
+      "chapter": "第四回",
+      "grounding": "現任族長乃是賈珍"
+    }
+  ]
+}

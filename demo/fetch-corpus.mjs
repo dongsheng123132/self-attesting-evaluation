@@ -106,6 +106,38 @@ const MANIFEST = [
     url: 'https://www.gutenberg.org/cache/epub/69700/pg69700.txt',
     sha256: '91f86e29b576c27576d199a8889a85bdb297e214d18e71e12b5efe3c69c425cd',
     note: '正典：The Case-Book of Sherlock Holmes'
+  },
+  // ── C 轨（红楼梦）：只有这四份是「一个 URL 取回原样」的，所以只有它们进得来。
+  // 判分器真正读的 wikisource 底本与脂批语料是本机加工出来的派生物，无自动重建路径，
+  // 因此**不在本清单里、也不忽略**，它们直接进 git。理由见 demo/hongloumeng-c/CORPUS-SOURCES.md。
+  {
+    track: 'hongloumeng-c',
+    file: 'demo/hongloumeng-c/corpus/pg24264-honglou.txt',
+    url: 'https://www.gutenberg.org/cache/epub/24264/pg24264.txt',
+    sha256: 'ff1526996bf4b81807651921a85e5c1c0f1d1d123c9fa4553057ba6a3ec72011',
+    note: '《紅樓夢》120 回，第二份独立底本（异文对照用，判分器不读它）'
+  },
+  {
+    track: 'hongloumeng-c',
+    file: 'demo/hongloumeng-c/corpus/pg23962.txt',
+    url: 'https://www.gutenberg.org/cache/epub/23962/pg23962.txt',
+    sha256: 'af3c9e408c0c58595b666ed9981b6fa1e9343f4bbc78309b1cb0818c32fc1f58',
+    note: '《西遊記》：单作者对照本。W0 用它证伪「文体统计量能分出换人」'
+  },
+  {
+    track: 'hongloumeng-c',
+    file: 'demo/hongloumeng-c/corpus/pg23863.txt',
+    url: 'https://www.gutenberg.org/cache/epub/23863/pg23863.txt',
+    sha256: '9d5b723b57f462545d412593870e7f48157829777b9329350a29bc44fd654789',
+    note: '《水滸傳》：单作者对照本'
+  },
+  {
+    track: 'hongloumeng-c',
+    file: 'demo/hongloumeng-c/corpus/pg24032.txt',
+    url: 'https://www.gutenberg.org/cache/epub/24032/pg24032.txt',
+    sha256: '98a08c88b154cfef2e6a4436f124b1e29254839c04cf0bc4538ce1fc87610393',
+    note: '《儒林外史》：**残缺，不可用作对照本**。第 2–11、13–18 回整段缺失，第 21 回回目重复。'
+      + '留在清单里是因为它是「数据源必须先观察后使用」那条决策的实物证据，不是因为它能用'
   }
 ];
 

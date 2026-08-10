@@ -625,6 +625,65 @@ t('B12.7', 'health 把 schema 违规计入 issues 并逐条列出（只校验不
     || `health 没报: ${JSON.stringify(item?.schema_issues)} issues=${h.issues}`;
 });
 
+
+// ─────────────── B13：写入闸门强制 schema 校验（RFC-0010）───────────────
+//
+// 起因是两次实弹，第二次来自另一个 harness：
+//   ① artifacts 写成 [{path,what}]（schema 要 string[]）→ 下游 reobserve / verify-state
+//      双双 ERR_INVALID_ARG_TYPE，数据不合规伪装成程序 bug
+//   ② codex 写入 source_kind="path+command"（不在允许集内）→ 落盘时无人报错
+//
+// 三道旧检查之间有条缝：乐观锁只证明「你读过」、必填只查字段在不在、
+// 缩水只查条数——都不查**类型**。两次事故都从这条缝穿过去了。
+const B13P = J('demo/gate13/task.origin.json');
+
+t('B13.1', '类型违规被拒写（artifacts 用对象形式）且磁盘不动', () => {
+  writeJ(B13P, mkState('gate13'));
+  const before = fs.readFileSync(B13P, 'utf8');
+  const cur = readJ(B13P);
+  const bad = { ...cur, artifacts: [{ path: 'a.txt', what: '对象形式' }] };
+  const r = putState(B13P, bad, { expect: contentHash(cur) });
+  const after = fs.readFileSync(B13P, 'utf8');
+  return (r.status === 'denied' && r.disk_unchanged === true && before === after)
+    || `status=${r.status} 盘变了=${before !== after}`;
+});
+
+t('B13.2', '枚举违规被拒写（source_kind 取允许集之外的值）且磁盘不动', () => {
+  const cur = readJ(B13P);
+  const bad = { ...cur, facts: [{ claim: 'x', verified: true, source: 'y', source_kind: 'path+command' }] };
+  const before = fs.readFileSync(B13P, 'utf8');
+  const r = putState(B13P, bad, { expect: contentHash(cur) });
+  return (r.status === 'denied' && fs.readFileSync(B13P, 'utf8') === before)
+    || `status=${r.status} reason=${r.reason}`;
+});
+
+t('B13.3', '拒写结果必须逐条指名违规字段（只拦不报等于没拦）', () => {
+  const cur = readJ(B13P);
+  const bad = { ...cur, artifacts: [{ path: 'a.txt' }] };
+  const r = putState(B13P, bad, { expect: contentHash(cur) });
+  return (Array.isArray(r.schema_violations) && r.schema_violations.length > 0
+    && JSON.stringify(r.schema_violations).includes('artifacts'))
+    || `schema_violations=${JSON.stringify(r.schema_violations)}`;
+});
+
+t('B13.4', '【反向】合规学历不得被误拦——闸门不能只会喊狼来了', () => {
+  const cur = readJ(B13P);
+  const good = { ...cur, current_state: '改一句话，其余全合规' };
+  const r = putState(B13P, good, { expect: contentHash(cur) });
+  return (r.status === 'done' || r.status === 'unchanged') || `合规写入被拦：${r.status} ${r.reason}`;
+});
+
+t('B13.5', '【反向】仓库现有全部学历逐份试写均放行（存量不被锁死）', () => {
+  const states = findStates(REPO).filter(f => !f.includes(SB));
+  const blocked = [];
+  for (const f of states) {
+    const st = JSON.parse(fs.readFileSync(f, 'utf8'));
+    const viol = checkState(st);
+    if (viol.length) blocked.push(`${f}: ${viol.length} 处`);
+  }
+  return blocked.length === 0 || `以下存量学历会被新闸门锁死：${blocked.join('; ')}`;
+});
+
 // ───────────────────────── 报告 ─────────────────────────
 const pass = results.filter(r => r.ok).length;
 console.log(`\n═══ 本境 v0.2 一致性验证（benjing/0.2）═══`);
