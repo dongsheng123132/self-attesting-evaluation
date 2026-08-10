@@ -11,7 +11,8 @@ import path from 'node:path';
 import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
-  contentHash, recheckSource, dereferenceSource, findStates, putState, reconcile,
+  contentHash, recheckSource, dereferenceSource, PATH_ALIASES, aliasCandidates,
+  findStates, putState, reconcile,
   detectActor, observeModel, writeAtomic, health,
   isLocked as isLockedFS, lockState, unlockState, scanStateFiles
 } from './benjing-core.mjs';
@@ -682,6 +683,48 @@ t('B13.5', '【反向】仓库现有全部学历逐份试写均放行（存量�
     if (viol.length) blocked.push(`${f}: ${viol.length} 处`);
   }
   return blocked.length === 0 || `以下存量学历会被新闸门锁死：${blocked.join('; ')}`;
+});
+
+// ───────── B14 路径别名表：改过名的部件，旧证据指针不得断链 ─────────
+// 这组判据存在的理由：命名裁决把观察器改称取象、学历层改称本历，而 16 份锚点快照与
+// 110 份学历备份里的旧名**永远不能改**。别名表因此是常设部件，不是迁移工具。
+// 拿掉 PATH_ALIASES 或 aliasCandidates，B14.1 必须变红——这是「名字走 candidate→verified」
+// 里 verified 的定义（裁决 §5.2）。
+
+t('B14.1', '旧名 source 在部件改名后仍能解引用（证据不断链）', () => {
+  const dir = path.join(DSB, 'quxiang');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'observe.mjs'), '// moved here by the naming decision\n');
+  // source 写的是旧名，盘上只有新名。同句里那个 demo/x.md 是对照——它确实不存在，
+  // 必须仍然报缺；断言只针对被别名覆盖的那一条，否则等于顺手放行了别的缺失。
+  const d = dereferenceSource('node benxiang/observe.mjs demo/x.md', DSB);
+  return (!d.missing.includes('benxiang/observe.mjs') && d.missing.includes('demo/x.md'))
+    || `旧名未经别名解到 quxiang/，或对照路径被顺带放行：missing=${JSON.stringify(d.missing)}`;
+});
+
+t('B14.2', '【反向】别名表不得变成万能通行证——不存在的东西仍须报缺', () => {
+  const d = dereferenceSource('见 benxiang/no-such-file.mjs', DSB);
+  return d.missing.length === 1
+    || `别名表放行了一个根本不存在的文件：${JSON.stringify(d)}`;
+});
+
+t('B14.3', '【反向】别名只按显式前缀映射，不做模糊匹配', () => {
+  // 'xbenxiang/' 只是恰好包含 'benxiang'，不该被当成别名前缀命中
+  const c = aliasCandidates('xbenxiang/observe.mjs');
+  return c.length === 1
+    || `模糊匹配把无关路径也映射了：${JSON.stringify(c)}`;
+});
+
+t('B14.4', '【反向】别名是双向的：新名写法在目录尚未改名时也要解得开', () => {
+  // 本仓库当前正处在这个状态：文档已写新名，代码目录还是旧名
+  const d = dereferenceSource('node quxiang/observe.mjs', REPO);
+  return d.missing.length === 0
+    || `新名未能反向解到仍在盘上的旧目录：missing=${JSON.stringify(d.missing)}`;
+});
+
+t('B14.5', '【反向】别名表每条都要写明出自哪条裁决（不许有来历不明的映射）', () => {
+  const bad = PATH_ALIASES.filter(a => !a.decision || !a.from || !a.to);
+  return bad.length === 0 || `${bad.length} 条别名缺出处或端点`;
 });
 
 // ───────────────────────── 报告 ─────────────────────────

@@ -496,6 +496,38 @@ export function recheckSource(source) {
 }
 
 /**
+ * 路径别名表 —— 命名裁决留下的**常设部件**，不是迁移工具。
+ *
+ * 为什么是常设的：16 份锚点快照与 110 份学历备份里的旧名**永远不能改**（改一个字节 `.ots`
+ * 立刻失效，那批比特币时间锚全部作废）。所以新旧名不是「过渡期共存」，是**永久共存**——
+ * 别名表就是这个永久事实的可执行形态。裁决见 2origin-computer/NAMING-DECISION.md §2。
+ *
+ * **铁律：只做显式前缀替换，列表逐条写死。** 模糊匹配会让别名表退化成万能通行证——
+ * 那时任何不存在的路径都能被「解引用成功」，而一个对什么都放行的探针等于没装探针
+ * （同型：判据 X8「一份坏学历不得让观察器对其余全部失明」）。
+ */
+export const PATH_ALIASES = [
+  { from: 'benxiang/', to: 'quxiang/', decision: '取象 Quxiang · Sensor' },
+  { from: 'southbridge/benjing-', to: 'southbridge/xueji-', decision: '学籍 Xueji · State Layer' }
+];
+
+/**
+ * 一个相对路径的全部合法写法：原样 + 每条别名的**两个方向**。
+ *
+ * 双向是必需的，不是对称美：旧 source 指旧名而文件已改名（旧→新），
+ * 而锚点快照里的路径永远是旧名、核验时盘上却是新名（也是旧→新）；
+ * 反过来，新写的文档指新名而目录尚未改（新→旧）——本仓库当前正处在这个状态。
+ */
+export function aliasCandidates(rel) {
+  const out = [rel];
+  for (const a of PATH_ALIASES) {
+    if (rel.startsWith(a.from)) out.push(a.to + rel.slice(a.from.length));
+    if (rel.startsWith(a.to)) out.push(a.from + rel.slice(a.to.length));
+  }
+  return [...new Set(out)];
+}
+
+/**
  * source 解引用：把 source 里引用的路径真去看一眼还在不在。
  *
  * 催生它的那次：另一个会话删掉 bench/run-final*.log，六条 source 当场悬空，
@@ -540,11 +572,14 @@ export function dereferenceSource(source, root) {
     // 我们不知道它相对谁，报 unresolved 而不是 missing。
     // 首版把这 16 条一律算成悬空——探针对什么都报警就等于什么都没测。
     const rel = r.replace(/^[./\\]+/, '');
-    const seg = rel.split(/[\\/]/)[0];
+    // 别名表（见 PATH_ALIASES）：改过名的部件，旧 source 仍须能解引用。
+    // 基准目录的判断也要走别名——否则 `benxiang/` 改名后第一段目录不在了，
+    // 会被判成 unresolved（「不知道相对谁」）而不是解引用成功，那是把改名说成环境问题。
+    const cands = aliasCandidates(rel);
     const bases = [root, path.resolve(root, '..')]
-      .filter(b => observe(path.join(b, seg), root).properties.exists);
+      .filter(b => cands.some(c => observe(path.join(b, c.split(/[\\/]/)[0]), root).properties.exists));
     if (!bases.length) { unresolved.push(r); continue; }
-    if (!bases.some(b => observe(path.resolve(b, rel), root).properties.exists)) missing.push(r);
+    if (!bases.some(b => cands.some(c => observe(path.resolve(b, c), root).properties.exists))) missing.push(r);
   }
   return { refs, checked: refs.length, missing, unresolved, skipped: raw.length - refs.length };
 }

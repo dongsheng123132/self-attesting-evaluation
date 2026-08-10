@@ -306,12 +306,33 @@ export function doWrite(args, actor = 'shadowcore') {
     return r;
   }
 
+  // ── 批准绑定哪一笔改动（RFC-0009 §9；外部对照 arXiv:2607.10487 "bound to the same effect"）
+  //
+  // 缺口：checkApproval 从头到尾没见过 content。
+  //   expect_sha256 证明的是「你读过**改前**的样子」，不是「你要写的是**这一笔**」。
+  //   TTY confirm 证明的是「有人在终端」，同样不绑内容。
+  // 于是审计事后问「这次批准绑定的是哪笔改动」——答不上来。
+  //
+  // bound_effect 由**核心自己算**（核心手里有 content），驱动传什么都不影响它。
+  // 这跟 observeApprovalContext 是同一条原则：审计记观察，不记声明。
+  // 仍然「不是阻止，是定责」——它不拦任何写，它让事后能对上账：
+  // 批准绑的 effect hash 是 H_e，盘上留下的是什么，两者能不能对上。
+  // 只在确实出示过凭据时才绑：low 风险走 auto，没有批准可绑。
+  const boundEffect = {
+    sha256: sha256(content),
+    bytes: Buffer.byteLength(content, 'utf8'),
+    mode, target: relpath
+  };
+  const approvalEvidence = appr.approval_evidence
+    ? { ...appr.approval_evidence, bound_effect: boundEffect }
+    : null;
+
   // ── 审计闸门（fail-closed）：动世界之前先记 intent，记不下就不动
   // 「所有关键 Action 必须可审计」不是口号。审计写不进去还照做，等于这次动作
   // 事后无法定责——而定责恰恰是本协议唯一一次真正救过场的能力（§6.6 靠审计零记录定的责）。
   if (!logAudit(actor, {
     ...base, kind: 'action.intent', status: 'pending', risk,
-    approval: appr.approval, approval_evidence: appr.approval_evidence ?? null
+    approval: appr.approval, approval_evidence: approvalEvidence
   })) {
     const r = {
       ...base, status: 'denied', risk, approval: appr.approval,
@@ -331,13 +352,41 @@ export function doWrite(args, actor = 'shadowcore') {
     } catch { backupPath = null; }
   }
 
+  // ── 提交那一刻重新观察（RFC-0009 §10；外部对照 arXiv:2607.10487 "fresh at commit time"）
+  //
+  // 缺口是个 TOCTOU：before 在风险闸门处观察，真正的写发生在**三个 IO 之后**
+  // （logAudit 追加审计、mkdirSync、copyFileSync 备份）。而本机常态是多个会话并发开着。
+  // 别的会话在这个窗口里写了同一个文件，我们照样覆盖，那个叫「乐观锁」的凭据一个字都不说——
+  // 凭据在**检查**那一刻新鲜，在**提交**那一刻已经不新鲜了。这正是 CTA 那篇分开的两件事：
+  // endpoint success 是 utility，authorized commit 才是 security property。
+  //
+  // 只对覆盖写重检。追加写不重检是有意的：别人继续追加是合法的（见上方幂等段），
+  // 拿整文件 sha 判 diverged 会把正常并发追加误判成冲突，反而诱发重复写。
+  // **这只收窄窗口，不消灭它**：重观察到 writeFileSync 之间仍有一瞬（同 §4 对 R2 的态度，
+  // 能做的是让越权可被发现，不是假装同进程外的世界能被锁住）。
+  const atWrite = observe(target);
+  if (mode === 'write' && atWrite.sha256 !== before.sha256) {
+    const r = {
+      ...base, status: 'diverged', risk, approval: appr.approval,
+      approval_evidence: approvalEvidence,
+      reason: '批准依据的那份 before 已经不是提交时的现实——期间有人改了这个文件，本次写已放弃',
+      state_diff: {
+        approved_against: { exists: before.exists, sha256: before.sha256, size_bytes: before.size_bytes },
+        at_commit: { exists: atWrite.exists, sha256: atWrite.sha256, size_bytes: atWrite.size_bytes }
+      },
+      evidence: atWrite
+    };
+    logAudit(actor, r);
+    return r;
+  }
+
   // ── 真正动世界
   try {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     if (mode === 'append') fs.appendFileSync(target, content, 'utf8');
     else fs.writeFileSync(target, content, 'utf8');
   } catch (e) {
-    const r = { ...base, status: 'failed', risk, approval: appr.approval, approval_evidence: appr.approval_evidence ?? null, reason: `写失败: ${e.message}` };
+    const r = { ...base, status: 'failed', risk, approval: appr.approval, approval_evidence: approvalEvidence, reason: `写失败: ${e.message}` };
     logAudit(actor, r);
     return r;
   }
@@ -345,8 +394,10 @@ export function doWrite(args, actor = 'shadowcore') {
   // ── 写后回头观察：status 由观察决定，不由 writeFileSync 决定
   const after = observe(target);
   const expectedBytes = Buffer.byteLength(content, 'utf8');   // v0.1 这里错用了 content.length（字符数）
+  // 基线用 atWrite 而不是 before：两者在单线程下相同，但并发追加时 before 已经过期，
+  // 拿它算 grew 会把「别人也追加了」误判成写失败。footprint 的 offset 同理。
   const grew = mode === 'append'
-    ? after.size_bytes === (before.size_bytes || 0) + expectedBytes
+    ? after.size_bytes === (atWrite.size_bytes || 0) + expectedBytes
     : after.size_bytes === expectedBytes;
 
   const status = after.exists && grew ? 'done' : 'failed';
@@ -354,15 +405,18 @@ export function doWrite(args, actor = 'shadowcore') {
     ...base,
     status,
     risk, approval: appr.approval, riskReason,
-    // 批准的出处（RFC-0009）：核心观察所得，非调用方声明。审计据此区分"人批的"与"自动化自批的"
-    approval_evidence: appr.approval_evidence ?? null,
+    // 批准的出处（RFC-0009）：核心观察所得，非调用方声明。审计据此区分"人批的"与"自动化自批的"，
+    // 并经 bound_effect 回答"这次批准绑定的是哪一笔改动"。
+    approval_evidence: approvalEvidence,
     evidence: after,
     state_diff: { before: { exists: before.exists, sha256: before.sha256 }, after: { exists: after.exists, sha256: after.sha256 } },
     bytes_written: expectedBytes,
     // footprint = 这次动作在世界上留下的那一段（偏移+长度+该段 sha）。
     // 追加写的幂等重放靠它判定，而不是整文件快照——这样别人往同一文件继续追加不会污染判决。
+    // offset 取 atWrite（提交那刻的观察）而非 before：并发追加时 before.size_bytes 已过期，
+    // 用它记 offset 会让后续重放去读错位置，把成功的重放判成 diverged。
     ...(mode === 'append'
-      ? { footprint: { offset: before.size_bytes || 0, length: expectedBytes, sha256: sha256(content) } }
+      ? { footprint: { offset: atWrite.size_bytes || 0, length: expectedBytes, sha256: sha256(content) } }
       : {}),
     reversible: true,
     backup_path: backupPath ? path.relative(ROOT, backupPath).replace(/\\/g, '/') : null,

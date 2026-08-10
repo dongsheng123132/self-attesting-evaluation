@@ -18,7 +18,7 @@
 | 中文 | English | 它到底是什么 | 代码在哪 | 规范 |
 |---|---|---|---|---|
 | 2Origin | 2Origin | 整套架构的名字。模型是 CPU，这套东西是主板 | — | — |
-| 本历 | **State Layer** | 持久化的任务状态。乐观锁、可复核 source、actor 溯源、残缺写入拦截。**代码前缀仍是 `benjing-`**：58 处 `facts[].source` 指着它，路径别名表未就位 | `southbridge/benjing-*.mjs` | `benjing/0.2` |
+| 学籍 | **State Layer** | 学历的登记与版本管理：乐观锁、可复核 source、actor 溯源、残缺写入拦截。**层是学籍，实例是学历**——正如学堂产经验、学籍存学历。**代码前缀仍是 `benjing-`**（58 处 `facts[].source` 指着它，走路径别名表） | `southbridge/benjing-*.mjs` | `benjing/0.2` |
 | 本境 | **Machine Profile** | 这台机器有什么、能跑什么：工具 / 版本 / 代理。**不在本仓库**——实现在 `本境协议/`(uenv)。v0.1 曾把这个词派给学历层，已推翻 | — | `uenv` |
 | 学历 | **task state**（文件）/ *academic record*（比喻） | 一个任务的 `task.origin.json`：状态 + 已验证事实 + 决策 + 下一步。**不是聊天记录** | `demo/*/task.origin.json` | `2origin/0.2` |
 | 取象 | **Sensor** | 「看世界」的唯一实现。铁律：`observe()` 永不接收预期——观察器一旦收预期就退化成确认偏误机。**代码目录仍叫 `benxiang/`**：改名的前置条件（路径别名表）未就位，见裁决 §3 | `benxiang/observe.mjs` | `benxiang/0.1` |

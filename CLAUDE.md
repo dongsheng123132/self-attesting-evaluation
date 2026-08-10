@@ -122,13 +122,15 @@ MCP 通道（`southbridge_write` 工具）在 codex 上会被它自己的工具�
 - **不存聊天记录，存 State + Verified Facts。** 聊天记录是"影"，本象是"对象本身"。
 - **facts 必须带 verified**：没验证的话不配叫 fact，叫"假设"。
 - **learning 先 candidate，验证后才 verified**：一次成功不是永久真理。
-- **命名冻结**：本源 AI 计算机（整机）/ 本象 / **取象** / **本历** / 本境 / 影核 / 北桥 / 南桥 / 学堂 —— 一个季度内不改。
+- **命名冻结**：本源 AI 计算机（整机）/ 本象 / **取象** / **学籍** / 本境 / 影核 / 北桥 / 南桥 / 学堂 —— 一个季度内不改。
   - **取象 Quxiang · Sensor** 是本仓库那个观察器（`benxiang/observe.mjs`）的正名。「本象 / Benxiang」
     从此只指**表示层**（Origin IR，在 `本象协议/`，不在本仓库）。
-  - **本历 Benli · State Layer** 是学历层的正名（`southbridge/benjing-*.mjs`）。
-    「本境 / Benjing」还给**环境层**（uenv）——「历」是履历，「境」是环境，各归各位。
+  - **学籍 Xueji · State Layer** 是学历层的正名（`southbridge/benjing-*.mjs`）。**层是学籍，实例是学历**——
+    正如学堂产经验、学籍存学历。「本境 / Benjing」还给**环境层**（uenv）。
+    （曾拟名「本历」，一小时内作废：生造词，且稀释「学历」这个最有传播力的词。）
   - 裁决见 [`2origin-computer/NAMING-DECISION.md`](../2origin-computer/NAMING-DECISION.md)。
-  - **代码一律不改名**：本象→取象 35 处证据指针、本境→本历 58 处，路径别名表未就位；
+  - **代码一律不改名**：本象→取象 35 处证据指针、本境→学籍 58 处，改名走**路径别名表**
+    （`PATH_ALIASES`，判据 B14）——它是常设部件不是迁移工具；
     且 16 份锚点快照 + 110 份学历备份里的旧名**永远不能改**（改一个字节 `.ots` 就失效）。
     `.benjing-backups/` 这个目录名因此永远保留旧名——**化石不是债，是证据链完整的证明。**
 - **名字也走 candidate → verified**（裁决 §5）：没有任何判据会因某部件缺失而变红时，
