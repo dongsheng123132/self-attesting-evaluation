@@ -4,7 +4,7 @@
   "id": "hongloumeng-c",
   "title": "C 轨：《红楼梦》——判词兑现度判分器（案子与续写是同一个实验）",
   "goal": "造一台只判「叙事一致性」的判分器：给定第五回判词与十二支曲（曹雪芹本人写下的结局规格）、脂批记载的佚稿情节、以及前八十回内部的亲属/称谓/年龄/时间线/官职事实，逐条判定一段文本是否与之矛盾。先用它重审后四十回（这就是「案子」），再用它判我们自己的续写（这就是「续写」）。真正要证明的不是文笔，是「跨会话/跨 harness/跨模型、只靠状态不靠聊天记录」能扛住中文里连续性要求最高的任务，且判据不是我们自己发明的考题。",
-  "version": 39,
+  "version": 32,
   "created_at": "2026-08-09T00:00:00Z",
   "governance": {
     "tenant_id": "uking",
@@ -15,7 +15,7 @@
     "export_policy": "allow",
     "retention_days": 0
   },
-  "current_state": "W1 完成。W2 判分器过 C0（含新增 C0.7 单一实现，退出码 0）。W1-3 第三轮通过：可用 9/47 条亲属记录。W3-1 后四十回判决：兑现 15 / 违反 0 / 未交代 12。W4-1 完成：Hermes 写出五回 24,866 字，预注册 S1/S2/S3 全过，判决 12/0/13，对照组同事续编 3/0/22。匹配语义已合一（三份实现→一份 matcher.mjs，122 条判决零变化）。W3-2 假绿抽查已扩到主判分器全量：后四十回 17 条兑现里 5 条引用证据不成立，3 条由证据优先级修好、1 条（B-04-1）自动标记披露、1 条（A-01-2 指代错位）机制盖不住已如实公布并入 next_steps。FINDINGS-ARCH 第三条与第七条仍待办。",
+  "current_state": "W1 完成。W2 判分器过 C0（现跑退出码 0）。W1-3 第三轮通过：可用 9/47 条亲属记录。W3-1 后四十回判决：兑现 15 / 违反 0 / 未交代 12（回目排除后重跑，原为 16/1/10）。W4-1 完成：Hermes 写出五回 24,866 字，预注册 S1/S2/S3 全过，判决兑现 12 / 违反 0 / 未见 13，对照组同事续编 3/0/22。S4 假绿抽查掀出三类问题并全部修掉，终态 0 条证据不成立——其中回目行那一类污染了已发布结论，A-15-1 由「违反」降为「未交代」。C 轨全部凭证已进版本库。FINDINGS-ARCH 第三条（南桥审计覆盖）与第七条（学堂 recheck 判别力）仍待办。",
   "facts": [
     {
       "claim": "Gutenberg #24264《紅樓夢》120 回全本已落盘，sha256=ff1526996bf4b81807651921a85e5c1c0f1d1d123c9fa4553057ba6a3ec72011，正文 865,303 字（去空白，不含 Gutenberg 头尾声明）",
@@ -1046,6 +1046,12 @@
       "source": "命令：node demo/hongloumeng-c/verify-facts.mjs --facts demo/hongloumeng-c/work/hermes-facts-v3.json（退出码 0）"
     },
     {
+      "claim": "探针",
+      "verified": true,
+      "source": "x",
+      "source_kind": "file"
+    },
+    {
       "claim": "匹配语义合一：此前有三份字符级匹配实现（judge.mjs 的 scan、judge.mjs runOne 里又抄一遍、judge-external 的 hits），同一类漏实现犯了三次，每次都让「两份文本用同一套判据判」当场失效。已抽出 matcher.mjs 为唯一实现，繁简归一降级为参数 transform。重构前封存四份判决作基线，重构后逐条比：后四十回 36 / 前八十回 36 / 同事 25 / 我方 25，共 122 条判决变化 0 条，唯一差异是 evidence 多了 anchor 字段（哪个名字形锚住了这次命中）",
       "verified": true,
       "source_kind": "command",
@@ -1060,46 +1066,6 @@
       "actor": "claude-code",
       "when": "2026-08-11",
       "source": "命令：node demo/hongloumeng-c/verify-c0.mjs（摘掉共用实现后退出码 1，还原后 0）"
-    },
-    {
-      "claim": "W3-2 假绿抽查扩到后四十回全量：17 条兑现里 5 条的引用证据不成立，且是同一族——文本里有那个词，但那句话说的不是这件事（传闻 / 担心 / 动念 / 回忆旧誓 / 指代错位）。判分器有「不认人物话语」的规则，却没有任何规则挡「未然」，这是判据设计上的一整块空白，不是个别谓词写窄了",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "命令：node demo/hongloumeng-c/judge.mjs --from 81 --to 120 --json，逐条回读 evidence 并回原文核对"
-    },
-    {
-      "claim": "未然族只披露不拦截，理由是硬删等于拿假绿换假红：实测 B-04-1「宝玉弃家为僧」在后四十回叙述语里找不到更好的证据（唯一命中是第 119 回「追想當年…便賭誓說做和尚」），删掉它结论会变成「后四十回没写宝玉出家」——那是更糟的错误。改为证据打标 + 展示时优先引不带标记的证据，判决一字未改",
-      "verified": true,
-      "source_kind": "file",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "demo/hongloumeng-c/matcher.mjs 的 IRREALIS 表与 irrealisCaveat 注释；REPORT.md 的「假绿体检」小节"
-    },
-    {
-      "claim": "证据优先级直接修好 3 条：A-04-1 改引第 98 回「正是寶玉娶寶釵的這個時辰」、A-08-1 改引第 111–113 回（含「今日妙玉被劫」）、A-10-1 改引第 115 回「惜春定要絞髮出家」。排序只动展示不动 chapters —— order 类谓词靠 chapters[0] 定先后，在那里排序会把「先后成立」判反",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "命令：node demo/hongloumeng-c/judge.mjs --from 81 --to 120 --only A-04-1,A-08-1,A-10-1 --json"
-    },
-    {
-      "claim": "两条假绿如实留着不掩盖：B-04-1 是唯一「全部证据都在未然语境」的条目，已由机制自动标记并进报告；A-01-2「晴雯身份是婢」机制盖不住——它不是未然而是指代错位，四条候选证据全部是「晴雯」与「丫頭」凑巧挨着，没有一句说她是丫头",
-      "verified": true,
-      "source_kind": "command",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "命令：node demo/hongloumeng-c/judge.mjs --from 81 --to 120 --only A-01-2 --json（4 条证据逐条回读）"
-    },
-    {
-      "claim": "「聽見說」刻意不进 irrealis 标记表：C0 正例 A-14-3 的证据正是第十三回「從夢中聽見說秦氏死了」，那是转述形式的真事件。转述不等于未然，把它一起排除会打掉一条校准正例",
-      "verified": true,
-      "source_kind": "file",
-      "actor": "claude-code",
-      "when": "2026-08-11",
-      "source": "demo/hongloumeng-c/matcher.mjs 的 IRREALIS 注释；命令：node demo/hongloumeng-c/verify-c0.mjs"
     }
   ],
   "decisions": [
@@ -1196,8 +1162,7 @@
     "待核：把 Hu/Wang/Wu 2014 等既有计量红学工作落盘为可复核物，确认「未见叙事一致性判据」这条空白声明成立；若已有人做过，据实改写定位",
     "把 wikisource 抓取与清洗写成 demo/hongloumeng-c/build-corpus.mjs，使 wikisource-honglou-120.txt / -c005.txt / zhipi-raw.json 三份也变成「按指纹可重建」；在那之前 CORPUS-SOURCES.md 第四列的 ❌ 就是它们的真实状态",
     "把 judge-external.mjs 与 judge.mjs 的匹配实现合一：繁简归一抽成可选变换，匹配逻辑只留一份。两个入口各写各的语义已在同一文件里犯错两次（also_requires、分句边界），第三次只是时间问题",
-    "W3-2 假绿排查扩到后四十回与前八十回全量：本轮只对我方五回的 12 条兑现做了逐条回读，回目行这个洞是在续写载荷上撞见的，主判分器那侧尚未全量复查",
-    "指代错位类假绿（A-01-2 型）尚无机制：谓词命中应要求与主语有句法绑定（「X是丫頭」「丫頭X」），而非仅邻近。修完必须重跑 C0"
+    "W3-2 假绿排查扩到后四十回与前八十回全量：本轮只对我方五回的 12 条兑现做了逐条回读，回目行这个洞是在续写载荷上撞见的，主判分器那侧尚未全量复查"
   ],
   "learnings": [
     {
@@ -2042,13 +2007,13 @@
     }
   ],
   "actions": [],
-  "updated_at": "2026-08-10T18:57:57.024Z",
-  "content_hash": "3151ceef0d5823a58b1391506f90d28540fa9a66a938a4369c66e00cd81817d7",
+  "updated_at": "2026-08-10T18:56:39.221Z",
+  "content_hash": "472c68063901925b81b447cb675ea66d9b9bea0605e2864cca819f547f7c70d2",
   "actor": {
     "harness": "claude-code",
     "model": "claude-opus-5",
     "model_source": "transcript",
     "session_id": "a0e051a5-728b-4256-b818-1670aad14c25",
-    "at": "2026-08-10T18:57:57.024Z"
+    "at": "2026-08-10T18:56:39.220Z"
   }
 }
