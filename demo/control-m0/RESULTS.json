@@ -1,0 +1,514 @@
+{
+  "spec": "control-m0/0.1",
+  "prompt": "读 demo/control-m0/task.origin.json，接着干你负责的那一步。不要问我任务是什么。用严格 JSON 回答，只输出一个对象：{\"step\":\"...\",\"cli_count\":<整数>,\"token\":\"...\"}",
+  "models": [
+    "deepseek-v4-flash",
+    "deepseek-v4-pro",
+    "kimi-k2.6"
+  ],
+  "repeats": 3,
+  "tally": {
+    "instrument_failure": 2,
+    "retried": 2,
+    "unparseable": 0,
+    "no_answer": 10
+  },
+  "by_arm": {
+    "M3": {
+      "n_scored": 9,
+      "no_answer": 0,
+      "readingA_answered_only": {
+        "Q1_step": {
+          "k": 9,
+          "n": 9,
+          "rate": 1,
+          "wilson95": [
+            0.701,
+            1
+          ]
+        },
+        "Q2_window_count": {
+          "k": 9,
+          "n": 9,
+          "rate": 1,
+          "wilson95": [
+            0.701,
+            1
+          ]
+        },
+        "Q3_token": {
+          "k": 9,
+          "n": 9,
+          "rate": 1,
+          "wilson95": [
+            0.701,
+            1
+          ]
+        }
+      },
+      "readingB_no_answer_counts_as_wrong": {
+        "Q1_step": {
+          "k": 9,
+          "n": 9,
+          "rate": 1,
+          "wilson95": [
+            0.701,
+            1
+          ]
+        },
+        "Q2_window_count": {
+          "k": 9,
+          "n": 9,
+          "rate": 1,
+          "wilson95": [
+            0.701,
+            1
+          ]
+        },
+        "Q3_token": {
+          "k": 9,
+          "n": 9,
+          "rate": 1,
+          "wilson95": [
+            0.701,
+            1
+          ]
+        }
+      }
+    },
+    "M2": {
+      "n_scored": 2,
+      "no_answer": 7,
+      "readingA_answered_only": {
+        "Q1_step": {
+          "k": 1,
+          "n": 2,
+          "rate": 0.5,
+          "wilson95": [
+            0.095,
+            0.905
+          ]
+        },
+        "Q2_window_count": {
+          "k": 0,
+          "n": 2,
+          "rate": 0,
+          "wilson95": [
+            0,
+            0.658
+          ]
+        },
+        "Q3_token": {
+          "k": 0,
+          "n": 2,
+          "rate": 0,
+          "wilson95": [
+            0,
+            0.658
+          ]
+        }
+      },
+      "readingB_no_answer_counts_as_wrong": {
+        "Q1_step": {
+          "k": 1,
+          "n": 9,
+          "rate": 0.111,
+          "wilson95": [
+            0.02,
+            0.435
+          ]
+        },
+        "Q2_window_count": {
+          "k": 0,
+          "n": 9,
+          "rate": 0,
+          "wilson95": [
+            0,
+            0.299
+          ]
+        },
+        "Q3_token": {
+          "k": 0,
+          "n": 9,
+          "rate": 0,
+          "wilson95": [
+            0,
+            0.299
+          ]
+        }
+      }
+    },
+    "M0": {
+      "n_scored": 6,
+      "no_answer": 3,
+      "readingA_answered_only": {
+        "Q1_step": {
+          "k": 0,
+          "n": 6,
+          "rate": 0,
+          "wilson95": [
+            0,
+            0.39
+          ]
+        },
+        "Q2_window_count": {
+          "k": 0,
+          "n": 6,
+          "rate": 0,
+          "wilson95": [
+            0,
+            0.39
+          ]
+        },
+        "Q3_token": {
+          "k": 0,
+          "n": 6,
+          "rate": 0,
+          "wilson95": [
+            0,
+            0.39
+          ]
+        }
+      },
+      "readingB_no_answer_counts_as_wrong": {
+        "Q1_step": {
+          "k": 0,
+          "n": 9,
+          "rate": 0,
+          "wilson95": [
+            0,
+            0.299
+          ]
+        },
+        "Q2_window_count": {
+          "k": 0,
+          "n": 9,
+          "rate": 0,
+          "wilson95": [
+            0,
+            0.299
+          ]
+        },
+        "Q3_token": {
+          "k": 0,
+          "n": 9,
+          "rate": 0,
+          "wilson95": [
+            0,
+            0.299
+          ]
+        }
+      }
+    }
+  },
+  "rows": [
+    {
+      "model": "deepseek-v4-flash",
+      "arm": "M3",
+      "i": 0,
+      "outcome": "scored",
+      "q1": true,
+      "q2": true,
+      "q3": true,
+      "got": {
+        "step": "STEP-C",
+        "cli_count": 2741,
+        "token_len": 16
+      }
+    },
+    {
+      "model": "deepseek-v4-flash",
+      "arm": "M3",
+      "i": 1,
+      "outcome": "scored",
+      "q1": true,
+      "q2": true,
+      "q3": true,
+      "got": {
+        "step": "STEP-C",
+        "cli_count": 2741,
+        "token_len": 16
+      }
+    },
+    {
+      "model": "deepseek-v4-flash",
+      "arm": "M3",
+      "i": 2,
+      "outcome": "scored",
+      "q1": true,
+      "q2": true,
+      "q3": true,
+      "got": {
+        "step": "STEP-C",
+        "cli_count": 2741,
+        "token_len": 16
+      }
+    },
+    {
+      "model": "deepseek-v4-flash",
+      "arm": "M2",
+      "i": 0,
+      "outcome": "no_answer",
+      "why": "turn limit (20)"
+    },
+    {
+      "model": "deepseek-v4-flash",
+      "arm": "M2",
+      "i": 1,
+      "outcome": "no_answer",
+      "why": "turn limit (20)"
+    },
+    {
+      "model": "deepseek-v4-flash",
+      "arm": "M2",
+      "i": 2,
+      "outcome": "scored",
+      "q1": false,
+      "q2": false,
+      "q3": false,
+      "got": {
+        "step": "C",
+        "cli_count": 6827,
+        "token_len": 10
+      }
+    },
+    {
+      "model": "deepseek-v4-flash",
+      "arm": "M0",
+      "i": 0,
+      "outcome": "scored",
+      "q1": false,
+      "q2": false,
+      "q3": false,
+      "got": {
+        "step": "control-m0.read-task",
+        "cli_count": 11,
+        "token_len": 0
+      }
+    },
+    {
+      "model": "deepseek-v4-flash",
+      "arm": "M0",
+      "i": 1,
+      "outcome": "scored",
+      "q1": false,
+      "q2": false,
+      "q3": false,
+      "got": {
+        "step": "control-m0:task.origin.json 缺失，无步骤可执行",
+        "cli_count": 0,
+        "token_len": 21
+      }
+    },
+    {
+      "model": "deepseek-v4-flash",
+      "arm": "M0",
+      "i": 2,
+      "outcome": "scored",
+      "q1": false,
+      "q2": false,
+      "q3": false,
+      "got": {
+        "step": "read demo/control-m0/task.origin.json",
+        "cli_count": 0,
+        "token_len": 55
+      }
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "arm": "M3",
+      "i": 0,
+      "outcome": "scored",
+      "q1": true,
+      "q2": true,
+      "q3": true,
+      "got": {
+        "step": "STEP-C",
+        "cli_count": 2741,
+        "token_len": 16
+      }
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "arm": "M3",
+      "i": 1,
+      "outcome": "scored",
+      "q1": true,
+      "q2": true,
+      "q3": true,
+      "got": {
+        "step": "STEP-C",
+        "cli_count": 2741,
+        "token_len": 16
+      }
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "arm": "M3",
+      "i": 2,
+      "outcome": "scored",
+      "q1": true,
+      "q2": true,
+      "q3": true,
+      "got": {
+        "step": "STEP-C",
+        "cli_count": 2741,
+        "token_len": 16
+      }
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "arm": "M2",
+      "i": 0,
+      "outcome": "no_answer",
+      "why": "turn limit (20)"
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "arm": "M2",
+      "i": 1,
+      "outcome": "no_answer",
+      "why": "turn limit (20)"
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "arm": "M2",
+      "i": 2,
+      "outcome": "scored",
+      "q1": true,
+      "q2": false,
+      "q3": false,
+      "got": {
+        "step": "STEP-C",
+        "cli_count": 10960,
+        "token_len": 5
+      }
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "arm": "M0",
+      "i": 0,
+      "outcome": "scored",
+      "q1": false,
+      "q2": false,
+      "q3": false,
+      "got": {
+        "step": "control-m0",
+        "cli_count": 0,
+        "token_len": 0
+      }
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "arm": "M0",
+      "i": 1,
+      "outcome": "scored",
+      "q1": false,
+      "q2": false,
+      "q3": false,
+      "got": {
+        "step": "done",
+        "cli_count": 16,
+        "token_len": 64
+      }
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "arm": "M0",
+      "i": 2,
+      "outcome": "scored",
+      "q1": false,
+      "q2": false,
+      "q3": false,
+      "got": {
+        "step": "not_found",
+        "cli_count": 200,
+        "token_len": 39
+      }
+    },
+    {
+      "model": "kimi-k2.6",
+      "arm": "M3",
+      "i": 0,
+      "outcome": "scored",
+      "q1": true,
+      "q2": true,
+      "q3": true,
+      "got": {
+        "step": "STEP-C",
+        "cli_count": 2741,
+        "token_len": 16
+      }
+    },
+    {
+      "model": "kimi-k2.6",
+      "arm": "M3",
+      "i": 1,
+      "outcome": "scored",
+      "q1": true,
+      "q2": true,
+      "q3": true,
+      "got": {
+        "step": "STEP-C",
+        "cli_count": 2741,
+        "token_len": 16
+      }
+    },
+    {
+      "model": "kimi-k2.6",
+      "arm": "M3",
+      "i": 2,
+      "outcome": "scored",
+      "q1": true,
+      "q2": true,
+      "q3": true,
+      "got": {
+        "step": "STEP-C",
+        "cli_count": 2741,
+        "token_len": 16
+      }
+    },
+    {
+      "model": "kimi-k2.6",
+      "arm": "M2",
+      "i": 0,
+      "outcome": "no_answer",
+      "why": "turn limit (20)"
+    },
+    {
+      "model": "kimi-k2.6",
+      "arm": "M2",
+      "i": 1,
+      "outcome": "no_answer",
+      "why": "turn limit (20)"
+    },
+    {
+      "model": "kimi-k2.6",
+      "arm": "M2",
+      "i": 2,
+      "outcome": "no_answer",
+      "why": "turn limit (20)"
+    },
+    {
+      "model": "kimi-k2.6",
+      "arm": "M0",
+      "i": 0,
+      "outcome": "no_answer",
+      "why": "turn limit (20)"
+    },
+    {
+      "model": "kimi-k2.6",
+      "arm": "M0",
+      "i": 1,
+      "outcome": "no_answer",
+      "why": "turn limit (20)"
+    },
+    {
+      "model": "kimi-k2.6",
+      "arm": "M0",
+      "i": 2,
+      "outcome": "no_answer",
+      "why": "turn limit (20)"
+    }
+  ]
+}

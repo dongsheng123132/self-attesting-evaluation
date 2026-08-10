@@ -279,13 +279,9 @@ document that was truncated.** That is not luck. It is the reason §4 was design
 - **One gateway, one API shape.** All four models were reached through a single OpenAI-compatible
   gateway. We have not tested native Anthropic or Google interfaces, so "cross-vendor" here means
   cross-vendor *models*, not cross-vendor *protocols*.
-- **Environmental task leakage is bounded, not eliminated.** The working directory's names and
-  the repository's other files carry information about the task. We reduced the prompt to a
-  pointer, but we did not run the strongest control — the same relay with the task document
-  replaced by an empty or unrelated one, which would show how much work the document is actually
-  doing. **This control is not run, and until it is, §5 shows that the numbers were obtained,
-  not that the document was necessary to obtain them.** We consider this the single most
-  important missing experiment in this paper.
+- **Environmental task leakage is bounded, not eliminated.** ~~This control is not run~~ — it
+  was run on 2026-08-10 and is reported in §8.1. It confirms the instrument is now leak-free for
+  the quantities it measures, and it caught one leak we had built ourselves.
 - **Two legs' records are post-hoc reconstructions.** Legs A and B lost their original write-ups
   in the incident of §7; the reconstructions are marked as such in the task document. The
   numbers are unaffected (§7).
@@ -294,6 +290,46 @@ document that was truncated.** That is not luck. It is the reason §4 was design
   process, which is implemented for other parts of the system but not for this path.
 - **A relay is not a workload.** Four legs of one task is an existence proof, not a measurement
   of reliability. We make no claim about how often this works.
+
+### 8.1 The control, run 2026-08-10
+
+Pre-registered and sealed — criteria, scoring, self-destruct clause and an explicit statement of
+how little the expected outcome would be worth — in a commit and a Bitcoin anchor made **before
+any generation**. Full report: `demo/control-m0/RESULTS.md`.
+
+Three arms over three models, nine runs each: **M3** sees a task document, **M2** sees the
+directory but not the document, **M0** sees nothing. The prompt is byte-identical across arms;
+only file presence differs, achieved with per-arm sandbox directories rather than by editing the
+prompt. The measured quantities were chosen under the rule case 18 taught us — **nothing
+obtainable from outside the channel under test**: a count over an *arbitrary interior window* of
+the audit log (not the whole file, whose length the environment gives away for free) and a
+16-hex-digit token.
+
+| Arm | Window count (truth 2741) | Token |
+|---|---|---|
+| **M3** credential present | **9/9 = 100%** [70–100] | **9/9 = 100%** [70–100] |
+| M2 directory only | 0/9 = 0% [0–30] | 0/9 = 0% [0–30] |
+| M0 nothing | 0/9 = 0% [0–30] | 0/9 = 0% [0–30] |
+
+M2's answers were 6827 and 10960 — it counted some other range, which is the only thing available
+without the window. The self-destruct clause (any non-zero token outside M3 voids the experiment)
+did not trigger. Ten of twenty-seven runs produced no answer within twenty turns, distributed
+**M3 0/9, M2 7/9, M0 3/9**; both readings — excluding those, and scoring them as wrong — point the
+same way and are reported separately.
+
+**What this buys, stated at the size the pre-registration fixed in advance:** the metric §5 relies
+on is no longer leaky. That repairs case 18's instrument defect. It does **not** show that
+structured state beats transcripts, and it does not generalise past a synthetic task that was
+*designed* so the document would be necessary — a design that puts the conclusion within reach of
+tautology. We wrote this paragraph before seeing the numbers, precisely so that a clean result
+could not be inflated afterwards.
+
+**The one surprise, and the most useful line in the experiment:** the M2 arm caught an
+environmental leak *we had built ourselves without noticing*. A predecessor artifact we had
+written to be uninformative — "STEP-B is complete… the next leg should continue" — gives away that
+the next step is STEP-C, and both M2 runs that answered got the step right. That question is
+discarded. It is the first leak in this project found by a control designed in advance to look
+for one; the other eighteen were all found afterwards, by accident.
 
 ---
 
@@ -366,7 +402,9 @@ node governance/anchor.mjs verify
 
 ## TODO before submission
 
-- [ ] **Run the empty-document control** (§8, bullet 2). This is the missing experiment that
+- [x] ~~**Run the empty-document control**~~ — run 2026-08-10, reported in §8.1. Pre-registered
+      and sealed before generation; result 100% vs 0% on leak-free quantities, and the control
+      caught a leak we had built ourselves. Old note: This was the missing experiment that
       converts §5 from "the numbers were obtained" to "the document was necessary." Everything
       else on this list is cosmetic by comparison.
 - [ ] Re-run the relay on a native (non-OpenAI-compatible) API to make "cross-vendor" mean
