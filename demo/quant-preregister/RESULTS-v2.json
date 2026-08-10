@@ -1,0 +1,477 @@
+{
+  "kind": "quant.results",
+  "spec": "2origin/0.1",
+  "id": "quant-preregister-v2",
+  "preregistration_sha256": "0354049996de1306f84e28dd3ad45412135f99b65faa827506c6967409601f57",
+  "grid_size": 608,
+  "summary": {
+    "seeds_run": 20,
+    "P": {
+      "mean": -0.22648193464433244,
+      "sd": 0.5710586438941414
+    },
+    "F": {
+      "mean": 0.3822995287383861,
+      "sd": 0.2895977312847094
+    },
+    "N": {
+      "mean": -0.07787636642442727,
+      "sd": 0.4941960614656682
+    },
+    "P_in_sample": {
+      "mean": 0.5853866116558294,
+      "sd": 0.4535637775313044
+    },
+    "expected_max_sharpe_under_null": {
+      "mean": 0.47864054200390216
+    },
+    "mining_premium": 0.6087814633827185
+  },
+  "verdicts": [
+    {
+      "id": "R1",
+      "test": "mean(F.sharpe) > 0.5 across seeds",
+      "passed": false,
+      "conclusion": "网格或样本不足以产生可观的挖掘溢价；须加大网格重跑，且在报告里如实写明设计被改过"
+    },
+    {
+      "id": "R2",
+      "test": "abs(mean(P.sharpe) - mean(N.sharpe)) < 0.30",
+      "passed": true,
+      "conclusion": "预注册正确地拒绝了假发现：先封存参数后，样本外成绩与瞎选无异"
+    },
+    {
+      "id": "R3",
+      "test": "mean(F.sharpe) - mean(P.sharpe) > 0.5",
+      "passed": true,
+      "conclusion": "挖掘溢价的大小 = 不做预注册时业绩数字被夸大的幅度"
+    },
+    {
+      "id": "R4",
+      "test": "mean(F.sharpe) <= mean(F.expected_max_sharpe_under_null)",
+      "passed": true,
+      "conclusion": "Deflated Sharpe 当场判定 F 臂的成绩落在噪声预期之内"
+    }
+  ],
+  "aborts": [
+    {
+      "id": "A1",
+      "test": "abs(mean(P.sharpe)) > 0.5",
+      "fired": false,
+      "then": "本实验作废：数据生成器漏了漂移，不是策略厉害"
+    },
+    {
+      "id": "A2",
+      "test": "instrument_failures > 5%",
+      "fired": false,
+      "then": "仪器失效率过高，结果不可读"
+    }
+  ],
+  "failures": {
+    "instrument_failure": 0,
+    "zero_std": 86,
+    "seeds_dropped": 0
+  },
+  "rows": [
+    {
+      "seed": 1,
+      "P": {
+        "fast": 16,
+        "slow": 110,
+        "in_sample": -0.1388991266628413,
+        "reported": -0.5223232054863507
+      },
+      "F": {
+        "fast": 18,
+        "slow": 170,
+        "reported": -0.09730775467842599
+      },
+      "N": {
+        "fast": 34,
+        "slow": 140,
+        "reported": -0.17877060211606885
+      },
+      "expected_max_sharpe_under_null": 0.388627083882613
+    },
+    {
+      "seed": 2,
+      "P": {
+        "fast": 24,
+        "slow": 140,
+        "in_sample": 1.2761827384312503,
+        "reported": -0.2505814579353276
+      },
+      "F": {
+        "fast": 4,
+        "slow": 70,
+        "reported": 0.6770295695274083
+      },
+      "N": {
+        "fast": 10,
+        "slow": 80,
+        "reported": 0.2785184517397391
+      },
+      "expected_max_sharpe_under_null": 0.38139900292047507
+    },
+    {
+      "seed": 3,
+      "P": {
+        "fast": 10,
+        "slow": 165,
+        "in_sample": 0.058277772294612694,
+        "reported": -0.2870126207803284
+      },
+      "F": {
+        "fast": 40,
+        "slow": 85,
+        "reported": 0.09310556351098206
+      },
+      "N": {
+        "fast": 32,
+        "slow": 160,
+        "reported": -0.11162802500972842
+      },
+      "expected_max_sharpe_under_null": 0.45272563367087293
+    },
+    {
+      "seed": 4,
+      "P": {
+        "fast": 40,
+        "slow": 175,
+        "in_sample": 0.17594318011740454,
+        "reported": -0.08104049626059048
+      },
+      "F": {
+        "fast": 40,
+        "slow": 185,
+        "reported": 0.043607942063062684
+      },
+      "N": {
+        "fast": 4,
+        "slow": 125,
+        "reported": -0.7677995298220156
+      },
+      "expected_max_sharpe_under_null": 0.6200299730868344
+    },
+    {
+      "seed": 5,
+      "P": {
+        "fast": 12,
+        "slow": 190,
+        "in_sample": 0.24253942996136824,
+        "reported": 0.42853280843618613
+      },
+      "F": {
+        "fast": 14,
+        "slow": 190,
+        "reported": 0.3947946463190896
+      },
+      "N": {
+        "fast": 26,
+        "slow": 95,
+        "reported": 0.0928351711681528
+      },
+      "expected_max_sharpe_under_null": 0.632819373121666
+    },
+    {
+      "seed": 6,
+      "P": {
+        "fast": 12,
+        "slow": 110,
+        "in_sample": 0.6353956151074925,
+        "reported": -0.9506049648548593
+      },
+      "F": {
+        "fast": 4,
+        "slow": 155,
+        "reported": 0.2857836761542955
+      },
+      "N": {
+        "fast": 12,
+        "slow": 110,
+        "reported": -0.9506049648548593
+      },
+      "expected_max_sharpe_under_null": 0.42839617406379515
+    },
+    {
+      "seed": 7,
+      "P": {
+        "fast": 24,
+        "slow": 85,
+        "in_sample": 0.6859975091719196,
+        "reported": -0.11372989582432576
+      },
+      "F": {
+        "fast": 32,
+        "slow": 45,
+        "reported": 0.3347819618590946
+      },
+      "N": {
+        "fast": 10,
+        "slow": 70,
+        "reported": -0.28424423308502766
+      },
+      "expected_max_sharpe_under_null": 0.45995957730053183
+    },
+    {
+      "seed": 8,
+      "P": {
+        "fast": 26,
+        "slow": 45,
+        "in_sample": -0.20711045895305671,
+        "reported": -1.5560405128604056
+      },
+      "F": {
+        "fast": 40,
+        "slow": 75,
+        "reported": -0.12641386002854274
+      },
+      "N": {
+        "fast": 12,
+        "slow": 85,
+        "reported": -0.8230051400051009
+      },
+      "expected_max_sharpe_under_null": 0.6112297906609285
+    },
+    {
+      "seed": 9,
+      "P": {
+        "fast": 16,
+        "slow": 50,
+        "in_sample": -0.03340248916474625,
+        "reported": -0.8881749925084192
+      },
+      "F": {
+        "fast": 20,
+        "slow": 90,
+        "reported": -0.12906090264229858
+      },
+      "N": {
+        "fast": 30,
+        "slow": 120,
+        "reported": -0.09362409632338348
+      },
+      "expected_max_sharpe_under_null": 0.4876525586652533
+    },
+    {
+      "seed": 10,
+      "P": {
+        "fast": 16,
+        "slow": 70,
+        "in_sample": 0.5771453036711885,
+        "reported": 0.22454624842642543
+      },
+      "F": {
+        "fast": 26,
+        "slow": 60,
+        "reported": 0.5602386328897863
+      },
+      "N": {
+        "fast": 34,
+        "slow": 45,
+        "reported": 0.27232723422479027
+      },
+      "expected_max_sharpe_under_null": 0.344975300321232
+    },
+    {
+      "seed": 11,
+      "P": {
+        "fast": 22,
+        "slow": 50,
+        "in_sample": 1.0108062090532668,
+        "reported": -0.5541085256495664
+      },
+      "F": {
+        "fast": 20,
+        "slow": 105,
+        "reported": 0.5384751161850981
+      },
+      "N": {
+        "fast": 36,
+        "slow": 130,
+        "reported": -0.4808976589036954
+      },
+      "expected_max_sharpe_under_null": 0.4585290925004567
+    },
+    {
+      "seed": 12,
+      "P": {
+        "fast": 28,
+        "slow": 135,
+        "in_sample": 0.5766321050231256,
+        "reported": -0.8407114461898502
+      },
+      "F": {
+        "fast": 22,
+        "slow": 165,
+        "reported": 0.2758048128460623
+      },
+      "N": {
+        "fast": 28,
+        "slow": 55,
+        "reported": -0.8261933011506862
+      },
+      "expected_max_sharpe_under_null": 0.5703571604028909
+    },
+    {
+      "seed": 13,
+      "P": {
+        "fast": 4,
+        "slow": 50,
+        "in_sample": 1.046035767144281,
+        "reported": -0.4827884397202955
+      },
+      "F": {
+        "fast": 40,
+        "slow": 55,
+        "reported": 0.5220832499130891
+      },
+      "N": {
+        "fast": 36,
+        "slow": 145,
+        "reported": -0.3276402980067087
+      },
+      "expected_max_sharpe_under_null": 0.53509155446914
+    },
+    {
+      "seed": 14,
+      "P": {
+        "fast": 8,
+        "slow": 165,
+        "in_sample": 0.9421870688897491,
+        "reported": 0.3514709179050945
+      },
+      "F": {
+        "fast": 28,
+        "slow": 155,
+        "reported": 0.7676738563535014
+      },
+      "N": {
+        "fast": 12,
+        "slow": 65,
+        "reported": 0.4427709371594858
+      },
+      "expected_max_sharpe_under_null": 0.5043643189118735
+    },
+    {
+      "seed": 15,
+      "P": {
+        "fast": 40,
+        "slow": 185,
+        "in_sample": 0.7127639783730038,
+        "reported": 0.5000838362662858
+      },
+      "F": {
+        "fast": 4,
+        "slow": 200,
+        "reported": 0.6548698322413534
+      },
+      "N": {
+        "fast": 26,
+        "slow": 165,
+        "reported": 0.5787878912944888
+      },
+      "expected_max_sharpe_under_null": 0.3125071283251907
+    },
+    {
+      "seed": 16,
+      "P": {
+        "fast": 8,
+        "slow": 195,
+        "in_sample": 0.8004132985460645,
+        "reported": 0.099447983507609
+      },
+      "F": {
+        "fast": 12,
+        "slow": 90,
+        "reported": 0.6363656034855023
+      },
+      "N": {
+        "fast": 8,
+        "slow": 170,
+        "reported": 0.3595690555688944
+      },
+      "expected_max_sharpe_under_null": 0.4979229424462799
+    },
+    {
+      "seed": 17,
+      "P": {
+        "fast": 40,
+        "slow": 180,
+        "in_sample": 0.9276559731968235,
+        "reported": 0.5929095421767198
+      },
+      "F": {
+        "fast": 40,
+        "slow": 180,
+        "reported": 0.7434186315538917
+      },
+      "N": {
+        "fast": 38,
+        "slow": 160,
+        "reported": 0.5123068698094423
+      },
+      "expected_max_sharpe_under_null": 0.3969576143758604
+    },
+    {
+      "seed": 18,
+      "P": {
+        "fast": 6,
+        "slow": 45,
+        "in_sample": 1.041288614972399,
+        "reported": -0.26544243803206574
+      },
+      "F": {
+        "fast": 30,
+        "slow": 105,
+        "reported": 0.5379129593509271
+      },
+      "N": {
+        "fast": 34,
+        "slow": 140,
+        "reported": 0.17634974567614586
+      },
+      "expected_max_sharpe_under_null": 0.30355900153735316
+    },
+    {
+      "seed": 19,
+      "P": {
+        "fast": 26,
+        "slow": 45,
+        "in_sample": 1.1309536442699333,
+        "reported": -0.4040806698279886
+      },
+      "F": {
+        "fast": 26,
+        "slow": 75,
+        "reported": 0.426641091470073
+      },
+      "N": {
+        "fast": 20,
+        "slow": 165,
+        "reported": 0.0062385055250532
+      },
+      "expected_max_sharpe_under_null": 0.7429923618763971
+    },
+    {
+      "seed": 20,
+      "P": {
+        "fast": 12,
+        "slow": 55,
+        "in_sample": 0.24692609967334822,
+        "reported": 0.4700096363254049
+      },
+      "F": {
+        "fast": 38,
+        "slow": 65,
+        "reported": 0.5061859463937705
+      },
+      "N": {
+        "fast": 8,
+        "slow": 160,
+        "reported": 0.5671766586225361
+      },
+      "expected_max_sharpe_under_null": 0.4427151975383995
+    }
+  ]
+}

@@ -2,11 +2,11 @@
   "kind": "task.origin",
   "id": "quant-preregister",
   "spec": "2origin/0.2",
-  "version": 11,
-  "updated_at": "2026-08-10T18:35:43.897Z",
+  "version": 8,
+  "updated_at": "2026-08-10T18:33:22.457Z",
   "title": "回测挖掘对照：预注册能否挡住凭空造出来的 alpha",
   "goal": "在真实 alpha 已知为零的合成数据上量出参数挖掘的溢价，并让『我没有事后调参』这句话可被陌生人独立核验。",
-  "current_state": "两轮跑完。v2（608 组网格）：F=0.382，E[max SR]=0.479，DSR 余量由 0.016 扩大到 0.097（六倍）——试得越多，挖出的夏普涨得比噪声上限慢，所以 DSR 更判得住。R2/R3/R4 成立，R1 仍不成立且就此停止加大网格（再加就是试到过为止）。",
+  "current_state": "已跑完，结果与裁决在 RESULTS.md。四条判据 R2/R4 成立、R1/R3 不成立（R3 差 0.005145，按预注册原样判不通过）。跑手改过一次索引方式，偏离已如实记录，故 backtest.mjs 哈希与锚点中的值不再一致。",
   "facts": [
     {
       "claim": "PREREGISTRATION.md 的 sha256 = b1b3851f1dc634f6cce21a83163c5acf5f7c6726c5bea8ec79cff0839931cd9f",
@@ -82,11 +82,6 @@
       "claim": "第二轮只改网格一个变量（36→608），数据/种子/切分/成本/策略/判定阈值全部未动",
       "verified": true,
       "source": "demo/quant-preregister/PREREGISTRATION-v2.md"
-    },
-    {
-      "claim": "第二轮 608 组：F=0.382 而噪声期望最大夏普=0.479，DSR 余量从 v1 的 0.016 扩大到 0.097。搜索空间变大同时抬高噪声上限，且后者涨得更快",
-      "verified": true,
-      "source": "demo/quant-preregister/RESULTS-v2.json"
     }
   ],
   "decisions": [
@@ -105,10 +100,6 @@
     {
       "what": "R1/R3 不成立照原样报告，不调阈值、不用未预注册的量补救",
       "why": "临界值面前把话说圆正是预注册要防的动作。R3 差 0.005145 这件事本身比它成立更有说服力。"
-    },
-    {
-      "what": "R1 仍不成立，但就此停止加大网格",
-      "why": "预注册能约束参数搜索，不能自动约束「重跑预注册」本身。因为 R1 没过就一再加大直到它过，等于把「试到过为止」搬到元层面——那道闸只能由人在这里合上。"
     }
   ],
   "next_steps": [
@@ -127,12 +118,12 @@
     "demo/quant-preregister/RESULTS.json",
     "demo/quant-preregister/RESULTS-run1.json"
   ],
-  "content_hash": "a62f44894ba183b3acc67d4b811df1d1086debbc3339f6337c9e47ed259ff23c",
+  "content_hash": "1dfa13850a689c52c4e0990183f5b6aae6c8abc5cb426159383b45e5b0258854",
   "actor": {
     "harness": "claude-code",
     "model": "claude-opus-5",
     "model_source": "transcript",
     "session_id": "dab721c6-5329-48ed-9915-6d87dc3aca62",
-    "at": "2026-08-10T18:35:43.896Z"
+    "at": "2026-08-10T18:33:22.457Z"
   }
 }
