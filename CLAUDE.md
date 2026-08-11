@@ -95,6 +95,7 @@ node southbridge/verify-todo.mjs         # 待办传播 v0.1（大部分是反�
 node xuetang/verify-xuetang.mjs          # 学堂 v0.1（反向用例：作者自封 verified / 恒绿考题 / 空当全绿）
 node governance/verify-governance.mjs    # 治理边界 v0.1
 node governance/verify-anchor.mjs        # 证据锚定 v0.1（反向用例：隐私泄漏 / 守卫空转 / 自证时间）
+node governance/verify-naming.mjs        # 命名一致性 v0.1（一名两物 / 一物两名 / 声称的实现是否真在盘上）
 node southbridge/benjing-todo.mjs list --dupes   # 查跨学历重复待办（退出码 2 = 有重复）
 node southbridge/verify-state.mjs demo/taskN/task.origin.json   # 单份学历
 ```

@@ -24,15 +24,15 @@
 | 取象 | **Sensor** | 「看世界」的唯一实现。铁律：`observe()` 永不接收预期——观察器一旦收预期就退化成确认偏误机。**代码目录仍叫 `benxiang/`**：改名的前置条件（路径别名表）未就位，见裁决 §3 | `benxiang/observe.mjs` | `benxiang/0.1` |
 | 本象 | **Origin IR** | 世界的持久表示层：对象/关系/载荷/状态/约束/来源/边界。**不在本仓库**——实现在 `本象协议/compiler/` | — | `benxiang/origin-ir` |
 | 北桥 | **context compiler** | 把状态编译进上下文窗口。两个时刻：boot（无 goal，确定性）与 request（goal 出现后才做相关性） | `northbridge/compile.mjs` | `northbridge/0.2` |
-| 学堂 | **the school** / *learning loop* | 经验的产生、升降级与装载。核心规则：learning 的 `recheck` 必须是可重跑的动作——没有它，这条经验永远无法被推翻，也就永远不该叫 verified | `xuetang/learning-core.mjs`、`exam.mjs` | `xuetang/0.1` |
+| 学堂 | **the school** / *learning loop* | 经验的产生、升降级与装载。核心规则：learning 的 `recheck` 必须是可重跑的动作——没有它，这条经验永远无法被推翻，也就永远不该叫 verified | `xuetang/learning-core.mjs`、`xuetang/exam.mjs` | `xuetang/0.1` |
 | 经验 | **learning** | 「下次别再这样」。与 fact（「这个任务发生过什么」）分属两类：fact 要 `source` 引可复核物，learning 要 `recheck` 是可重跑命令 | `demo/*/task.origin.json` 的 `learnings[]` | `xuetang/0.1` |
 | 长循环考试 | **the exam** | 把每条 verified 经验的 `recheck` 再跑一遍，跑挂当场降级。「一次成功不是永久真理」的机械化 | `xuetang/exam.mjs` | `xuetang/0.1` |
-| 南桥 | **action channel** | 把动作请求送到影核的**通道**。目前两条：CLI（给无头 harness）与 MCP。两条通道判决一致是**验证出来的**，不是假设 | `southbridge/southbridge-cli.mjs`、`southbridge-mcp.mjs` | `shadowcore/0.2` §双驱动 parity |
+| 南桥 | **action channel** | 把动作请求送到影核的**通道**。目前两条：CLI（给无头 harness）与 MCP。两条通道判决一致是**验证出来的**，不是假设 | `southbridge/southbridge-cli.mjs`、`southbridge/southbridge-mcp.mjs` | `shadowcore/0.2` §双驱动 parity |
 | 影核 | **Action Kernel** | 动作的**核**：风险判级、批准模型、审计落盘、幂等、写后回读观察。**英文不用 `ActionParity`**——parity 指「CLI/MCP 双通道判决一致」，那是我们测过它的一个性质，不是它是什么；用验证属性当名字等于用「我们测过它」当名字。ActionParity 仅作为商标保留 | `southbridge/shadowcore-core.mjs` | `shadowcore/0.2` |
 | 带外观察 | **out-of-band check** | 不通过被观察者自己的自述去核对它。学历声称 ↔ 影核审计 ↔ 磁盘实数 | `oob/` | `oob/0.1` |
 | 学堂循环 | **the loop** | 任务 → 经验 → 已验证状态 → 下次接着干。跨会话、跨 harness、跨模型。**这是整体，不是部件**——部件是上面那个「学堂」 | 整体 | — |
 | 已验证事实 | **verified fact** | 带 `verified` 与可复核 `source` 的断言。没验证的不配叫 fact，叫假设 | — | — |
-| 判据 | **conformance judgment** | 会跑的一条判据。反向判据（故意造假必须被抓住）比正向的值钱 | `verify-*.mjs` | — |
+| 判据 | **conformance judgment** | 会跑的一条判据。反向判据（故意造假必须被抓住）比正向的值钱 | `*/verify-*.mjs` | — |
 
 ## 两处必须先解决的重叠
 
