@@ -96,6 +96,7 @@ node xuetang/verify-xuetang.mjs          # 学堂 v0.1（反向用例：作者�
 node governance/verify-governance.mjs    # 治理边界 v0.1
 node governance/verify-anchor.mjs        # 证据锚定 v0.1（反向用例：隐私泄漏 / 守卫空转 / 自证时间）
 node governance/verify-naming.mjs        # 命名一致性 v0.1（一名两物 / 一物两名 / 声称的实现是否真在盘上）
+node governance/verify-selfref.mjs       # 自指废话 v0.1（改名后旧名被自己的替换吃掉）；可带目录参数扫别的仓库
 node southbridge/benjing-todo.mjs list --dupes   # 查跨学历重复待办（退出码 2 = 有重复）
 node southbridge/verify-state.mjs demo/taskN/task.origin.json   # 单份学历
 ```
@@ -153,6 +154,13 @@ MCP 通道（`southbridge_write` 工具）在 codex 上会被它自己的工具�
     （`PATH_ALIASES`，判据 B14）——它是常设部件不是迁移工具；
     且 16 份锚点快照 + 110 份学历备份里的旧名**永远不能改**（改一个字节 `.ots` 就失效）。
     `.benjing-backups/` 这个目录名因此永远保留旧名——**化石不是债，是证据链完整的证明。**
+- **批量操作必须声明边界**：全局文本替换与 `git add` 是全仓库最高频、最危险的改世界动作，
+  却是唯二没走任何闸门的（锚定有 EXCLUDE_RULES、影核有风险分级+写后回读、北桥有「投影必须
+  披露丢了什么」）。2026-08-11 一天之内同形状事故三次：改名替换吃掉了讲改名那段里的旧名、
+  `git add -A` 裹进另一会话 1000+ 行工作、替换误伤了本该保留的目录内文件名。
+  - **多会话并发下禁用 `git add -A`/`git commit -a`**，只 add 本次任务真正改过的文件。
+    它会让 commit message 说谎，并替别人提交半成品。
+  - 全局替换先跑 `node governance/verify-selfref.mjs`，讲改名的段落用 `<!-- selfref:example -->` 显式豁免。
 - **名字也走 candidate → verified**（裁决 §5）：没有任何判据会因某部件缺失而变红时，
   那个名字只能是 `candidate`。**定义一个名字 ＝ 做出一个尚未被验证的存在性主张**（bugscope A1 同型）。
 
