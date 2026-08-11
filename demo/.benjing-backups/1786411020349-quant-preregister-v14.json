@@ -2,11 +2,11 @@
   "kind": "task.origin",
   "id": "quant-preregister",
   "spec": "2origin/0.2",
-  "version": 15,
-  "updated_at": "2026-08-11T01:17:00.349Z",
+  "version": 14,
+  "updated_at": "2026-08-11T01:17:00.251Z",
   "title": "回测挖掘对照：预注册能否挡住凭空造出来的 alpha",
   "goal": "在真实 alpha 已知为零的合成数据上量出参数挖掘的溢价，并让『我没有事后调参』这句话可被陌生人独立核验。",
-  "current_state": "两轮跑完，两轮的比特币时间锚均已确认（63d46b16 @ 16:20:54Z，8854a7f4 @ 19:18:28Z）。核心结论：网格 36→608 后 F 由 0.303 升至 0.382，噪声期望最大夏普由 0.319 升至 0.479，DSR 余量扩大六倍——试得越多反而越判得住。R1 仍不成立且就此停手。本任务已完结，除非有新的预注册。",
+  "current_state": "两轮跑完，第一轮的外部时间锚已由比特币区块确认（63d46b16fc99c421 @ 2026-08-10T16:20:54Z），第二轮 8854a7f4a490592f 待 6 个确认。核心结论：网格 36→608 后 F 由 0.303 升至 0.382，而噪声期望最大夏普由 0.319 升至 0.479——试得越多 DSR 越判得住，余量扩大六倍。R1 仍不成立且就此停手，不再加大网格。",
   "facts": [
     {
       "claim": "PREREGISTRATION.md 的 sha256 = b1b3851f1dc634f6cce21a83163c5acf5f7c6726c5bea8ec79cff0839931cd9f",
@@ -137,12 +137,12 @@
     "demo/quant-preregister/RESULTS.json",
     "demo/quant-preregister/RESULTS-run1.json"
   ],
-  "content_hash": "5008a1a32be3531907509ba5c1b460ff98745b0655e8115f4272de7a00cda757",
+  "content_hash": "af35135f7181e868cefa081e907c5115d85bdcdaf3f99d11c743f0160300fa72",
   "actor": {
     "harness": "claude-code",
     "model": "claude-opus-5",
     "model_source": "transcript",
     "session_id": "dab721c6-5329-48ed-9915-6d87dc3aca62",
-    "at": "2026-08-11T01:17:00.348Z"
+    "at": "2026-08-11T01:17:00.250Z"
   }
 }
